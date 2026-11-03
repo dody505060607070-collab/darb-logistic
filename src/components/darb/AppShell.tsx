@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/darb/ThemeToggle";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
@@ -240,6 +241,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             )}
           </div>
           <div className="mr-auto flex items-center gap-2">
+            <ThemeToggle />
             <Notifications />
             <div className="hidden text-left sm:block">
               <div className="text-sm font-semibold text-primary">{auth.fullName}</div>
