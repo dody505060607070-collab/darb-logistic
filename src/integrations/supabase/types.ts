@@ -2066,6 +2066,17 @@ export type Database = {
           weight_kg: number
         }[]
       }
+      driver_report_location: {
+        Args: {
+          p_event_time: string
+          p_lat: number
+          p_lng: number
+          p_reading_id: string
+          p_speed: number
+          p_trip_id: string
+        }
+        Returns: undefined
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]

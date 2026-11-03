@@ -46,6 +46,35 @@ function getPos(): Promise<{ lat: number; lng: number } | null> {
   });
 }
 
+/** Sends the phone location (max once per 45s) while a trip is in progress. */
+function LiveGps({ tripId }: { tripId: string }) {
+  const [state, setState] = useState<"on" | "denied" | "off">("off");
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    let last = 0;
+    const id = navigator.geolocation.watchPosition(
+      (p) => {
+        setState("on");
+        if (Date.now() - last < 45000 || !navigator.onLine) return;
+        last = Date.now();
+        void db.rpc("driver_report_location", {
+          p_trip_id: tripId, p_lat: p.coords.latitude, p_lng: p.coords.longitude,
+          p_speed: p.coords.speed != null ? Math.round(p.coords.speed * 3.6) : null,
+          p_event_time: new Date(p.timestamp).toISOString(), p_reading_id: `phone-${tripId}-${p.timestamp}`,
+        });
+      },
+      (e) => setState(e.code === 1 ? "denied" : "off"),
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, [tripId]);
+  return (
+    <div className={cn("px-4 py-1.5 text-center text-xs", state === "on" ? "bg-success-soft text-success" : "bg-warning-soft text-warning")}>
+      {state === "on" ? "📍 يتم إرسال موقعك أثناء الرحلة" : state === "denied" ? "فعّل إذن الموقع لتتبع الرحلة" : "جارٍ تحديد الموقع…"}
+    </div>
+  );
+}
+
 function DriverApp() {
   const auth = useAuth();
   const nav = useNavigate();
@@ -101,7 +130,8 @@ function DriverApp() {
   const d = me.data?.[0];
 
   return (
-    <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20">
+    <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20 animate-in fade-in duration-500">
+      {current?.status === "in_progress" && <LiveGps tripId={current.id} />}
       <header className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
         <Logo light className="scale-90" />
         <div className="flex items-center gap-3 text-xs">

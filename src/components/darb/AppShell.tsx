@@ -56,6 +56,16 @@ export const NAV: NavItem[] = [
   { to: "/settings", label: "الإعدادات", icon: Settings, roles: [] },
 ];
 
+/** Landing page per role: owners/ops managers keep the full dashboard. */
+export function roleHome(roles: AppRole[]): string {
+  if (roles.includes("owner") || roles.includes("ops_manager")) return "/";
+  if (roles.includes("dispatcher")) return "/operations";
+  if (roles.includes("accountant")) return "/finance";
+  if (roles.includes("maintenance")) return "/maintenance";
+  if (roles.includes("fleet_supervisor")) return "/fleet";
+  return "/";
+}
+
 function useClock() {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
@@ -148,13 +158,21 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
   const auth = useAuth();
   const nav = useNavigate();
   const now = useClock();
+  const path = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!auth.ready) return;
     if (!auth.session) void nav({ to: "/login" });
     else if (staffOnly && !auth.isStaff && auth.roles.includes("driver")) void nav({ to: "/driver" });
-  }, [auth.ready, auth.session, auth.isStaff, auth.roles, staffOnly, nav]);
+    else if (auth.roles.length) {
+      // Role-specific home and page guard
+      const item = NAV.filter((n) => n.to !== "/").find((n) => path.startsWith(n.to));
+      const home = roleHome(auth.roles);
+      if (path === "/" && home !== "/") void nav({ to: home });
+      else if (item?.roles && !auth.can(...item.roles)) void nav({ to: home });
+    }
+  }, [auth.ready, auth.session, auth.isStaff, auth.roles, staffOnly, nav, path]);
 
   if (!auth.ready || !auth.session)
     return (
@@ -234,7 +252,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             </Button>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main key={path} className="page-enter min-w-0 flex-1 p-3 sm:p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

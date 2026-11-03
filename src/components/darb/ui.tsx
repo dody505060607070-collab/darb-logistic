@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ChevronLeft, ChevronRight, Inbox, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STATUS, type Tone } from "@/lib/format";
@@ -94,7 +94,7 @@ export function Kpi({
         <span className={cn(tone && "text-current opacity-80")}>{label}</span>
         {icon && <span className="[&_svg]:size-4">{icon}</span>}
       </div>
-      <div className="num mt-1 text-right text-2xl font-bold">{value}</div>
+      <div className="num mt-1 text-right text-2xl font-bold"><CountUp value={value} /></div>
       {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
@@ -292,4 +292,24 @@ export function Select({
       ))}
     </select>
   );
+}
+
+/** Animates numeric KPI values from 0; non-numeric values render as-is. */
+function CountUp({ value }: { value: ReactNode }) {
+  const target = typeof value === "number" ? value : null;
+  const [n, setN] = useState(target ?? 0);
+  useEffect(() => {
+    if (target == null) return;
+    const start = performance.now();
+    let raf = 0;
+    const step = (t: number) => {
+      const k = Math.min(1, (t - start) / 900);
+      setN(target * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  if (target == null) return <>{value}</>;
+  return <>{Number.isInteger(target) ? Math.round(n).toLocaleString("en-US") : n.toFixed(1)}</>;
 }
