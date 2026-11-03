@@ -80,6 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "دَرب — إدارة عمليات النقل والشاحنات" },
       { property: "og:description", content: "نظام دَرب لإدارة نقل البضائع والأسطول والرحلات داخل المملكة." },
       { property: "og:type", content: "website" },
+      { name: "theme-color", content: "#000000" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -87,10 +88,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@200;300;400;500;600;700&display=swap",
       },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-512.jpg" },
     ],
   }),
   shellComponent: RootShell,
