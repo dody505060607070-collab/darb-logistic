@@ -11,12 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CustodyRouteImport } from './routes/custody'
+import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as FinanceRouteImport } from './routes/finance'
+import { Route as IncidentsRouteImport } from './routes/incidents'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TrackingRouteImport } from './routes/tracking'
 import { Route as DriversIndexRouteImport } from './routes/drivers.index'
@@ -38,6 +41,11 @@ const CustodyRoute = CustodyRouteImport.update({
   path: '/custody',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomersRoute = CustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocumentsRoute = DocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -53,6 +61,11 @@ const FinanceRoute = FinanceRouteImport.update({
   path: '/finance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IncidentsRoute = IncidentsRouteImport.update({
+  id: '/incidents',
+  path: '/incidents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -66,6 +79,11 @@ const MaintenanceRoute = MaintenanceRouteImport.update({
 const OperationsRoute = OperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -122,12 +140,15 @@ const TripsIdRoute = TripsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/custody': typeof CustodyRoute
+  '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
   '/expenses': typeof ExpensesRoute
   '/finance': typeof FinanceRoute
+  '/incidents': typeof IncidentsRoute
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/operations': typeof OperationsRoute
+  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
@@ -142,12 +163,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/custody': typeof CustodyRoute
+  '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
   '/expenses': typeof ExpensesRoute
   '/finance': typeof FinanceRoute
+  '/incidents': typeof IncidentsRoute
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/operations': typeof OperationsRoute
+  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
@@ -163,12 +187,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/custody': typeof CustodyRoute
+  '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
   '/expenses': typeof ExpensesRoute
   '/finance': typeof FinanceRoute
+  '/incidents': typeof IncidentsRoute
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/operations': typeof OperationsRoute
+  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
@@ -185,12 +212,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/custody'
+    | '/customers'
     | '/documents'
     | '/expenses'
     | '/finance'
+    | '/incidents'
     | '/login'
     | '/maintenance'
     | '/operations'
+    | '/reports'
     | '/reset-password'
     | '/tracking'
     | '/drivers/$id'
@@ -205,12 +235,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/custody'
+    | '/customers'
     | '/documents'
     | '/expenses'
     | '/finance'
+    | '/incidents'
     | '/login'
     | '/maintenance'
     | '/operations'
+    | '/reports'
     | '/reset-password'
     | '/tracking'
     | '/drivers/$id'
@@ -225,12 +258,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/custody'
+    | '/customers'
     | '/documents'
     | '/expenses'
     | '/finance'
+    | '/incidents'
     | '/login'
     | '/maintenance'
     | '/operations'
+    | '/reports'
     | '/reset-password'
     | '/tracking'
     | '/drivers/$id'
@@ -246,12 +282,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustodyRoute: typeof CustodyRoute
+  CustomersRoute: typeof CustomersRoute
   DocumentsRoute: typeof DocumentsRoute
   ExpensesRoute: typeof ExpensesRoute
   FinanceRoute: typeof FinanceRoute
+  IncidentsRoute: typeof IncidentsRoute
   LoginRoute: typeof LoginRoute
   MaintenanceRoute: typeof MaintenanceRoute
   OperationsRoute: typeof OperationsRoute
+  ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TrackingRoute: typeof TrackingRoute
   DriversIdRoute: typeof DriversIdRoute
@@ -280,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustodyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customers': {
+      id: '/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/documents': {
       id: '/documents'
       path: '/documents'
@@ -301,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/incidents': {
+      id: '/incidents'
+      path: '/incidents'
+      fullPath: '/incidents'
+      preLoaderRoute: typeof IncidentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -320,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -398,12 +458,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustodyRoute: CustodyRoute,
+  CustomersRoute: CustomersRoute,
   DocumentsRoute: DocumentsRoute,
   ExpensesRoute: ExpensesRoute,
   FinanceRoute: FinanceRoute,
+  IncidentsRoute: IncidentsRoute,
   LoginRoute: LoginRoute,
   MaintenanceRoute: MaintenanceRoute,
   OperationsRoute: OperationsRoute,
+  ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TrackingRoute: TrackingRoute,
   DriversIdRoute: DriversIdRoute,
