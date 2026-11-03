@@ -99,10 +99,10 @@ function Wizard() {
       if (withTrip) {
         const { data: trip, error: e2 } = await db.from("trips").insert({
           order_id: order.id,
-          origin_city: pick.city,
-          dest_city: drop.city,
-          origin_location_id: pick.id,
-          dest_location_id: drop.id,
+          origin_city: pick!.city,
+          dest_city: drop!.city,
+          origin_location_id: pick!.id,
+          dest_location_id: drop!.id,
           planned_start: fromLocalInput(v.pickup_at),
           planned_end: fromLocalInput(v.delivery_due_at),
           distance_km: km,
