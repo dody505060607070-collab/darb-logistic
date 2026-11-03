@@ -56,6 +56,9 @@ function SettingsPage() {
   const [branchOpen, setBranchOpen] = useState(false);
   const [invOpen, setInvOpen] = useState(false);
   const [addRole, setAddRole] = useState<Record<string, string>>({});
+  const [linkDriver, setLinkDriver] = useState<Record<string, string>>({});
+  const freeDrivers = useRows(["drivers", "unlinked"], () => db.from("drivers").select("id, full_name, user_id").is("user_id", null).order("full_name"), isOwner);
+  const pending = (profiles.data ?? []).filter((p) => !(roles.data ?? []).some((r) => r.user_id === p.id));
 
   useEffect(() => { if (company.data) setC(company.data); }, [company.data]);
 
@@ -64,11 +67,19 @@ function SettingsPage() {
     if (error) return void toast.error(errMsg(error));
     toast.success("تم حفظ إعدادات الشركة");
   }
-  async function grant(uid: string) {
-    const r = addRole[uid];
-    if (!r) return;
+  async function grant(uid: string, role?: string) {
+    const r = role ?? addRole[uid];
+    if (!r) return void toast.error("اختر الدور أولًا");
+    if (r === "driver") {
+      const d = linkDriver[uid];
+      if (!d) return void toast.error("اختر ملف السائق المرتبط بهذا الحساب");
+      const { error: e1 } = await db.from("drivers").update({ user_id: uid }).eq("id", d);
+      if (e1) return void toast.error(errMsg(e1));
+      void qc.invalidateQueries({ queryKey: ["drivers"] });
+    }
     const { error } = await db.from("user_roles").insert({ user_id: uid, role: r });
     if (error) return void toast.error(errMsg(error));
+    toast.success(`تم منح دور ${ROLE_LABELS[r as AppRole]}`);
     void qc.invalidateQueries({ queryKey: ["user_roles"] });
   }
   async function revoke(id: string) {
@@ -85,10 +96,36 @@ function SettingsPage() {
   return (
     <>
       <PageHeader title="الإعدادات والمستخدمون والصلاحيات والتكاملات" icon={<Cog />} />
-      <Tabs defaultValue={tab ?? (isOwner ? "company" : "alerts")} dir="rtl">
+      {isOwner && pending.length > 0 && (
+        <Panel tone="copper" className="mb-5" title={`حسابات جديدة بانتظار الصلاحية (${pending.length})`} icon={<KeyRound />}>
+          <p className="mb-3 text-sm text-muted-foreground">هؤلاء سجّلوا دخولًا ولا يملكون أي دور بعد، فلا يرون أي بيانات. اختر الدور المناسب لكل شخص واضغط «منح».</p>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {pending.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-2xl bg-black/25 p-3">
+                <div className="min-w-40 flex-1">
+                  <b className="block">{p.full_name}</b>
+                  <span className="num text-xs opacity-70">{p.email}</span>
+                </div>
+                <select aria-label="الدور" className="h-9 rounded-xl border border-white/20 bg-black/40 px-2 text-sm" value={addRole[p.id] ?? ""} onChange={(e) => setAddRole({ ...addRole, [p.id]: e.target.value })}>
+                  <option value="">اختر الدور…</option>
+                  {Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner").map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                </select>
+                {addRole[p.id] === "driver" && (
+                  <select aria-label="ملف السائق" className="h-9 rounded-xl border border-white/20 bg-black/40 px-2 text-sm" value={linkDriver[p.id] ?? ""} onChange={(e) => setLinkDriver({ ...linkDriver, [p.id]: e.target.value })}>
+                    <option value="">ملف السائق…</option>
+                    {(freeDrivers.data ?? []).map((d) => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+                  </select>
+                )}
+                <Button size="sm" variant="gold" onClick={() => void grant(p.id)}>منح</Button>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
+      <Tabs defaultValue={tab ?? (isOwner ? "users" : "alerts")} dir="rtl">
         <TabsList className="flex-wrap">
-          {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           {isOwner && <TabsTrigger value="users">المستخدمون والصلاحيات</TabsTrigger>}
+          {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           <TabsTrigger value="integrations">التكاملات</TabsTrigger>
           <TabsTrigger value="alerts">التنبيهات</TabsTrigger>
           {isOwner && <TabsTrigger value="audit">سجل التدقيق</TabsTrigger>}
@@ -133,6 +170,12 @@ function SettingsPage() {
                         <option value="">—</option>
                         {Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner").map(([k, l]) => <option key={k} value={k}>{l}</option>)}
                       </select>
+                      {addRole[p.id] === "driver" && (
+                        <select aria-label="ملف السائق" className="h-8 rounded-md border bg-card px-1 text-xs" value={linkDriver[p.id] ?? ""} onChange={(e) => setLinkDriver({ ...linkDriver, [p.id]: e.target.value })}>
+                          <option value="">ملف السائق…</option>
+                          {(freeDrivers.data ?? []).map((d) => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+                        </select>
+                      )}
                       <Button size="sm" variant="soft" onClick={() => void grant(p.id)}>منح</Button>
                     </div>
                   ) },
