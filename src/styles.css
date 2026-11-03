@@ -155,3 +155,7 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+/* Keep wide tables inside their card on small screens */
+.panel, main .grid > * { min-width: 0; }
+main table { min-width: 100%; }
+.leaflet-container { max-width: 100%; }
