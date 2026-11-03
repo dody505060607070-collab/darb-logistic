@@ -126,7 +126,10 @@ function LoginPage() {
               </div>
             )}
             {mode === "signin" && (
-              <div className="flex justify-end text-sm">
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 text-muted-foreground">
+                  <input type="checkbox" defaultChecked className="size-4 accent-gold" /> تذكّرني على هذا الجهاز
+                </label>
                 <button type="button" className="font-medium text-gold hover:underline" onClick={() => setMode("reset")}>
                   هل نسيت كلمة المرور؟
                 </button>
