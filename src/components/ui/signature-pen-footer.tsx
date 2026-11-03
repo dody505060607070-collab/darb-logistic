@@ -498,7 +498,7 @@ const CSS =
   ":where(.spf) *,:where(.spf) *::before,:where(.spf) *::after{box-sizing:border-box;}" +
   ":where(.spf) a:not(.spf-slot *){color:inherit;text-decoration:none;}" +
   ":where(.spf) button:not(.spf-slot *){font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;}" +
-  ":where(.spf) h2,:where(.spf) p,:where(.spf) ul{margin:0;padding:0;}" +
+  ":where(.spf) h2:not(.spf-slot *),:where(.spf) p:not(.spf-slot *),:where(.spf) ul:not(.spf-slot *){margin:0;padding:0;}" +
   ".spf-glow{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 55% at 50% 38%,rgba(255,255,255,.55),transparent 70%);}" +
   ".spf[data-theme=dark] .spf-glow,.dark .spf[data-theme=auto] .spf-glow{background:radial-gradient(60% 55% at 50% 38%,rgba(255,255,255,.045),transparent 70%);}" +
   ".spf-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(40px,7cqw,96px) 20px clamp(36px,5cqw,64px);text-align:center;}" +
