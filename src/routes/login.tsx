@@ -81,7 +81,7 @@ function LoginPage() {
 
   const light = theme.mode === "light";
   return (
-    <div className="relative min-h-screen bg-background">
+    <div dir="ltr" className="relative min-h-screen bg-background">
       <ThemeToggle className="absolute top-4 left-4 z-20" />
       <ClientOnly fallback={<div className="min-h-screen bg-background" />}>
         <SignaturePenFooter
