@@ -24,6 +24,7 @@ import {
   X,
   Cog,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -252,7 +253,26 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             </Button>
           </div>
         </header>
-        <main key={path} className="page-enter min-w-0 flex-1 p-3 sm:p-4 md:p-6">{children}</main>
+        <main key={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6">{children}</main>
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+          {[
+            { to: "/", label: "الرئيسية", icon: Home },
+            { to: "/trips", label: "الرحلات", icon: RouteIcon },
+          ].map((n) => (
+            <Link key={n.to} to={n.to} className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", (n.to === "/" ? path === "/" : path.startsWith(n.to)) ? "text-gold" : "text-muted-foreground")}>
+              <n.icon className="size-5" />{n.label}
+            </Link>
+          ))}
+          <Link to={auth.can("ops_manager", "dispatcher") ? "/orders/new" : "/expenses"} className="-mt-4 mx-1 flex flex-col items-center justify-center rounded-xl bg-gold py-2 text-[11px] font-semibold text-gold-foreground shadow-lg">
+            <Plus className="size-5" />إجراء سريع
+          </Link>
+          <Link to="/tracking" className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", path.startsWith("/tracking") ? "text-gold" : "text-muted-foreground")}>
+            <MapPin className="size-5" />التتبع
+          </Link>
+          <button onClick={() => setOpen(true)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground">
+            <Menu className="size-5" />المزيد
+          </button>
+        </nav>
       </div>
     </div>
   );
