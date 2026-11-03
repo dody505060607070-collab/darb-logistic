@@ -264,3 +264,11 @@ html.light .panel table tbody tr { border-color: var(--color-border); }
 /* Inputs and buttons: soft pill shapes */
 main input, main select, main textarea, main [role="combobox"] { border-radius: 14px; }
 main button { border-radius: 14px; }
+.bento-panel { box-shadow: none; }
+.bento-panel > header { border-bottom-color: rgba(255,255,255,.14); }
+.bento-panel > header h2, .bento-panel h2.text-primary { color: #fff; }
+.bento-panel .text-muted-foreground { color: rgba(255,255,255,.66); }
+.bento-panel .text-gold, .bento-panel .text-success, .bento-panel .text-primary { color: #E8FF1F; }
+.bento-panel .text-danger { color: #FFD0E6; }
+.bento-panel .bg-muted, .bento-panel .bg-card, .bento-panel [class*="bg-muted"] { background: rgba(0,0,0,.28); }
+html.light .bento-panel > header, html.light .bento-panel > header h2 { color: #fff; }

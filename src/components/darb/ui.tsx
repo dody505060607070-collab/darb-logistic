@@ -36,7 +36,9 @@ export function Panel({
   children,
   className,
   bodyClass,
+  tone,
 }: {
+  tone?: "blue" | "graph" | "pink" | "copper" | "green" | "lime" | "glass";
   title?: ReactNode;
   icon?: ReactNode;
   actions?: ReactNode;
@@ -45,7 +47,7 @@ export function Panel({
   bodyClass?: string;
 }) {
   return (
-    <section className={cn("panel flex flex-col", className)}>
+    <section className={cn("panel flex flex-col", tone && `bento bento-${tone} bento-panel`, className)}>
       {(title || actions) && (
         <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
           <h2 className="flex items-center gap-2 text-base font-bold text-primary">
@@ -56,6 +58,7 @@ export function Panel({
         </header>
       )}
       <div className={cn("flex-1 p-4", bodyClass)}>{children}</div>
+      {tone && tone !== "glass" && <span className="rim" />}
     </section>
   );
 }
