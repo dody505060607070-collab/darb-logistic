@@ -16,3 +16,15 @@
 - [ ] CSV import with column mapping — waiting for user's real data files
 - [ ] Replace sample reference data with real fleet, drivers, customers, contracts
 - [ ] Signed-in end-to-end check — needs the owner account to be created first
+
+## Improvements batch (2026-11-03)
+- [x] Global search Ctrl+K + Alt+1..9 page shortcuts
+- [x] Sidebar counters (pending expenses, open incidents, open work orders)
+- [x] Excel (CSV) + PDF print on every table
+- [x] Morning summary hero with 3D truck on dashboard
+- [x] Installable app (manifest + icon)
+- [ ] Reports charts (revenue, fuel, cost/km)
+- [ ] Drag & drop assignment in operations room
+- [ ] Letterhead print for POD / invoice
+- [ ] Branch-scoped data per user
+- [ ] Offline-capable driver app (service worker)

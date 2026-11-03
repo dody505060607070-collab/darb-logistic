@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, Inbox, Loader2, Search } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Download, Inbox, Loader2, Printer, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STATUS, type Tone } from "@/lib/format";
 import { Input } from "@/components/ui/input";
@@ -203,7 +203,7 @@ export function DataTable<T extends Record<string, unknown>>({
 
   return (
     <div className="flex flex-col gap-3">
-      {(searchKeys || filters) && (
+      {(searchKeys || filters || filtered.length > 0) && (
         <div className="flex flex-wrap items-center gap-2">
           {searchKeys && (
             <div className="relative min-w-56 flex-1">
@@ -220,6 +220,12 @@ export function DataTable<T extends Record<string, unknown>>({
             </div>
           )}
           {filters}
+          {filtered.length > 0 && (
+            <div className="mr-auto flex gap-1">
+              <Button size="sm" variant="ghost" title="تصدير Excel" onClick={() => exportExcel(filtered, cols)}><Download /> Excel</Button>
+              <Button size="sm" variant="ghost" title="طباعة / PDF" onClick={() => printTable(filtered, cols)}><Printer /> PDF</Button>
+            </div>
+          )}
         </div>
       )}
       {error ? (
@@ -344,4 +350,28 @@ function CountUp({ value }: { value: ReactNode }) {
   }, [target]);
   if (target == null) return <>{value}</>;
   return <>{Number.isInteger(target) ? Math.round(n).toLocaleString("en-US") : n.toFixed(1)}</>;
+}
+
+function cellText<T extends Record<string, unknown>>(r: T, c: Col<T>) {
+  const v = r[c.key];
+  if (v === null || v === undefined) return "";
+  if (typeof v === "object") return "";
+  return String(v);
+}
+function exportExcel<T extends Record<string, unknown>>(rows: T[], cols: Col<T>[]) {
+  const esc = (x: string) => `"${x.replace(/"/g, '""')}"`;
+  const lines = [cols.map((c) => esc(c.label)).join(","), ...rows.map((r) => cols.map((c) => esc(cellText(r, c))).join(","))];
+  const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `darb-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function printTable<T extends Record<string, unknown>>(rows: T[], cols: Col<T>[]) {
+  const w = window.open("", "_blank");
+  if (!w) return;
+  const h = (x: string) => x.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch] as string);
+  w.document.write(`<html dir="rtl"><head><meta charset="utf-8"><title>دَرب — تقرير</title><style>body{font-family:'IBM Plex Sans Arabic',sans-serif;padding:24px;color:#111}header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #a3c400;padding-bottom:10px;margin-bottom:16px}h1{margin:0;font-size:22px}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f4ffb8;text-align:right}th,td{border:1px solid #ddd;padding:6px 8px}</style></head><body><header><h1>دَرب — لوجستيات</h1><span>${new Date().toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" })}</span></header><table><thead><tr>${cols.map((c) => `<th>${h(c.label)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${cols.map((c) => `<td>${h(cellText(r, c))}</td>`).join("")}</tr>`).join("")}</tbody></table><script>setTimeout(()=>print(),300)</script></body></html>`);
+  w.document.close();
 }

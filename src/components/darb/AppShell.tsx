@@ -36,6 +36,7 @@ import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "./ui";
+import { CommandPalette } from "./CommandPalette";
 
 type NavItem = { to: string; label: string; icon: typeof Home; roles?: AppRole[] };
 
@@ -123,9 +124,28 @@ function Notifications() {
   );
 }
 
+/** Live counters for items waiting on someone (RLS scopes them per role). */
+function useNavCounts() {
+  return useQuery({
+    queryKey: ["nav-counts"],
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const c = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
+      const [exp, inc, wo] = await Promise.all([
+        c(db.from("expenses").select("id", { count: "exact", head: true }).eq("status", "pending")),
+        c(db.from("incidents").select("id", { count: "exact", head: true }).not("status", "in", "(closed,resolved)")),
+        c(db.from("work_orders").select("id", { count: "exact", head: true }).not("status", "in", "(done,closed,cancelled)")),
+      ]);
+      return { "/expenses": exp, "/incidents": inc, "/maintenance": wo } as Record<string, number>;
+    },
+  });
+}
+
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { can } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const counts = useNavCounts().data ?? {};
   return (
     <nav className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="px-5 pt-6 pb-4">
@@ -146,7 +166,10 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 )}
               >
                 <n.icon className="size-5" />
-                {n.label}
+                <span className="flex-1">{n.label}</span>
+                {!!counts[n.to] && (
+                  <span className={cn("num grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold", active ? "bg-black/80 text-white" : "bg-warning text-black")}>{counts[n.to]}</span>
+                )}
               </Link>
             </li>
           );
@@ -241,6 +264,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             )}
           </div>
           <div className="mr-auto flex items-center gap-2">
+            <CommandPalette />
             <ThemeToggle />
             <Notifications />
             <div className="hidden text-left sm:block">
