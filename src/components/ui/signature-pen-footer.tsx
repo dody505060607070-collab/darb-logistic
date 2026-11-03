@@ -140,9 +140,7 @@ export const ARABIC_GLYPHS: Record<string, [number, string]> = {
   "\u0631": [380, "300 330 310 200 280 70 210 -60 110 -150 0 -190"],
   "\u0628": [820, "760 330 750 170 700 60 590 15 400 0 200 5 70 40 30 120 40 260|420 -150 395 -180"],
 }
-GLYPHS_EXTRA_INSTALL: {
-  for (const k in ARABIC_GLYPHS) GLYPHS[k] = ARABIC_GLYPHS[k]
-}
+Object.assign(GLYPHS, ARABIC_GLYPHS)
 
 export const ASCENT = 800
 export const SPACE = 378
@@ -261,6 +259,7 @@ export const layoutWord = (text: string): { strokes: Stroke[]; box: Box } => {
   const clean = String(text ?? "")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u064B-\u065F\u0670]/g, "")
   const rtl = /[\u0600-\u06FF]/.test(clean)
   const runs: P[][] = []
   const late: P[][] = []
