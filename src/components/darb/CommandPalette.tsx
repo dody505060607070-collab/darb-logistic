@@ -86,7 +86,7 @@ export function CommandPalette() {
             </CommandGroup>
             {!!data?.trips.length && (
               <CommandGroup heading="الرحلات">
-                {data.trips.map((h) => (
+                {data.trips.map((h: Hit) => (
                   <CommandItem key={h.id} value={`trip ${h.label} ${h.sub}`} onSelect={() => go("/trips/$id", { id: h.id })}>
                     <RouteIcon className="size-4" /> <span className="num">{h.label}</span><span className="text-xs text-muted-foreground">{h.sub}</span>
                   </CommandItem>
@@ -95,7 +95,7 @@ export function CommandPalette() {
             )}
             {!!data?.assets.length && (
               <CommandGroup heading="الأسطول">
-                {data.assets.map((h) => (
+                {data.assets.map((h: Hit) => (
                   <CommandItem key={h.id} value={`asset ${h.label} ${h.sub}`} onSelect={() => go("/fleet/$id", { id: h.id })}>
                     <Truck className="size-4" /> <span className="num">{h.label}</span><span className="text-xs text-muted-foreground">{h.sub}</span>
                   </CommandItem>
@@ -104,7 +104,7 @@ export function CommandPalette() {
             )}
             {!!data?.drivers.length && (
               <CommandGroup heading="السائقون">
-                {data.drivers.map((h) => (
+                {data.drivers.map((h: Hit) => (
                   <CommandItem key={h.id} value={`driver ${h.label} ${h.sub}`} onSelect={() => go("/drivers/$id", { id: h.id })}>
                     <User className="size-4" /> {h.label}<span className="text-xs text-muted-foreground">{h.sub}</span>
                   </CommandItem>
@@ -113,7 +113,7 @@ export function CommandPalette() {
             )}
             {!!data?.customers.length && (
               <CommandGroup heading="العملاء">
-                {data.customers.map((h) => (
+                {data.customers.map((h: Hit) => (
                   <CommandItem key={h.id} value={`customer ${h.label} ${h.sub}`} onSelect={() => go("/customers")}>
                     <Users className="size-4" /> {h.label}<span className="text-xs text-muted-foreground">{h.sub}</span>
                   </CommandItem>
