@@ -37,6 +37,12 @@ function haversine(a?: [number, number], b?: [number, number]) {
   return Math.round(2 * R * Math.asin(Math.sqrt(x)) * 1.25); // road factor estimate
 }
 
+function F({ label, children, req }: { label: string; children: React.ReactNode; req?: boolean }) {
+  return (
+    <div><Label className="mb-1 block text-xs">{label} {req && <span className="text-danger">*</span>}</Label>{children}</div>
+  );
+}
+
 function Wizard() {
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -127,9 +133,6 @@ function Wizard() {
   }
 
   const sel = "h-9 w-full rounded-md border border-input bg-card px-3 text-sm";
-  const F = ({ label, children, req }: { label: string; children: React.ReactNode; req?: boolean }) => (
-    <div><Label className="mb-1 block text-xs">{label} {req && <span className="text-danger">*</span>}</Label>{children}</div>
-  );
 
   return (
     <>
