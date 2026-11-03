@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const { can } = useAuth();
+  const { can, fullName } = useAuth();
   const nav = useNavigate();
   const trips = useRows(["trips"], fetchTrips);
   const assets = useRows(["assets"], fetchAssets);
