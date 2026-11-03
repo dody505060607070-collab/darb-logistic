@@ -1,0 +1,5 @@
+-- Run with the database SQL tool; the final RAISE rolls everything back and prints results.
+-- Expected: every item reports OK.
+-- Covers: overlapping booking blocked, adjacent allowed, double billing, negative stock,
+-- tire mounted twice, two open custodies, fuel amount math, stale/duplicate GPS reading, critical defect stops asset.
+-- (See the migration history for the exact DO block used on 2026-11-03.)

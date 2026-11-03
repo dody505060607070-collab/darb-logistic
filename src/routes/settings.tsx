@@ -1,0 +1,204 @@
+import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Bell, Building, History, KeyRound, Plug, Plus, Settings as Cog, Trash2, Users } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { AppShell } from "@/components/darb/AppShell";
+import { Badge, DataTable, PageHeader, Panel, Status } from "@/components/darb/ui";
+import { EntityDialog } from "@/components/darb/EntityDialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { db, useOne, useRows, type Row } from "@/lib/db";
+import { ROLE_LABELS, useAuth, type AppRole } from "@/lib/auth";
+import { errMsg, fmtDateTime } from "@/lib/format";
+
+export const Route = createFileRoute("/settings")({
+  validateSearch: (s: Record<string, unknown>) => ({ tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined }),
+  head: () => ({
+    meta: [
+      { title: "الإعدادات والمستخدمون والصلاحيات — دَرب" },
+      { name: "description", content: "إعداد الشركة والفروع والمستخدمين والصلاحيات وحالة التكاملات وسجل التدقيق." },
+      { property: "og:title", content: "الإعدادات — دَرب" },
+      { property: "og:description", content: "الشركة والمستخدمون والصلاحيات والتكاملات." },
+    ],
+  }),
+  component: () => (
+    <AppShell>
+      <SettingsPage />
+    </AppShell>
+  ),
+});
+
+const INTEGRATIONS: { name: string; desc: string; needs: string }[] = [
+  { name: "مزود تتبع GPS", desc: "قراءات المواقع والعداد من الأجهزة", needs: "اسم المزود، وثائق API، مفتاح الوصول" },
+  { name: "الفوترة الإلكترونية (ZATCA)", desc: "إرسال الفواتير واستلام حالة الإصدار", needs: "حساب مزود فوترة معتمد وبيانات الربط" },
+  { name: "نظام المحاسبة", desc: "ترحيل الفواتير والدفعات والمصروفات", needs: "اسم النظام وبيانات الوصول" },
+  { name: "الرسائل النصية / واتساب", desc: "تنبيهات خارجية للسائقين والعملاء", needs: "مزود رسائل وقوالب معتمدة ومستلمون" },
+  { name: "مزود توجيه الشاحنات", desc: "مسارات تراعي قيود الشاحنات وETA", needs: "مزود يدعم قيود الشاحنات ومفتاح API" },
+  { name: "منصة نقل / وصل", desc: "التكامل الرسمي لبوليصات الشحن", needs: "حساب رسمي وبيانات التكامل" },
+];
+
+function SettingsPage() {
+  const { tab } = Route.useSearch();
+  const { can, session } = useAuth();
+  const qc = useQueryClient();
+  const isOwner = can("owner");
+  const company = useOne(["company_settings"], () => db.from("company_settings").select("*").eq("id", 1).maybeSingle());
+  const branches = useRows(["branches"], () => db.from("branches").select("*").order("name"));
+  const profiles = useRows(["profiles"], () => db.from("profiles").select("*").order("created_at"), isOwner);
+  const roles = useRows(["user_roles"], () => db.from("user_roles").select("*"), isOwner);
+  const invites = useRows(["invitations"], () => db.from("invitations").select("*").order("created_at", { ascending: false }), isOwner);
+  const notifs = useRows(["notifications", "all"], () => db.from("notifications").select("*").order("created_at", { ascending: false }).limit(100));
+  const audit = useRows(["audit_log"], () => db.from("audit_log").select("*").order("at", { ascending: false }).limit(200), isOwner);
+  const [c, setC] = useState<Row>({});
+  const [branchOpen, setBranchOpen] = useState(false);
+  const [invOpen, setInvOpen] = useState(false);
+  const [addRole, setAddRole] = useState<Record<string, string>>({});
+
+  useEffect(() => { if (company.data) setC(company.data); }, [company.data]);
+
+  async function saveCompany() {
+    const { error } = await db.from("company_settings").update({ company_name: c.company_name, vat_rate: Number(c.vat_rate), vat_number: c.vat_number, cr_number: c.cr_number, doc_expiry_warning_days: Number(c.doc_expiry_warning_days), updated_at: new Date().toISOString() }).eq("id", 1);
+    if (error) return void toast.error(errMsg(error));
+    toast.success("تم حفظ إعدادات الشركة");
+  }
+  async function grant(uid: string) {
+    const r = addRole[uid];
+    if (!r) return;
+    const { error } = await db.from("user_roles").insert({ user_id: uid, role: r });
+    if (error) return void toast.error(errMsg(error));
+    void qc.invalidateQueries({ queryKey: ["user_roles"] });
+  }
+  async function revoke(id: string) {
+    const { error } = await db.from("user_roles").delete().eq("id", id);
+    if (error) return void toast.error(errMsg(error));
+    void qc.invalidateQueries({ queryKey: ["user_roles"] });
+  }
+  async function setNotif(id: string, status: string) {
+    const { error } = await db.from("notifications").update({ status }).eq("id", id);
+    if (error) return void toast.error(errMsg(error));
+    void qc.invalidateQueries({ queryKey: ["notifications"] });
+  }
+
+  return (
+    <>
+      <PageHeader title="الإعدادات والمستخدمون والصلاحيات والتكاملات" icon={<Cog />} />
+      <Tabs defaultValue={tab ?? (isOwner ? "company" : "alerts")} dir="rtl">
+        <TabsList className="flex-wrap">
+          {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
+          {isOwner && <TabsTrigger value="users">المستخدمون والصلاحيات</TabsTrigger>}
+          <TabsTrigger value="integrations">التكاملات</TabsTrigger>
+          <TabsTrigger value="alerts">التنبيهات</TabsTrigger>
+          {isOwner && <TabsTrigger value="audit">سجل التدقيق</TabsTrigger>}
+        </TabsList>
+        {isOwner && (
+          <TabsContent value="company">
+            <div className="grid gap-5 xl:grid-cols-2">
+              <Panel title="بيانات الشركة" icon={<Building />}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2"><Label className="mb-1 block text-xs">اسم الشركة</Label><Input value={c.company_name ?? ""} onChange={(e) => setC({ ...c, company_name: e.target.value })} /></div>
+                  <div><Label className="mb-1 block text-xs">السجل التجاري</Label><Input value={c.cr_number ?? ""} onChange={(e) => setC({ ...c, cr_number: e.target.value })} /></div>
+                  <div><Label className="mb-1 block text-xs">الرقم الضريبي</Label><Input value={c.vat_number ?? ""} onChange={(e) => setC({ ...c, vat_number: e.target.value })} /></div>
+                  <div><Label className="mb-1 block text-xs">نسبة ضريبة القيمة المضافة %</Label><Input type="number" value={c.vat_rate ?? ""} onChange={(e) => setC({ ...c, vat_rate: e.target.value })} /></div>
+                  <div><Label className="mb-1 block text-xs">التنبيه قبل انتهاء المستندات (يوم)</Label><Input type="number" value={c.doc_expiry_warning_days ?? ""} onChange={(e) => setC({ ...c, doc_expiry_warning_days: e.target.value })} /></div>
+                  <div><Label className="mb-1 block text-xs">المنطقة الزمنية للعرض</Label><Input value="Asia/Riyadh" disabled /></div>
+                </div>
+                <Button variant="gold" className="mt-4" onClick={() => void saveCompany()}>حفظ</Button>
+              </Panel>
+              <Panel title="الفروع" icon={<Building />} actions={<Button size="sm" variant="gold" onClick={() => setBranchOpen(true)}><Plus /> فرع</Button>}>
+                <DataTable rows={branches.data} loading={branches.isLoading} cols={[{ key: "name", label: "الفرع" }, { key: "city", label: "المدينة" }]} />
+              </Panel>
+            </div>
+          </TabsContent>
+        )}
+        {isOwner && (
+          <TabsContent value="users">
+            <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
+              <Panel title="المستخدمون" icon={<Users />}>
+                <DataTable rows={profiles.data} loading={profiles.isLoading} cols={[
+                  { key: "full_name", label: "الاسم", render: (p) => <b>{p.full_name}</b> },
+                  { key: "email", label: "البريد", render: (p) => <span className="num text-xs">{p.email}</span> },
+                  { key: "roles", label: "الأدوار", render: (p) => (
+                    <div className="flex flex-wrap gap-1">
+                      {(roles.data ?? []).filter((r) => r.user_id === p.id).map((r) => (
+                        <Badge key={r.id} tone="gold">{ROLE_LABELS[r.role as AppRole]}{!(r.role === "owner" && p.id === session?.user.id) && <button onClick={() => void revoke(r.id)} className="mr-1 text-danger" aria-label="إزالة"><Trash2 className="size-3" /></button>}</Badge>
+                      ))}
+                    </div>
+                  ) },
+                  { key: "add", label: "منح دور", render: (p) => (
+                    <div className="flex gap-1">
+                      <select className="h-8 rounded-md border bg-card px-1 text-xs" value={addRole[p.id] ?? ""} onChange={(e) => setAddRole({ ...addRole, [p.id]: e.target.value })}>
+                        <option value="">—</option>
+                        {Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner").map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                      </select>
+                      <Button size="sm" variant="soft" onClick={() => void grant(p.id)}>منح</Button>
+                    </div>
+                  ) },
+                ]} />
+              </Panel>
+              <Panel title="الدعوات" icon={<KeyRound />} actions={<Button size="sm" variant="gold" onClick={() => setInvOpen(true)}><Plus /> دعوة</Button>}>
+                <p className="mb-3 text-xs text-muted-foreground">التسجيل خاص: المستخدم يُنشئ حسابه بالبريد المدعو فيحصل على الدور تلقائيًا. لا تُرسل رسائل خارجية من النظام.</p>
+                <DataTable rows={invites.data} loading={invites.isLoading} cols={[
+                  { key: "email", label: "البريد", render: (i) => <span className="num text-xs">{i.email}</span> },
+                  { key: "role", label: "الدور", render: (i) => ROLE_LABELS[i.role as AppRole] },
+                  { key: "st", label: "الحالة", render: (i) => (i.accepted_at ? <Badge tone="success">مقبولة</Badge> : <Badge tone="warning">بانتظار</Badge>) },
+                ]} />
+              </Panel>
+            </div>
+          </TabsContent>
+        )}
+        <TabsContent value="integrations">
+          <Panel title="حالة التكاملات (الحالة الحقيقية)" icon={<Plug />}>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {INTEGRATIONS.map((i) => (
+                <div key={i.name} className="rounded-lg border p-4">
+                  <div className="flex items-center justify-between"><b className="text-primary">{i.name}</b><Badge>لم يتم الربط</Badge></div>
+                  <p className="mt-1 text-sm text-muted-foreground">{i.desc}</p>
+                  <p className="mt-2 text-xs"><span className="font-semibold">المطلوب للربط:</span> {i.needs}</p>
+                </div>
+              ))}
+              <div className="rounded-lg border border-success/40 p-4">
+                <div className="flex items-center justify-between"><b className="text-primary">قاعدة البيانات والملفات</b><Badge tone="success">متصل</Badge></div>
+                <p className="mt-1 text-sm text-muted-foreground">تخزين البيانات والمرفقات الخاصة بروابط مؤقتة.</p>
+              </div>
+            </div>
+          </Panel>
+        </TabsContent>
+        <TabsContent value="alerts">
+          <Panel title="التنبيهات" icon={<Bell />}>
+            <DataTable rows={notifs.data} loading={notifs.isLoading} searchKeys={["title", "body", "category"]} cols={[
+              { key: "at", label: "الوقت", render: (n) => <span className="num">{fmtDateTime(n.created_at)}</span> },
+              { key: "severity", label: "الشدة", render: (n) => <Status kind="severity" value={n.severity} /> },
+              { key: "title", label: "العنوان" },
+              { key: "body", label: "التفاصيل", className: "max-w-sm truncate" },
+              { key: "status", label: "الحالة", render: (n) => <Badge tone={n.status === "open" ? "warning" : n.status === "resolved" ? "success" : "info"}>{n.status === "open" ? "مفتوح" : n.status === "resolved" ? "مُعالج" : "مُستلم"}</Badge> },
+              { key: "act", label: "", render: (n) => n.status !== "resolved" && <div className="flex gap-1">{n.status === "open" && <Button size="sm" variant="outline" onClick={() => void setNotif(n.id, "acknowledged")}>استلام</Button>}<Button size="sm" variant="soft" onClick={() => void setNotif(n.id, "resolved")}>معالجة</Button></div> },
+            ]} />
+          </Panel>
+        </TabsContent>
+        {isOwner && (
+          <TabsContent value="audit">
+            <Panel title="سجل التدقيق (غير قابل للتعديل)" icon={<History />}>
+              <DataTable rows={audit.data} loading={audit.isLoading} searchKeys={["table_name", "action", "row_id"]} cols={[
+                { key: "at", label: "الوقت", render: (a) => <span className="num">{fmtDateTime(a.at)}</span> },
+                { key: "table_name", label: "الجدول" },
+                { key: "action", label: "العملية", render: (a) => <Badge tone={a.action === "DELETE" ? "danger" : a.action === "OVERRIDE" ? "warning" : "info"}>{a.action}</Badge> },
+                { key: "row_id", label: "السجل", render: (a) => <span className="num text-xs">{String(a.row_id).slice(0, 8)}</span> },
+                { key: "actor", label: "المنفذ", render: (a) => <span className="num text-xs">{a.actor ? (profiles.data ?? []).find((p) => p.id === a.actor)?.full_name ?? String(a.actor).slice(0, 8) : "النظام"}</span> },
+              ]} />
+            </Panel>
+          </TabsContent>
+        )}
+      </Tabs>
+      <EntityDialog open={branchOpen} onOpenChange={setBranchOpen} title="فرع جديد" table="branches" invalidate={["branches"]} fields={[{ name: "name", label: "اسم الفرع", required: true }, { name: "city", label: "المدينة", required: true }]} />
+      <EntityDialog open={invOpen} onOpenChange={setInvOpen} title="دعوة مستخدم" table="invitations" invalidate={["invitations"]}
+        transform={(v) => ({ ...v, email: String(v["email"]).toLowerCase().trim(), invited_by: session?.user.id })} fields={[
+          { name: "email", label: "البريد الإلكتروني", required: true },
+          { name: "role", label: "الدور", type: "select", required: true, options: Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner") as [string, string][] },
+          { name: "driver_id", label: "ربط بملف سائق (للسائقين)", type: "ref", ref: { table: "drivers", label: "full_name", filter: (q) => q.is("user_id", null) } },
+        ]} />
+    </>
+  );
+}
