@@ -11,13 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TrackingRouteImport } from './routes/tracking'
 import { Route as DriversIndexRouteImport } from './routes/drivers.index'
 import { Route as DriversIdRouteImport } from './routes/drivers.$id'
 import { Route as FleetIndexRouteImport } from './routes/fleet.index'
 import { Route as FleetIdRouteImport } from './routes/fleet.$id'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersNewRouteImport } from './routes/orders.new'
+import { Route as TripsIndexRouteImport } from './routes/trips.index'
+import { Route as TripsIdRouteImport } from './routes/trips.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +33,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OperationsRoute = OperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackingRoute = TrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DriversIndexRoute = DriversIndexRouteImport.update({
@@ -64,87 +78,125 @@ const OrdersNewRoute = OrdersNewRouteImport.update({
   path: '/orders/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TripsIndexRoute = TripsIndexRouteImport.update({
+  id: '/trips/',
+  path: '/trips/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripsIdRoute = TripsIdRouteImport.update({
+  id: '/trips/$id',
+  path: '/trips/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
   '/orders/new': typeof OrdersNewRoute
+  '/trips/$id': typeof TripsIdRoute
   '/drivers/': typeof DriversIndexRoute
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
+  '/trips/': typeof TripsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
   '/orders/new': typeof OrdersNewRoute
+  '/trips/$id': typeof TripsIdRoute
   '/drivers': typeof DriversIndexRoute
   '/fleet': typeof FleetIndexRoute
   '/orders': typeof OrdersIndexRoute
+  '/trips': typeof TripsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
   '/orders/new': typeof OrdersNewRoute
+  '/trips/$id': typeof TripsIdRoute
   '/drivers/': typeof DriversIndexRoute
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
+  '/trips/': typeof TripsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/operations'
     | '/reset-password'
+    | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
     | '/orders/new'
+    | '/trips/$id'
     | '/drivers/'
     | '/fleet/'
     | '/orders/'
+    | '/trips/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/operations'
     | '/reset-password'
+    | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
     | '/orders/new'
+    | '/trips/$id'
     | '/drivers'
     | '/fleet'
     | '/orders'
+    | '/trips'
   id:
     | '__root__'
     | '/'
     | '/login'
+    | '/operations'
     | '/reset-password'
+    | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
     | '/orders/new'
+    | '/trips/$id'
     | '/drivers/'
     | '/fleet/'
     | '/orders/'
+    | '/trips/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  OperationsRoute: typeof OperationsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TrackingRoute: typeof TrackingRoute
   DriversIdRoute: typeof DriversIdRoute
   FleetIdRoute: typeof FleetIdRoute
   OrdersNewRoute: typeof OrdersNewRoute
+  TripsIdRoute: typeof TripsIdRoute
   DriversIndexRoute: typeof DriversIndexRoute
   FleetIndexRoute: typeof FleetIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
+  TripsIndexRoute: typeof TripsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -163,11 +215,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/operations': {
+      id: '/operations'
+      path: '/operations'
+      fullPath: '/operations'
+      preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tracking': {
+      id: '/tracking'
+      path: '/tracking'
+      fullPath: '/tracking'
+      preLoaderRoute: typeof TrackingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/drivers/': {
@@ -212,19 +278,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trips/': {
+      id: '/trips/'
+      path: '/trips'
+      fullPath: '/trips/'
+      preLoaderRoute: typeof TripsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trips/$id': {
+      id: '/trips/$id'
+      path: '/trips/$id'
+      fullPath: '/trips/$id'
+      preLoaderRoute: typeof TripsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  OperationsRoute: OperationsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TrackingRoute: TrackingRoute,
   DriversIdRoute: DriversIdRoute,
   FleetIdRoute: FleetIdRoute,
   OrdersNewRoute: OrdersNewRoute,
+  TripsIdRoute: TripsIdRoute,
   DriversIndexRoute: DriversIndexRoute,
   FleetIndexRoute: FleetIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
+  TripsIndexRoute: TripsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
