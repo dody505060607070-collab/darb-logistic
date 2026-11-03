@@ -1,3 +1,4 @@
+import truck3d from "@/assets/truck-3d.jpg";
 import { lazy, Suspense, useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft, BarChart3, Coins, Gauge, Route as RouteIcon, Truck, Container } from "lucide-react";
@@ -103,9 +104,22 @@ function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">لوحة الإدارة والمؤشرات</h1>
-      </div>
+      <section className="bento bento-glass relative min-h-[220px] overflow-hidden">
+        <img src={truck3d} alt="شاحنة دَرب على طريق سريع في المملكة" width={1536} height={768} className="absolute inset-0 h-full w-full object-cover opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-l from-background via-background/70 to-transparent" />
+        <div className="relative flex h-full max-w-xl flex-col gap-3 p-6 md:p-8">
+          <span className="chip w-fit">ملخص الصباح</span>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">{greeting()}، {fullName?.split(" ")[0] ?? ""}</h1>
+          <p className="text-sm leading-7 text-muted-foreground">
+            لديك <b className="text-foreground">{fmtNum(active.length)}</b> رحلة نشطة و<b className="text-foreground">{fmtNum(todayTrips.length)}</b> رحلة اليوم
+            {late.length ? <> — <b className="text-warning">{fmtNum(late.length)} متأخرة</b> تحتاج متابعة</> : <> — لا توجد رحلات متأخرة</>}.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/operations" className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-110">غرفة العمليات</Link>
+            <Link to="/tracking" className="rounded-full border border-foreground/20 bg-background/40 px-4 py-2 text-sm font-semibold backdrop-blur transition hover:border-primary">التتبع المباشر</Link>
+          </div>
+        </div>
+      </section>
 
       <section className="panel grid grid-cols-2 gap-3 p-4 md:grid-cols-5">
         <div className="col-span-2 flex items-center gap-3 md:col-span-1">
@@ -273,4 +287,9 @@ function FleetDonut({ total, parts }: { total: number; parts: number[] }) {
       </div>
     </div>
   );
+}
+
+function greeting() {
+  const h = Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Riyadh", hour: "numeric", hourCycle: "h23" }).format(new Date()));
+  return h < 12 ? "صباح الخير" : "مساء الخير";
 }
