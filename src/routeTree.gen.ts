@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CustodyRouteImport } from './routes/custody'
 import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as ExpensesRouteImport } from './routes/expenses'
+import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TrackingRouteImport } from './routes/tracking'
@@ -40,9 +43,24 @@ const DocumentsRoute = DocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExpensesRoute = ExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceRoute = FinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OperationsRoute = OperationsRouteImport.update({
@@ -105,7 +123,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/custody': typeof CustodyRoute
   '/documents': typeof DocumentsRoute
+  '/expenses': typeof ExpensesRoute
+  '/finance': typeof FinanceRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tracking': typeof TrackingRoute
@@ -122,7 +143,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/custody': typeof CustodyRoute
   '/documents': typeof DocumentsRoute
+  '/expenses': typeof ExpensesRoute
+  '/finance': typeof FinanceRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tracking': typeof TrackingRoute
@@ -140,7 +164,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/custody': typeof CustodyRoute
   '/documents': typeof DocumentsRoute
+  '/expenses': typeof ExpensesRoute
+  '/finance': typeof FinanceRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tracking': typeof TrackingRoute
@@ -159,7 +186,10 @@ export interface FileRouteTypes {
     | '/'
     | '/custody'
     | '/documents'
+    | '/expenses'
+    | '/finance'
     | '/login'
+    | '/maintenance'
     | '/operations'
     | '/reset-password'
     | '/tracking'
@@ -176,7 +206,10 @@ export interface FileRouteTypes {
     | '/'
     | '/custody'
     | '/documents'
+    | '/expenses'
+    | '/finance'
     | '/login'
+    | '/maintenance'
     | '/operations'
     | '/reset-password'
     | '/tracking'
@@ -193,7 +226,10 @@ export interface FileRouteTypes {
     | '/'
     | '/custody'
     | '/documents'
+    | '/expenses'
+    | '/finance'
     | '/login'
+    | '/maintenance'
     | '/operations'
     | '/reset-password'
     | '/tracking'
@@ -211,7 +247,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustodyRoute: typeof CustodyRoute
   DocumentsRoute: typeof DocumentsRoute
+  ExpensesRoute: typeof ExpensesRoute
+  FinanceRoute: typeof FinanceRoute
   LoginRoute: typeof LoginRoute
+  MaintenanceRoute: typeof MaintenanceRoute
   OperationsRoute: typeof OperationsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TrackingRoute: typeof TrackingRoute
@@ -248,11 +287,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/expenses': {
+      id: '/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof ExpensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance': {
+      id: '/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof FinanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/operations': {
@@ -339,7 +399,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustodyRoute: CustodyRoute,
   DocumentsRoute: DocumentsRoute,
+  ExpensesRoute: ExpensesRoute,
+  FinanceRoute: FinanceRoute,
   LoginRoute: LoginRoute,
+  MaintenanceRoute: MaintenanceRoute,
   OperationsRoute: OperationsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TrackingRoute: TrackingRoute,
