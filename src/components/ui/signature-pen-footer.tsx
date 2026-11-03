@@ -134,6 +134,16 @@ export const GLYPHS: Record<string, [number, string]> = {
   "~": [491, "161 463 195 498 246 498 321 472 384 447 406 469 422 482"],
 }
 
+// Arabic single-stroke glyphs (drawn right-to-left inside each glyph box).
+export const ARABIC_GLYPHS: Record<string, [number, string]> = {
+  "\u062F": [420, "150 520 230 420 300 280 330 150 300 60 210 15 90 20 30 50"],
+  "\u0631": [380, "300 330 310 200 280 70 210 -60 110 -150 0 -190"],
+  "\u0628": [820, "760 330 750 170 700 60 590 15 400 0 200 5 70 40 30 120 40 260|420 -150 395 -180"],
+}
+GLYPHS_EXTRA_INSTALL: {
+  for (const k in ARABIC_GLYPHS) GLYPHS[k] = ARABIC_GLYPHS[k]
+}
+
 export const ASCENT = 800
 export const SPACE = 378
 
@@ -251,12 +261,15 @@ export const layoutWord = (text: string): { strokes: Stroke[]; box: Box } => {
   const clean = String(text ?? "")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
+  const rtl = /[\u0600-\u06FF]/.test(clean)
   const runs: P[][] = []
   const late: P[][] = []
   let x = 0
+  if (rtl) for (const ch of clean) x += (parseGlyph(ch) ?? parseGlyph(" ")!).adv
   let prevEnd: P | null = null
   for (const ch of clean) {
     const g = parseGlyph(ch) ?? parseGlyph(" ")!
+    if (rtl) x -= g.adv
     g.strokes.forEach((raw, si) => {
       const p = raw.map(([a, b]) => [a + x, b] as P)
       const last = runs[runs.length - 1]
@@ -274,8 +287,8 @@ export const layoutWord = (text: string): { strokes: Stroke[]; box: Box } => {
       runs.push(p)
       prevEnd = p[p.length - 1]
     })
-    if (!g.strokes.length) prevEnd = null
-    x += g.adv
+    if (!g.strokes.length || rtl) prevEnd = null
+    if (!rtl) x += g.adv
   }
   const all = [...runs, ...late]
   if (!all.length) return { strokes: [], box: { x: 0, y: 0, w: 0, h: 0 } }
@@ -454,6 +467,10 @@ export type SignaturePenFooterProps = {
   fontSans?: string
   onSigned?: () => void
   className?: string
+  /** Shown beside the word (to its right) once signed. */
+  logo?: React.ReactNode
+  /** Rendered under the title/description, e.g. a form. */
+  children?: React.ReactNode
 }
 
 const DEFAULT_ACTIONS: FooterAction[] = [
@@ -487,6 +504,10 @@ const CSS =
   ".spf[data-theme=dark] .spf-glow,.dark .spf[data-theme=auto] .spf-glow{background:radial-gradient(60% 55% at 50% 38%,rgba(255,255,255,.045),transparent 70%);}" +
   ".spf-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(40px,7cqw,96px) 20px clamp(36px,5cqw,64px);text-align:center;}" +
   ".spf-stage{position:relative;width:min(100%,calc(clamp(120px,17cqw,200px) * var(--spf-ar)));aspect-ratio:var(--spf-ar);margin-bottom:clamp(10px,2cqw,22px);touch-action:pan-y;}" +
+  ".spf-row{display:flex;align-items:center;justify-content:center;gap:clamp(8px,2cqw,24px);width:100%;}" +
+  ".spf-logo{opacity:0;transform:translateX(-12px) scale(.96);transition:opacity .7s ease,transform .7s cubic-bezier(.3,1.4,.5,1);}" +
+  ".spf[data-signed] .spf-logo{opacity:1;transform:none;}" +
+  ".spf-slot{width:100%;display:flex;justify-content:center;margin-top:clamp(18px,3cqw,32px);text-align:start;}" +
   ".spf-stage[data-live]{cursor:none;}" +
   ".spf-svg{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;overflow:visible;}" +
   ".spf-guide{transition:opacity .9s ease;}" +
@@ -572,6 +593,8 @@ export default function SignaturePenFooter({
   fontSans = '"Lato", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
   onSigned,
   className = "",
+  logo,
+  children,
 }: SignaturePenFooterProps) {
   const uid = React.useId().replace(/[^a-zA-Z0-9]/g, "")
   const layout = React.useMemo(() => layoutWord(word), [word])
@@ -920,6 +943,7 @@ export default function SignaturePenFooter({
       <style>{CSS}</style>
       <div className="spf-glow" aria-hidden="true" />
       <div className="spf-main">
+        <div className="spf-row">
         <div ref={stageRef} className="spf-stage" data-live={live ? "" : undefined}>
           <svg
             ref={svgRef}
@@ -1069,6 +1093,8 @@ export default function SignaturePenFooter({
             Sign again
           </button>
         </div>
+        {logo ? <div className="spf-logo">{logo}</div> : null}
+        </div>
 
         {title ? (
           <h2 className="spf-title">
@@ -1106,6 +1132,7 @@ export default function SignaturePenFooter({
             ))}
           </div>
         ) : null}
+        {children ? <div className="spf-slot spf-r" style={{ "--i": n + 3 } as React.CSSProperties}>{children}</div> : null}
       </div>
 
       <div className="spf-bar spf-r" style={{ "--i": n + 6 } as React.CSSProperties}>
