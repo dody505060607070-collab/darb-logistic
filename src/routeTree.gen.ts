@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CustodyRouteImport } from './routes/custody'
+import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -26,6 +28,16 @@ import { Route as TripsIdRouteImport } from './routes/trips.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustodyRoute = CustodyRouteImport.update({
+  id: '/custody',
+  path: '/custody',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -91,6 +103,8 @@ const TripsIdRoute = TripsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/custody': typeof CustodyRoute
+  '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -106,6 +120,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/custody': typeof CustodyRoute
+  '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -122,6 +138,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/custody': typeof CustodyRoute
+  '/documents': typeof DocumentsRoute
   '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -139,6 +157,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/custody'
+    | '/documents'
     | '/login'
     | '/operations'
     | '/reset-password'
@@ -154,6 +174,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/custody'
+    | '/documents'
     | '/login'
     | '/operations'
     | '/reset-password'
@@ -169,6 +191,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/custody'
+    | '/documents'
     | '/login'
     | '/operations'
     | '/reset-password'
@@ -185,6 +209,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CustodyRoute: typeof CustodyRoute
+  DocumentsRoute: typeof DocumentsRoute
   LoginRoute: typeof LoginRoute
   OperationsRoute: typeof OperationsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -206,6 +232,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custody': {
+      id: '/custody'
+      path: '/custody'
+      fullPath: '/custody'
+      preLoaderRoute: typeof CustodyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -297,6 +337,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CustodyRoute: CustodyRoute,
+  DocumentsRoute: DocumentsRoute,
   LoginRoute: LoginRoute,
   OperationsRoute: OperationsRoute,
   ResetPasswordRoute: ResetPasswordRoute,

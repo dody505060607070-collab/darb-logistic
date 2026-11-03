@@ -2094,8 +2094,13 @@ export type Database = {
         }
         Returns: string
       }
+      reinspect_ok: { Args: { p_inspection_id: string }; Returns: undefined }
       review_expense: {
         Args: { p_approve: boolean; p_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      set_work_order_status: {
+        Args: { p_id: string; p_status: string }
         Returns: undefined
       }
       settle_advance: { Args: { p_id: string }; Returns: number }

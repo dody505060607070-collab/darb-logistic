@@ -15,6 +15,13 @@
       "when": 1793693240320,
       "tag": "0001_darb_seed_reference_data",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793694138110,
+      "tag": "0002_maintenance_rpcs",
+      "breakpoints": true
     }
   ]
 }
