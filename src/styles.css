@@ -57,54 +57,55 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-card: 0 1px 2px oklch(0.3 0.04 165 / 0.06), 0 4px 16px oklch(0.3 0.04 165 / 0.05);
+  --shadow-card: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 20px 40px -24px oklch(0 0 0 / 0.8);
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.974 0.003 165);
-  --foreground: oklch(0.24 0.03 165);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.03 165);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.03 165);
-  --primary: oklch(0.33 0.055 166);
-  --primary-foreground: oklch(0.985 0.003 165);
-  --secondary: oklch(0.95 0.008 165);
-  --secondary-foreground: oklch(0.33 0.055 166);
-  --muted: oklch(0.955 0.005 165);
-  --muted-foreground: oklch(0.52 0.02 165);
-  --accent: oklch(0.95 0.02 80);
-  --accent-foreground: oklch(0.33 0.055 166);
-  --destructive: oklch(0.58 0.2 27);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.91 0.006 165);
-  --input: oklch(0.89 0.008 165);
-  --ring: oklch(0.74 0.075 75);
-  --gold: oklch(0.74 0.075 75);
-  --gold-foreground: oklch(0.99 0.005 80);
-  --gold-soft: oklch(0.95 0.03 80);
-  --success: oklch(0.55 0.13 150);
-  --success-soft: oklch(0.95 0.04 150);
-  --info: oklch(0.55 0.15 250);
-  --info-soft: oklch(0.95 0.03 250);
-  --warning: oklch(0.7 0.14 70);
-  --warning-soft: oklch(0.96 0.05 80);
-  --danger: oklch(0.58 0.2 27);
-  --danger-soft: oklch(0.95 0.03 25);
-  --chart-1: oklch(0.45 0.09 160);
-  --chart-2: oklch(0.74 0.075 75);
-  --chart-3: oklch(0.55 0.15 250);
-  --chart-4: oklch(0.58 0.2 27);
-  --chart-5: oklch(0.7 0.14 70);
-  --sidebar: oklch(0.31 0.052 166);
-  --sidebar-foreground: oklch(0.96 0.01 165);
-  --sidebar-primary: oklch(0.74 0.075 75);
-  --sidebar-primary-foreground: oklch(0.99 0.005 80);
-  --sidebar-accent: oklch(0.36 0.05 166);
-  --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(0.4 0.04 166);
-  --sidebar-ring: oklch(0.74 0.075 75);
+  /* Finance-bento look: pure black canvas, glass cards, neon lime accent, periwinkle + peach secondaries */
+  --radius: 1.25rem;
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.16 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.17 0.003 280);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.94 0.21 115);
+  --primary-foreground: oklch(0.15 0.005 280);
+  --secondary: oklch(1 0 0 / 0.08);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(1 0 0 / 0.06);
+  --muted-foreground: oklch(1 0 0 / 0.56);
+  --accent: oklch(1 0 0 / 0.1);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.66 0.21 22);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.16);
+  --ring: oklch(0.94 0.21 115);
+  --gold: oklch(0.94 0.21 115);
+  --gold-foreground: oklch(0.15 0.005 280);
+  --gold-soft: oklch(0.94 0.21 115 / 0.14);
+  --success: oklch(0.94 0.21 115);
+  --success-soft: oklch(0.94 0.21 115 / 0.14);
+  --info: oklch(0.78 0.11 280);
+  --info-soft: oklch(0.78 0.11 280 / 0.16);
+  --warning: oklch(0.83 0.12 55);
+  --warning-soft: oklch(0.83 0.12 55 / 0.16);
+  --danger: oklch(0.68 0.2 22);
+  --danger-soft: oklch(0.68 0.2 22 / 0.16);
+  --chart-1: oklch(0.94 0.21 115);
+  --chart-2: oklch(0.78 0.11 280);
+  --chart-3: oklch(0.83 0.12 55);
+  --chart-4: oklch(1 0 0);
+  --chart-5: oklch(0.68 0.2 22);
+  --sidebar: oklch(0.09 0 0);
+  --sidebar-foreground: oklch(1 0 0 / 0.78);
+  --sidebar-primary: oklch(0.94 0.21 115);
+  --sidebar-primary-foreground: oklch(0.15 0.005 280);
+  --sidebar-accent: oklch(1 0 0 / 0.08);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.1);
+  --sidebar-ring: oklch(0.94 0.21 115);
 }
 
 @layer base {
@@ -149,7 +150,14 @@
   & .grid > *:nth-child(n+5) { animation-delay: 240ms; }
 }
 .panel { transition: box-shadow .2s ease, transform .2s ease; }
-.panel:hover { box-shadow: 0 2px 4px oklch(0.3 0.04 165 / 0.08), 0 10px 28px oklch(0.3 0.04 165 / 0.1); }
+.panel { background: linear-gradient(180deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.03)); backdrop-filter: blur(20px); }
+.panel:hover { border-color: oklch(1 0 0 / 0.2); transform: translateY(-2px); }
+html { color-scheme: dark; }
+/* Big KPI numbers: thin, tight like the bento tiles */
+main .num.text-2xl, main .text-3xl.num, main .text-4xl { font-weight: 300; letter-spacing: -0.03em; }
+/* Headings stay white; lime is reserved for accents and actions */
+main h1.text-primary, main h2.text-primary, main h3.text-primary, main .text-primary.font-bold { color: var(--color-foreground); }
+.leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
 html { scroll-behavior: smooth; }
 @media (max-width: 640px) { button, [role="button"] { min-height: 40px; } }
 @media (prefers-reduced-motion: reduce) {
