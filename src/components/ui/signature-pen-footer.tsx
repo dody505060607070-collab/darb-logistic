@@ -496,8 +496,8 @@ const CSS =
   "position:relative;isolation:isolate;overflow:hidden;overflow:clip;container-type:inline-size;display:flex;flex-direction:column;width:100%;background:var(--spf-bg);color:var(--spf-fg);font-family:var(--spf-sans);-webkit-font-smoothing:antialiased;}" +
   ".spf[data-theme=dark],.dark .spf[data-theme=auto]{--spf-bg:#121214;--spf-fg:#f2f2f3;--spf-muted:#9a9aa1;--spf-line:rgba(255,255,255,.09);--spf-card:#1c1c1f;--spf-card-line:rgba(255,255,255,.16);--spf-accent:#4f86ff;--spf-shade:.62;--spf-pen-hi:#fbfbfb;--spf-pen-mid:#e4e4e2;--spf-pen-lo:#a9a9a6;--spf-pen-edge:#7d7d7a;}" +
   ":where(.spf) *,:where(.spf) *::before,:where(.spf) *::after{box-sizing:border-box;}" +
-  ":where(.spf) a{color:inherit;text-decoration:none;}" +
-  ":where(.spf) button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;}" +
+  ":where(.spf) a:not(.spf-slot *){color:inherit;text-decoration:none;}" +
+  ":where(.spf) button:not(.spf-slot *){font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;}" +
   ":where(.spf) h2,:where(.spf) p,:where(.spf) ul{margin:0;padding:0;}" +
   ".spf-glow{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 55% at 50% 38%,rgba(255,255,255,.55),transparent 70%);}" +
   ".spf[data-theme=dark] .spf-glow,.dark .spf[data-theme=auto] .spf-glow{background:radial-gradient(60% 55% at 50% 38%,rgba(255,255,255,.045),transparent 70%);}" +
