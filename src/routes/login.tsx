@@ -9,7 +9,8 @@ import { Logo } from "@/components/darb/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import truck from "@/assets/login-truck.jpg";
+import { ClientOnly } from "@tanstack/react-router";
+import SignaturePenFooter from "@/components/ui/signature-pen-footer";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -75,9 +76,9 @@ function LoginPage() {
   }
 
   return (
-    <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="panel grid w-full max-w-5xl overflow-hidden md:grid-cols-2">
-        <div className="flex flex-col justify-center p-8 md:p-12">
+    <div dir="rtl" className="dark grid min-h-screen bg-background lg:grid-cols-2">
+        <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-16">
+          <div className="panel mx-auto w-full max-w-md p-8">
           <Logo className="mb-6 justify-center" />
           <h1 className="text-center text-2xl font-bold text-primary">
             {mode === "signin" ? "تسجيل الدخول إلى نظام دَرب" : mode === "signup" ? "إنشاء حساب بدعوة" : "استعادة كلمة المرور"}
@@ -167,11 +168,26 @@ function LoginPage() {
           </p>
           <p className="mt-3 text-center text-xs text-muted-foreground">الوصول للنظام عبر دعوة من مالك الحساب فقط.</p>
         </div>
-        <div className="relative hidden md:block">
-          <img src={truck} alt="شاحنة دَرب على طريق الرياض" width={1280} height={1280} className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-l from-card/0 via-card/0 to-card/30" />
+        </div>
+        <div dir="ltr" className="relative hidden overflow-hidden border-r border-border lg:block">
+          <ClientOnly fallback={<div className="h-full bg-background" />}>
+            <SignaturePenFooter
+              word="Finished"
+              title="أهلاً بك في دَرب"
+              description="منصة واحدة لإدارة أوامر النقل والرحلات والأسطول والمالية في المملكة. سجّل دخولك لمتابعة عملياتك لحظة بلحظة."
+              actions={[]}
+              brand="دَرب DARB"
+              links={[]}
+              theme="dark"
+              background="#000000"
+              accent="#E8FF1F"
+              inkFrom="#F4FF9A"
+              inkTo="#E8FF1F"
+              height="100svh"
+              fontSans='"IBM Plex Sans Arabic", system-ui, sans-serif'
+            />
+          </ClientOnly>
         </div>
       </div>
-    </div>
   );
 }
