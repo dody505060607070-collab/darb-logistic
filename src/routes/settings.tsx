@@ -122,10 +122,10 @@ function SettingsPage() {
           </div>
         </Panel>
       )}
-      <Tabs defaultValue={tab ?? (isOwner ? (pending.length ? "users" : "company") : "alerts")} dir="rtl">
+      <Tabs defaultValue={tab ?? (isOwner ? "users" : "alerts")} dir="rtl">
         <TabsList className="flex-wrap">
-          {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           {isOwner && <TabsTrigger value="users">المستخدمون والصلاحيات</TabsTrigger>}
+          {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           <TabsTrigger value="integrations">التكاملات</TabsTrigger>
           <TabsTrigger value="alerts">التنبيهات</TabsTrigger>
           {isOwner && <TabsTrigger value="audit">سجل التدقيق</TabsTrigger>}
