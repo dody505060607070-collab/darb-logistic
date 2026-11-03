@@ -212,3 +212,55 @@ html { scroll-behavior: smooth; }
 .panel, main .grid > * { min-width: 0; }
 main table { min-width: 100%; }
 .leaflet-container { max-width: 100%; }
+
+/* ===== Finance-bento card system (from the reference design) ===== */
+:root {
+  --bento-radius: 28px;
+  --g-blue: linear-gradient(180deg, #b9a6ff 0%, #2e43ff 36%, #2e43ff 74%, #6d7dff 100%);
+  --g-graph: linear-gradient(180deg, #9a9aa8 0%, #3a3a44 36%, #3a3a44 74%, #55555f 100%);
+  --g-pink: linear-gradient(180deg, #ffb3d6 0%, #ff2a85 36%, #ff2a85 74%, #ff6aa8 100%);
+  --g-copper: linear-gradient(180deg, #f6bf96 0%, #c2683a 36%, #c2683a 74%, #dc8a5c 100%);
+  --g-green: linear-gradient(180deg, #a6e8c8 0%, #36956f 36%, #36956f 74%, #58b58c 100%);
+  --g-lime: linear-gradient(180deg, #f4ffb8 0%, #a3c400 36%, #a3c400 74%, #c9e03a 100%);
+  --core-blue: #05082a; --core-graph: #060608; --core-pink: #3a031c; --core-copper: #1d0b05; --core-green: #061d15; --core-lime: #121700;
+}
+.panel { border-radius: var(--bento-radius); }
+.bento { position: relative; isolation: isolate; overflow: hidden; border-radius: var(--bento-radius); color: #fff; border: 0; }
+.bento::before { content: ""; position: absolute; inset: 0; z-index: -2; background: var(--bento-bg); }
+.bento::after { content: ""; position: absolute; left: 10%; right: 10%; top: 16%; bottom: -6%; border-radius: 90px; filter: blur(60px); z-index: -1; background: var(--bento-core); }
+.bento > .rim { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(255,255,255,.06); }
+.bento .cap { color: rgba(255,255,255,.62); }
+.bento-blue { --bento-bg: var(--g-blue); --bento-core: var(--core-blue); }
+.bento-graph { --bento-bg: var(--g-graph); --bento-core: var(--core-graph); }
+.bento-pink { --bento-bg: var(--g-pink); --bento-core: var(--core-pink); }
+.bento-copper { --bento-bg: var(--g-copper); --bento-core: var(--core-copper); }
+.bento-green { --bento-bg: var(--g-green); --bento-core: var(--core-green); }
+.bento-lime { --bento-bg: var(--g-lime); --bento-core: var(--core-lime); }
+.bento-solid { background: #E8FF1F; color: #0b0b0c; }
+.bento-solid::before, .bento-solid::after { display: none; }
+.bento-solid .cap, .bento-solid .hint { color: rgba(0,0,0,.55); }
+.bento-glass { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(20px); color: var(--color-foreground); }
+.bento-glass::before, .bento-glass::after, .bento-glass > .rim { display: none; }
+.bento-glass .cap { color: var(--color-muted-foreground); }
+html.light .bento-glass { background: var(--color-card); border-color: var(--color-border); }
+.cap { font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+.big { font-weight: 200; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.chip { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; background: rgba(0,0,0,.85); color: #fff; font-size: 11px; font-weight: 600; direction: ltr; }
+/* Automatic colour rotation for KPI rows without an explicit tone */
+.bento-auto:nth-child(6n+1) { --bento-bg: var(--g-blue); --bento-core: var(--core-blue); }
+.bento-auto:nth-child(6n+2) { --bento-bg: var(--g-graph); --bento-core: var(--core-graph); }
+.bento-auto:nth-child(6n+3) { --bento-bg: var(--g-pink); --bento-core: var(--core-pink); }
+.bento-auto:nth-child(6n+4) { --bento-bg: var(--g-copper); --bento-core: var(--core-copper); }
+.bento-auto:nth-child(6n+5) { --bento-bg: var(--g-green); --bento-core: var(--core-green); }
+.bento-auto:nth-child(6n+6) { --bento-bg: var(--g-lime); --bento-core: var(--core-lime); }
+/* Panel header like bento card titles */
+.panel > header { border-bottom-color: oklch(1 0 0 / 0.08); padding: 18px 22px 12px; }
+.panel > header h2 { font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+html.light .panel > header { border-bottom-color: var(--color-border); }
+/* Tables inside cards: hairlines, no boxed border */
+.panel table thead th { font-size: 11.5px; font-weight: 600; letter-spacing: .04em; color: var(--color-muted-foreground); }
+.panel table tbody tr { border-color: oklch(1 0 0 / 0.07); }
+html.light .panel table tbody tr { border-color: var(--color-border); }
+/* Inputs and buttons: soft pill shapes */
+main input, main select, main textarea, main [role="combobox"] { border-radius: 14px; }
+main button { border-radius: 14px; }
