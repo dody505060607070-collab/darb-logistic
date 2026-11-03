@@ -3,7 +3,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Container, Pencil, Plus, Truck } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
 import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
-import { EntityDialog, type Field } from "@/components/darb/EntityDialog";
+import { EntityDialog } from "@/components/darb/EntityDialog";
+import { ASSET_FIELDS } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
 import { useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchTrips } from "@/lib/queries";
@@ -27,21 +28,6 @@ export const Route = createFileRoute("/fleet/")({
   ),
 });
 
-export const ASSET_FIELDS: Field[] = [
-  { name: "code", label: "رقم الأصل", required: true },
-  { name: "kind", label: "النوع", type: "select", required: true, options: Object.entries(ASSET_KIND) },
-  { name: "plate", label: "اللوحة" },
-  { name: "make_model", label: "الشركة والطراز" },
-  { name: "year", label: "سنة الصنع", type: "number" },
-  { name: "vin", label: "رقم الهيكل (VIN)" },
-  { name: "trailer_type", label: "نوع المقطورة", hint: "للمقطورات فقط" },
-  { name: "capacity_tons", label: "السعة (طن)", type: "number" },
-  { name: "status", label: "الحالة التشغيلية", type: "select", required: true, default: "available", options: Object.entries(STATUS["asset"]!).map(([k, v]) => [k, v[0]]) },
-  { name: "odometer_km", label: "العداد (كم)", type: "number" },
-  { name: "location_text", label: "الموقع الحالي" },
-  { name: "branch_id", label: "الفرع", type: "ref", ref: { table: "branches", label: "name" } },
-  { name: "notes", label: "ملاحظات", type: "textarea" },
-];
 
 function FleetPage() {
   const nav = useNavigate();

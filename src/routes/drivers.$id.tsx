@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { db, useOne, useRows, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
 import { errMsg, fmtDateTime, fmtSAR } from "@/lib/format";
-import { DRIVER_FIELDS } from "./drivers.index";
-import { DOC_FIELDS, DocExpiry, openFile } from "./fleet.$id";
+import { DOC_FIELDS, DocExpiry, DRIVER_FIELDS, openFile } from "@/components/darb/shared";
 
 export const Route = createFileRoute("/drivers/$id")({
   head: () => ({

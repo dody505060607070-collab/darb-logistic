@@ -12,6 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as DriversIndexRouteImport } from './routes/drivers.index'
+import { Route as DriversIdRouteImport } from './routes/drivers.$id'
+import { Route as FleetIndexRouteImport } from './routes/fleet.index'
+import { Route as FleetIdRouteImport } from './routes/fleet.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +32,93 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DriversIndexRoute = DriversIndexRouteImport.update({
+  id: '/drivers/',
+  path: '/drivers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DriversIdRoute = DriversIdRouteImport.update({
+  id: '/drivers/$id',
+  path: '/drivers/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FleetIndexRoute = FleetIndexRouteImport.update({
+  id: '/fleet/',
+  path: '/fleet/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FleetIdRoute = FleetIdRouteImport.update({
+  id: '/fleet/$id',
+  path: '/fleet/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/drivers/$id': typeof DriversIdRoute
+  '/fleet/$id': typeof FleetIdRoute
+  '/drivers/': typeof DriversIndexRoute
+  '/fleet/': typeof FleetIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/drivers/$id': typeof DriversIdRoute
+  '/fleet/$id': typeof FleetIdRoute
+  '/drivers': typeof DriversIndexRoute
+  '/fleet': typeof FleetIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/drivers/$id': typeof DriversIdRoute
+  '/fleet/$id': typeof FleetIdRoute
+  '/drivers/': typeof DriversIndexRoute
+  '/fleet/': typeof FleetIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/reset-password'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/drivers/$id'
+    | '/fleet/$id'
+    | '/drivers/'
+    | '/fleet/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/reset-password'
-  id: '__root__' | '/' | '/login' | '/reset-password'
+  to:
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/drivers/$id'
+    | '/fleet/$id'
+    | '/drivers'
+    | '/fleet'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/drivers/$id'
+    | '/fleet/$id'
+    | '/drivers/'
+    | '/fleet/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  DriversIdRoute: typeof DriversIdRoute
+  FleetIdRoute: typeof FleetIdRoute
+  DriversIndexRoute: typeof DriversIndexRoute
+  FleetIndexRoute: typeof FleetIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +144,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/drivers/': {
+      id: '/drivers/'
+      path: '/drivers'
+      fullPath: '/drivers/'
+      preLoaderRoute: typeof DriversIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/drivers/$id': {
+      id: '/drivers/$id'
+      path: '/drivers/$id'
+      fullPath: '/drivers/$id'
+      preLoaderRoute: typeof DriversIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fleet/': {
+      id: '/fleet/'
+      path: '/fleet'
+      fullPath: '/fleet/'
+      preLoaderRoute: typeof FleetIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fleet/$id': {
+      id: '/fleet/$id'
+      path: '/fleet/$id'
+      fullPath: '/fleet/$id'
+      preLoaderRoute: typeof FleetIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +179,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  DriversIdRoute: DriversIdRoute,
+  FleetIdRoute: FleetIdRoute,
+  DriversIndexRoute: DriversIndexRoute,
+  FleetIndexRoute: FleetIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -4,13 +4,13 @@ import { ArrowRight, FileText, Gauge, MapPin, Pencil, Plus, Truck, Wrench } from
 import { toast } from "sonner";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
-import { EntityDialog, type Field } from "@/components/darb/EntityDialog";
+import { EntityDialog } from "@/components/darb/EntityDialog";
+import { ASSET_FIELDS, DOC_FIELDS, DocExpiry, openFile } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { db, signedUrl, useOne, useRows, type Row } from "@/lib/db";
+import { db, useOne, useRows, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
-import { ASSET_KIND, daysUntil, errMsg, fmtDate, fmtDateTime, fmtNum, fmtSAR } from "@/lib/format";
-import { ASSET_FIELDS } from "./fleet.index";
+import { ASSET_KIND, errMsg, fmtDateTime, fmtNum, fmtSAR } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/fleet/$id")({
@@ -29,35 +29,7 @@ export const Route = createFileRoute("/fleet/$id")({
   ),
 });
 
-export const DOC_FIELDS: Field[] = [
-  { name: "doc_type", label: "نوع المستند", required: true, type: "select", options: [["استمارة", "استمارة"], ["تأمين", "تأمين"], ["فحص دوري", "فحص دوري"], ["تصريح تشغيل", "تصريح تشغيل"], ["رخصة قيادة", "رخصة قيادة"], ["بطاقة سائق", "بطاقة سائق"], ["إقامة", "إقامة"], ["أخرى", "أخرى"]] },
-  { name: "number", label: "الرقم" },
-  { name: "issue_date", label: "تاريخ الإصدار", type: "date" },
-  { name: "expiry_date", label: "تاريخ الانتهاء", type: "date" },
-  { name: "review_status", label: "حالة المراجعة", type: "select", default: "pending", options: [["pending", "بانتظار المراجعة"], ["approved", "معتمد"], ["rejected", "مرفوض"]] },
-  { name: "file_path", label: "المرفق", type: "file" },
-  { name: "notes", label: "ملاحظات", type: "textarea" },
-];
 
-export function DocExpiry({ d }: { d?: string | null }) {
-  const n = daysUntil(d);
-  if (n === null) return <span className="text-muted-foreground">—</span>;
-  return (
-    <span className="flex items-center gap-2">
-      <span className="num">{fmtDate(d)}</span>
-      <Badge tone={n < 0 ? "danger" : n <= 30 ? "warning" : "success"}>{n < 0 ? "منتهٍ" : n <= 30 ? `${n} يوم` : "ساري"}</Badge>
-    </span>
-  );
-}
-
-export async function openFile(path?: string | null) {
-  if (!path) return;
-  try {
-    window.open(await signedUrl(path), "_blank", "noopener");
-  } catch (e) {
-    toast.error(errMsg(e));
-  }
-}
 
 function AssetProfile() {
   const { id } = Route.useParams();
