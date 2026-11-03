@@ -119,7 +119,7 @@ function Dashboard() {
       </section>
 
       <div className="grid gap-5 lg:grid-cols-4">
-        <Panel title="مؤشرات التشغيل" icon={<BarChart3 />}>
+        <Panel tone="blue" title="مؤشرات التشغيل" icon={<BarChart3 />}>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between rounded-md bg-muted px-3 py-2">
               <span>الالتزام بالمواعيد المتفق عليها</span>
@@ -135,7 +135,7 @@ function Dashboard() {
             </div>
           </div>
         </Panel>
-        <Panel title="الأسطول — الرؤوس" icon={<Truck />}>
+        <Panel tone="graph" title="الأسطول — الرؤوس" icon={<Truck />}>
           <div className="flex items-center gap-4">
             <FleetDonut total={tractors.length} parts={[count(tractors, "active"), count(tractors, "available"), count(tractors, "maintenance"), count(tractors, "stopped")]} />
             <ul className="space-y-1.5 text-sm">
@@ -146,7 +146,7 @@ function Dashboard() {
             </ul>
           </div>
         </Panel>
-        <Panel title="المقطورات" icon={<Container />}>
+        <Panel tone="copper" title="المقطورات" icon={<Container />}>
           <div className="text-center">
             <div className="num text-4xl font-bold text-primary">{trailers.length}</div>
             <div className="text-sm text-muted-foreground">مقطورة مسجلة</div>
@@ -157,7 +157,7 @@ function Dashboard() {
           </div>
         </Panel>
         {showFin ? (
-          <Panel title="الأداء المالي (رحلات نشطة)" icon={<Coins />}>
+          <Panel tone="green" title="الأداء المالي (رحلات نشطة)" icon={<Coins />}>
             <div className="grid grid-cols-3 gap-2 text-center text-sm">
               <div><div className="text-muted-foreground">الإيراد</div><b className="num text-success">{fmtSAR(finSum.rev)}</b></div>
               <div><div className="text-muted-foreground">التكلفة التقديرية</div><b className="num text-danger">{fmtSAR(finSum.cost)}</b></div>
