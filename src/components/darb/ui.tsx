@@ -64,7 +64,7 @@ export function PageHeader({ title, subtitle, actions, icon }: { title: string; 
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-primary">
+        <h1 className="flex items-center gap-2 text-[28px] font-bold tracking-tight text-primary">
           {icon && <span className="text-gold [&_svg]:size-7">{icon}</span>}
           {title}
         </h1>
@@ -75,27 +75,56 @@ export function PageHeader({ title, subtitle, actions, icon }: { title: string; 
   );
 }
 
+const BENTO: Record<Tone, string> = {
+  success: "bento-green",
+  info: "bento-blue",
+  warning: "bento-copper",
+  danger: "bento-pink",
+  gold: "bento-solid",
+  neutral: "bento-graph",
+};
+
 export function Kpi({
   label,
   value,
   hint,
   tone,
   icon,
+  variant,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
   tone?: Tone;
   icon?: ReactNode;
+  variant?: "glass" | "solid";
 }) {
+  const cls = variant === "glass" ? "bento-glass" : variant === "solid" ? "bento-solid" : tone ? BENTO[tone] : "bento-auto";
   return (
-    <div className={cn("rounded-lg border bg-card px-4 py-3", tone && TONES[tone], tone && "border-transparent")}>
-      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span className={cn(tone && "text-current opacity-80")}>{label}</span>
-        {icon && <span className="[&_svg]:size-4">{icon}</span>}
+    <div className={cn("bento kpi-tile flex min-h-[132px] flex-col justify-between px-5 py-4 transition-transform duration-300 hover:-translate-y-0.5", cls)}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="cap">{label}</span>
+        {icon && <span className="grid size-8 place-items-center rounded-full bg-black/25 [&_svg]:size-4">{icon}</span>}
       </div>
-      <div className="num mt-1 text-right text-2xl font-bold"><CountUp value={value} /></div>
-      {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}
+      <div className="big num mt-3 text-right text-[40px]"><CountUp value={value} /></div>
+      {hint && <div className="hint mt-1 text-xs opacity-75">{hint}</div>}
+      <span className="rim" />
+    </div>
+  );
+}
+
+/** Tick-mark progress bar from the bento design (goals / runway). */
+export function Ticks({ value, count = 40, className }: { value: number; count?: number; className?: string }) {
+  const f = Math.max(0, Math.min(1, value));
+  return (
+    <div className={cn("flex h-3 items-end justify-between", className)} dir="ltr" aria-hidden>
+      {Array.from({ length: count }, (_, i) => (
+        <span
+          key={i}
+          className={cn("w-[1.6px] rounded-full", i / (count - 1) <= f ? "bg-primary" : "bg-foreground/25")}
+          style={{ height: i % 8 === 0 ? 12 : 8 }}
+        />
+      ))}
     </div>
   );
 }
