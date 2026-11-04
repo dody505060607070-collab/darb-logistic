@@ -69,6 +69,7 @@ function ActivityPage() {
         <Kpi label="عمليات مسجلة" value={(audit.data ?? []).length} tone="gold" />
         <Kpi label="مرات الخروج" value={(ev.data ?? []).filter((e) => e.kind === "sign_out").length} tone="neutral" />
       </div>
+      <WhatsAppGatewayPanel />
       <AiReports />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="ملخص كل شخص">

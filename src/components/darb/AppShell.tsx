@@ -158,29 +158,40 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Logo light />
         <p className="mt-2 text-xs text-sidebar-foreground/70">إدارة عمليات النقل والشاحنات</p>
       </div>
-      <ul className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4">
-        {NAV.filter((n) => !n.roles || can(...n.roles)).map((n) => {
-          const active = n.to === "/" ? path === "/" : path.startsWith(n.to);
+      <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+        {NAV_GROUPS.map((g) => {
+          const items = NAV.filter((n) => n.group === g && (!n.roles || can(...n.roles)));
+          if (!items.length) return null;
           return (
-            <li key={n.to}>
-              <Link
-                to={n.to}
-                onClick={onNavigate}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  active ? "bg-sidebar-primary text-sidebar-primary-foreground shadow" : "hover:bg-sidebar-accent",
-                )}
-              >
-                <n.icon className="size-5" />
-                <span className="flex-1">{n.label}</span>
-                {!!counts[n.to] && (
-                  <span className={cn("num grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold", active ? "bg-black/80 text-white" : "bg-warning text-black")}>{counts[n.to]}</span>
-                )}
-              </Link>
-            </li>
+            <div key={g}>
+              {g !== NAV_GROUPS[0] && <p className="mb-1 px-3 text-[11px] font-semibold tracking-wide text-sidebar-foreground/50">{g}</p>}
+              <ul className="space-y-0.5">
+                {items.map((n) => {
+                  const active = n.to === "/" ? path === "/" : path.startsWith(n.to);
+                  return (
+                    <li key={n.to}>
+                      <Link
+                        to={n.to}
+                        onClick={onNavigate}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          active ? "bg-sidebar-primary text-sidebar-primary-foreground shadow" : "hover:bg-sidebar-accent",
+                        )}
+                      >
+                        <n.icon className="size-5" />
+                        <span className="flex-1">{n.label}</span>
+                        {!!counts[n.to] && (
+                          <span className={cn("num grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold", active ? "bg-black/80 text-white" : "bg-warning text-black")}>{counts[n.to]}</span>
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           );
         })}
-      </ul>
+      </div>
       <RolePreview onNavigate={onNavigate} />
     </nav>
   );
