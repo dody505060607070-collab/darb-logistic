@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CustodyRouteImport } from './routes/custody'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DocumentsRouteImport } from './routes/documents'
@@ -36,6 +37,11 @@ import { Route as TripsIdRouteImport } from './routes/trips.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustodyRoute = CustodyRouteImport.update({
@@ -151,6 +157,7 @@ const TripsIdRoute = TripsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
@@ -202,6 +210,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/chat'
     | '/custody'
     | '/customers'
     | '/documents'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/chat'
     | '/custody'
     | '/customers'
     | '/documents'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/chat'
     | '/custody'
     | '/customers'
     | '/documents'
@@ -305,6 +317,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRoute: typeof ChatRoute
   CustodyRoute: typeof CustodyRoute
   CustomersRoute: typeof CustomersRoute
   DocumentsRoute: typeof DocumentsRoute
@@ -336,6 +349,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/custody': {
@@ -497,6 +517,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRoute: ChatRoute,
   CustodyRoute: CustodyRoute,
   CustomersRoute: CustomersRoute,
   DocumentsRoute: DocumentsRoute,
