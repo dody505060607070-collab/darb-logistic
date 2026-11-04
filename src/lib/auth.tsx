@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthContext } from './auth-context';
 
 export type AppRole =
   | "owner"
@@ -21,7 +22,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   driver: "سائق",
 };
 
-type AuthState = {
+export type AuthState = {
   ready: boolean;
   session: Session | null;
   roles: AppRole[];
@@ -35,8 +36,6 @@ type AuthState = {
   setViewAs: (r: AppRole | null) => void;
   signOut: () => Promise<void>;
 };
-
-const Ctx = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -116,11 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
   };
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const v = useContext(Ctx);
+  const v = useContext(AuthContext);
   if (!v) throw new Error("useAuth outside AuthProvider");
   return v;
 }
