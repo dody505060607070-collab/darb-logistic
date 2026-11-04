@@ -41,7 +41,7 @@ export const requestLoginCode = createServerFn({ method: "POST" })
     if (recent && recent.length >= 5) throw new Error("طلبات كثيرة لهذا الرقم. حاول بعد ساعة.");
     if (recent?.[0] && Date.now() - new Date(recent[0].created_at).getTime() < 60_000) throw new Error("انتظر دقيقة قبل طلب رمز جديد");
 
-    const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000;
+    const n = (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % 1_000_000;
     const code = String(n).padStart(6, "0");
     const { error: insErr } = await supabaseAdmin.from("login_codes").insert({ phone: data.phone, code_hash: await hmac(g.key, `${data.phone}:${code}`), expires_at: new Date(Date.now() + TTL_MS).toISOString() });
     if (insErr) throw new Error("تعذر إنشاء الرمز");
