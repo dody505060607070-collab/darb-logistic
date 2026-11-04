@@ -110,7 +110,7 @@ function AiReports() {
       {latest ? (
         <div className="space-y-2">
           <div className="flex gap-2"><Badge tone="info">{latest.report_date}</Badge><span className="text-xs text-muted-foreground">{fmtDateTime(latest.created_at)}</span></div>
-          <div className="whitespace-pre-wrap text-sm leading-7">{latest.body}</div>
+          <div className="whitespace-pre-wrap text-sm leading-7">{latest.body.replace(/\*\*/g, "").replace(/^#+\s*/gm, "")}</div>
         </div>
       ) : <Empty text="لم يُنشأ أي تقرير بعد" />}
     </Panel>

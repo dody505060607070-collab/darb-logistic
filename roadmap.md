@@ -28,3 +28,11 @@
 - [ ] Letterhead print for POD / invoice
 - [ ] Branch-scoped data per user
 - [ ] Offline-capable driver app (service worker)
+
+## Batch 2026-11-04
+- [x] Tasks page (assign, urgent 12h / normal 24h reminders, submit, Super Admin confirm)
+- [x] Activity page (sign-in/out, actions per person per day)
+- [x] AI morning report daily 08:00 Riyadh + "generate now"
+- [x] Role preview moved to small sidebar picker with "شكل فقط" banner
+- [ ] WhatsApp sending of tasks/reminders — blocked: WhatsApp gateway (Hostinger) details
+- [ ] Rebuild role home pages to match the 5 uploaded designs — next turn
