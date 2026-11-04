@@ -1,5 +1,10 @@
 # DARB roadmap
 
+## Current request 2026-11-04 10:52 UTC
+- [ ] Phone-first sign-in with country selection and optional email — awaiting supported delivery-method choice; WhatsApp login codes are not supported by Cloud Auth.
+- [ ] Preserve permissions for existing staff and restricted access for unknown numbers — no automatic access to company data.
+- [ ] Advanced CRM on the existing home page, retaining current dashboard and using verified calculations.
+
 ## Done
 - [x] Packages 1–5 core: login, roles/invites, dashboard, ops room, order wizard, trips, tracking, fleet, drivers, custody & inspection, documents & authorizations, maintenance/tires/stock, fuel/expenses/advances, finance/invoices/payments, customers/contracts/carriers, incidents, reports, settings/audit, driver mobile app with offline outbox and POD.
 
