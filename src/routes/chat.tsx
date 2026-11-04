@@ -44,21 +44,25 @@ function ChatPage() {
     void supabase.rpc("chat_directory").then(({ data }) => setPeople(((data ?? []) as Person[]).filter((p) => p.id !== me)));
     void supabase.from("chat_messages").select("*").order("created_at", { ascending: true }).limit(1000).then(({ data }) => setMsgs((data ?? []) as Msg[]));
     const ch = supabase
-      .channel("chat-" + me)
+      .channel(`chat-${me}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, (p) => {
         const m = p.new as Msg;
         if (m.recipient_id && m.recipient_id !== me && m.sender_id !== me) return;
         setMsgs((cur) => (cur.some((x) => x.id === m.id) ? cur : [...cur, m]));
       })
       .subscribe();
-    return () => void supabase.removeChannel(ch);
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [me]);
 
   const thread = useMemo(
     () => msgs.filter((m) => (active === null ? m.recipient_id === null : (m.sender_id === me && m.recipient_id === active) || (m.sender_id === active && m.recipient_id === me))),
     [msgs, active, me],
   );
-  useEffect(() => endRef.current?.scrollIntoView({ block: "end" }), [thread.length, active]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [thread.length, active]);
 
   const last = (id: string | null) => {
     const t = msgs.filter((m) => (id === null ? m.recipient_id === null : (m.sender_id === id && m.recipient_id === me) || (m.sender_id === me && m.recipient_id === id)));
