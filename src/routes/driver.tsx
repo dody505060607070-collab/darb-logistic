@@ -37,6 +37,22 @@ const NEXT_EVENT: Record<string, string> = {
   pending: "arrived_pickup", arrived_pickup: "loading_start", loading_start: "loading_end", loading_end: "departed",
   departed: "arrived_delivery", fuel_stop: "arrived_delivery", rest_stop: "arrived_delivery", arrived_delivery: "unloading_start", unloading_start: "unloading_end",
 };
+/** Sample trip shown only to Super Admin previewing the driver screen (never saved). */
+const DEMO_TRIP: Row = {
+  id: "demo", number: "TRP-DEMO-001", status: "in_progress", stage: "departed", exception: null,
+  origin_city: "الرياض", dest_city: "الدمام", pickup_name: "مستودع السلي", delivery_name: "ميناء الملك عبدالعزيز",
+  distance_km: 410, planned_end: new Date(Date.now() + 3 * 3600e3).toISOString(),
+  tractor_id: "demo-t", tractor_code: "TRK-014", trailer_id: "demo-r", trailer_code: "TRL-022",
+  cargo_type: "حديد تسليح", quantity: 24, unit: "طن", order_number: "ORD-DEMO-17", consignee: "شركة المثال للمقاولات",
+  delivery_instructions: "التسليم من البوابة 3 قبل الساعة 4 عصرًا",
+};
+const DEMO_EVENTS: Row[] = [
+  { id: "e3", event_type: "departed", occurred_at: new Date(Date.now() - 1.5 * 3600e3).toISOString() },
+  { id: "e2", event_type: "loading_end", occurred_at: new Date(Date.now() - 2 * 3600e3).toISOString() },
+  { id: "e1", event_type: "arrived_pickup", occurred_at: new Date(Date.now() - 3 * 3600e3).toISOString() },
+];
+const demoToast = () => toast.info("معاينة فقط — لا يتم حفظ أي شيء");
+
 const CATS = ["وجبات", "رسوم ميزان", "رسوم طرق", "مبيت", "إصلاح طارئ", "غسيل", "أخرى"];
 
 function getPos(): Promise<{ lat: number; lng: number } | null> {
@@ -113,12 +129,11 @@ function DriverApp() {
 
   if (!auth.ready || !auth.session) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
-  if (!auth.driverId)
+  const demo = !auth.driverId && auth.viewAs === "driver";
+  if (!auth.driverId && !demo)
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center p-6">
-        {auth.viewAs && <div className="fixed top-2 left-2 z-50"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
         <div className="panel max-w-sm p-8 text-center">
-          {auth.viewAs && <p className="mb-3 text-xs text-gold">معاينة شاشة السائق — حسابك غير مرتبط بسائق، فتظهر الشاشة بدون رحلات.</p>}
           <Logo className="mb-4 justify-center" />
           <p className="text-sm text-muted-foreground">حسابك غير مرتبط بملف سائق. اطلب من مالك الحساب إرسال دعوة سائق لبريدك.</p>
           {auth.isStaff && <Button className="mt-4" onClick={() => void nav({ to: "/" })}>لوحة الإدارة</Button>}
@@ -127,14 +142,16 @@ function DriverApp() {
       </div>
     );
 
-  const list = trips.data ?? [];
+  const list = demo ? [DEMO_TRIP, { ...DEMO_TRIP, id: "demo2", number: "TRP-DEMO-002", status: "planned", origin_city: "جدة", dest_city: "مكة" }] : trips.data ?? [];
   const current = list.find((t) => t.status === "in_progress") ?? list.find((t) => ["planned", "ready"].includes(t.status));
-  const d = me.data?.[0];
+  const d = demo ? { full_name: "سائق تجريبي", code: "DRV-DEMO" } : me.data?.[0];
+  const driverId = auth.driverId ?? "demo";
 
   return (
     <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20 animate-in fade-in duration-500">
       {auth.viewAs && <div className="fixed top-2 left-2 z-50"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
-      {current?.status === "in_progress" && <LiveGps tripId={current.id} />}
+      {demo && <div className="bg-gold-soft px-4 py-1.5 text-center text-xs font-semibold text-primary">معاينة شكل تطبيق السائق ببيانات تجريبية — لا يتم حفظ أي شيء</div>}
+      {!demo && current?.status === "in_progress" && <LiveGps tripId={current.id} />}
       <header className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
         <Logo light className="scale-90" />
         <div className="flex items-center gap-3 text-xs">
@@ -143,7 +160,7 @@ function DriverApp() {
             {online ? "متصل" : "غير متصل"}
           </span>
           <Bell className="size-5" />
-          <button onClick={() => void auth.signOut()} aria-label="خروج"><LogOut className="size-5" /></button>
+          <button onClick={() => (demo ? demoToast() : void auth.signOut())} aria-label="خروج"><LogOut className="size-5" /></button>
         </div>
       </header>
 
@@ -171,16 +188,16 @@ function DriverApp() {
       )}
 
       <main className="flex-1 space-y-4 p-4">
-        {trips.isLoading ? <Loading /> : !current ? (
+        {!demo && trips.isLoading ? <Loading /> : !current ? (
           <div className="panel"><Empty text="لا توجد رحلة مكلّف بها حاليًا." /></div>
         ) : tab === "home" ? (
-          <HomeView t={current} custody={custody.data ?? []} online={online} go={setTab} />
+          <HomeView t={current} custody={demo ? [] : custody.data ?? []} online={online} go={setTab} demo={demo} />
         ) : tab === "inspect" ? (
-          <InspectView t={current} driverId={auth.driverId} done={() => setTab("home")} />
+          <InspectView t={current} driverId={driverId} done={() => setTab("home")} demo={demo} />
         ) : tab === "trip" ? (
-          <TripView t={current} driverId={auth.driverId} online={online} />
+          <TripView t={current} driverId={driverId} online={online} demo={demo} />
         ) : (
-          <PodView t={current} uid={auth.session.user.id} done={() => setTab("home")} />
+          <PodView t={current} uid={auth.session.user.id} done={() => setTab("home")} demo={demo} />
         )}
         {tab === "home" && list.filter((t) => t.id !== current?.id).length > 0 && (
           <div className="panel p-4">
@@ -220,12 +237,13 @@ function Stepper({ stage }: { stage: string }) {
   );
 }
 
-function HomeView({ t, custody, online, go }: { t: Row; custody: Row[]; online: boolean; go: (t: Tab) => void }) {
+function HomeView({ t, custody, online, go, demo }: { t: Row; custody: Row[]; online: boolean; go: (t: Tab) => void; demo?: boolean }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const next = NEXT_EVENT[t.stage] ?? null;
   async function advance() {
     if (!next) return;
+    if (demo) return void demoToast();
     setBusy(true);
     const pos = await getPos();
     const payload = { p_trip_id: t.id, p_event_type: next, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null, p_location: null, p_notes: null, p_client_event_id: crypto.randomUUID(), p_occurred_at: new Date().toISOString() };
@@ -289,13 +307,14 @@ function HomeView({ t, custody, online, go }: { t: Row; custody: Row[]; online: 
   );
 }
 
-function InspectView({ t, driverId, done }: { t: Row; driverId: string; done: () => void }) {
+function InspectView({ t, driverId, done, demo }: { t: Row; driverId: string; done: () => void; demo?: boolean }) {
   const qc = useQueryClient();
   const [assetId, setAssetId] = useState<string>(t.tractor_id);
   const [answers, setAnswers] = useState<CheckAnswer[]>(freshChecklist());
   const [busy, setBusy] = useState(false);
   async function save() {
     if (answers.some((a) => a.result === "fail" && !a.reason)) return void toast.error("اذكر سبب كل بند غير سليم");
+    if (demo) { demoToast(); return done(); }
     setBusy(true);
     const { error } = await db.from("inspections").insert({ asset_id: assetId, driver_id: driverId, trip_id: t.id, kind: "pre_trip", items: answers });
     setBusy(false);
@@ -321,9 +340,10 @@ function InspectView({ t, driverId, done }: { t: Row; driverId: string; done: ()
   );
 }
 
-function TripView({ t, driverId, online }: { t: Row; driverId: string; online: boolean }) {
+function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; online: boolean; demo?: boolean }) {
   const qc = useQueryClient();
-  const events = useRows(["trip_events", t.id], () => db.from("trip_events").select("*").eq("trip_id", t.id).order("occurred_at", { ascending: false }));
+  const live = useRows(["trip_events", t.id], () => db.from("trip_events").select("*").eq("trip_id", t.id).order("occurred_at", { ascending: false }), !demo);
+  const events = demo ? { data: DEMO_EVENTS } : live;
   const [cat, setCat] = useState(CATS[0]!);
   const [amt, setAmt] = useState("");
   const [desc, setDesc] = useState("");
@@ -335,6 +355,7 @@ function TripView({ t, driverId, online }: { t: Row; driverId: string; online: b
   const [busy, setBusy] = useState(false);
 
   async function quickEvent(type: string, notes?: string) {
+    if (demo) return void demoToast();
     const pos = await getPos();
     const payload = { p_trip_id: t.id, p_event_type: type, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null, p_location: null, p_notes: notes ?? null, p_client_event_id: crypto.randomUUID(), p_occurred_at: new Date().toISOString() };
     if (!online) { enqueue({ id: payload.p_client_event_id, kind: "event", payload }); return void toast.info("حُفظ وسيُرسل عند الاتصال"); }
@@ -345,6 +366,7 @@ function TripView({ t, driverId, online }: { t: Row; driverId: string; online: b
   }
   async function addExpense() {
     if (!Number(amt)) return void toast.error("أدخل المبلغ");
+    if (demo) return void demoToast();
     setBusy(true);
     try {
       const id = crypto.randomUUID();
@@ -363,6 +385,7 @@ function TripView({ t, driverId, online }: { t: Row; driverId: string; online: b
   async function addFuel() {
     const l = Number(liters), p = Number(price);
     if (!l || !p) return void toast.error("أدخل اللترات والسعر");
+    if (demo) return void demoToast();
     const id = crypto.randomUUID();
     const payload = { asset_id: t.tractor_id, driver_id: driverId, trip_id: t.id, liters: l, unit_price: p, amount: Math.round(l * p * 100) / 100, odometer: odo ? Number(odo) : null, status: "pending", client_event_id: id, source: "driver_app" };
     if (!online) { enqueue({ id, kind: "fuel", payload }); return void toast.info("حُفظت التعبئة وسترسل عند الاتصال"); }
@@ -374,6 +397,7 @@ function TripView({ t, driverId, online }: { t: Row; driverId: string; online: b
   }
   async function report() {
     if (issue.length < 5) return void toast.error("صف المشكلة");
+    if (demo) return void demoToast();
     const { error } = await db.from("incidents").insert({ trip_id: t.id, driver_id: driverId, asset_id: t.tractor_id, kind: "breakdown", severity: "medium", description: issue, client_event_id: crypto.randomUUID() });
     if (error) return void toast.error(errMsg(error));
     toast.success("أُرسل البلاغ لغرفة العمليات");
@@ -426,7 +450,7 @@ function TripView({ t, driverId, online }: { t: Row; driverId: string; online: b
   );
 }
 
-function PodView({ t, uid, done }: { t: Row; uid: string; done: () => void }) {
+function PodView({ t, uid, done, demo }: { t: Row; uid: string; done: () => void; demo?: boolean }) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -441,6 +465,7 @@ function PodView({ t, uid, done }: { t: Row; uid: string; done: () => void }) {
   async function submit() {
     if (!name) return void toast.error("اسم المستلم مطلوب");
     if (!sig) return void toast.error("توقيع المستلم مطلوب");
+    if (demo) { demoToast(); return done(); }
     if (!navigator.onLine) return void toast.error("إثبات التسليم يتطلب اتصالًا لرفع الصور والتوقيع. أعد المحاولة عند الاتصال.");
     setBusy(true);
     try {
