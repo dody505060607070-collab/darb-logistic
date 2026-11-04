@@ -90,3 +90,87 @@ export const whatsappSendTest = createServerFn({ method: "POST" })
     if (!r.ok) throw new Error(`فشل الإرسال [${r.status}]: ${r.text}`);
     return { ok: true };
   });
+
+const digits = (p?: string | null) => {
+  let n = String(p ?? "").replace(/\D/g, "");
+  if (n.startsWith("05") && n.length === 10) n = "966" + n.slice(1);
+  return n.length >= 9 && n.length <= 15 ? n : null;
+};
+const SUPPORT = "\n\n📞 هذا رقم دَرب الرسمي — يمكنك مراسلتنا عليه في أي وقت للدعم والاستفسار.";
+
+/**
+ * Sends the WhatsApp message for a task event. The caller must be able to read the task (RLS),
+ * then recipients' phones are looked up with the admin client.
+ * assigned/returned → assignee; submitted → owners (the company's linked number receives it as well).
+ */
+export const notifyTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { taskId: string; event: "assigned" | "submitted" | "returned" | "approved" }) => {
+    if (!/^[0-9a-f-]{36}$/i.test(String(d?.taskId))) throw new Error("مهمة غير صحيحة");
+    if (!["assigned", "submitted", "returned", "approved"].includes(d.event)) throw new Error("حدث غير صحيح");
+    return d;
+  })
+  .handler(async ({ context, data }) => {
+    const ctx = context as unknown as Ctx;
+    const { data: task } = await ctx.supabase.from("tasks").select("*").eq("id", data.taskId).maybeSingle();
+    if (!task) throw new Error("المهمة غير موجودة أو غير مسموح بها");
+    const c = cfg();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const setStatus = (s: string) => supabaseAdmin.from("tasks").update({ whatsapp_status: s }).eq("id", task.id);
+    if (!c.ready) { await setStatus("not_connected"); return { sent: 0, reason: "not_configured" }; }
+
+    const { data: people } = await supabaseAdmin.from("profiles").select("id, full_name, phone").in("id", [task.assignee_id, task.assigned_by].filter(Boolean));
+    const who = (id: string) => people?.find((p) => p.id === id);
+    let recipients: string[] = [];
+    if (data.event === "submitted") {
+      const { data: owners } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "owner");
+      const ids = [...new Set([task.assigned_by, ...(owners ?? []).map((o) => o.user_id)])];
+      const { data: ph } = await supabaseAdmin.from("profiles").select("phone").in("id", ids);
+      recipients = (ph ?? []).map((p) => digits(p.phone)).filter(Boolean) as string[];
+      const own = await call(`/instance/fetchInstances?instanceName=${encodeURIComponent(c.instance)}`).catch(() => null);
+      const ownNum = digits(String((Array.isArray(own?.json) ? own?.json[0] : own?.json)?.ownerJid ?? (Array.isArray(own?.json) ? own?.json[0]?.instance?.owner : "") ?? "").split("@")[0]);
+      if (ownNum) recipients.push(ownNum);
+    } else {
+      const n = digits(who(task.assignee_id)?.phone);
+      if (n) recipients = [n];
+    }
+    recipients = [...new Set(recipients)];
+    if (!recipients.length) { await setStatus("no_phone"); return { sent: 0, reason: "no_phone" }; }
+
+    const name = who(task.assignee_id)?.full_name ?? "الموظف";
+    const pr = task.priority === "urgent" ? "🔴 عاجلة" : "عادية";
+    const details = [
+      `📌 *${task.title}*`,
+      task.description ? `📝 ${task.description}` : "",
+      `الأولوية: ${pr}`,
+      task.due_at ? `⏰ الموعد: ${new Date(task.due_at).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" })}` : "",
+      task.requested_by_external ? `بطلب من: ${task.requested_by_external}` : "",
+      task.location_text ? `📍 الموقع: ${task.location_text}\n${task.lat ? `https://maps.google.com/?q=${task.lat},${task.lng}` : `https://maps.google.com/?q=${encodeURIComponent(task.location_text)}`}` : "",
+    ].filter(Boolean).join("\n");
+    const head = {
+      assigned: `مرحباً ${name} 👋\nتم تكليفك بمهمة جديدة في نظام دَرب:`,
+      returned: `⚠️ ${name}، أُعيدت إليك المهمة لأنها لم تكتمل بعد.${task.review_note ? `\nالسبب: ${task.review_note}` : ""}`,
+      submitted: `✅ ${name} أبلغ أنه أنهى المهمة — ادخل إلى صفحة المهام للمراجعة والاعتماد أو الإرجاع.${task.done_note ? `\nملاحظته: ${task.done_note}` : ""}`,
+      approved: `🎉 ${name}، تم اعتماد مهمتك كمكتملة. شكراً لك!`,
+    }[data.event];
+    const text = `${head}\n\n${details}${data.event === "submitted" ? "" : "\n\nبعد الإنجاز ادخل إلى نظام دَرب واضغط «أنهيت المهمة»."}${SUPPORT}`;
+
+    let photo: string | null = null;
+    if (task.photo_path && (data.event === "assigned" || data.event === "returned")) {
+      const { data: s } = await supabaseAdmin.storage.from("attachments").createSignedUrl(task.photo_path, 3600);
+      photo = s?.signedUrl ?? null;
+    }
+    let sent = 0; const errors: string[] = [];
+    for (const number of recipients) {
+      const r = photo
+        ? await call(`/message/sendMedia/${encodeURIComponent(c.instance)}`, { method: "POST", body: JSON.stringify({ number, mediatype: "image", media: photo, caption: text }) })
+        : await call(`/message/sendText/${encodeURIComponent(c.instance)}`, { method: "POST", body: JSON.stringify({ number, text }) });
+      if (r.ok) sent++; else errors.push(`[${r.status}] ${r.text}`);
+      if (task.lat && r.ok && data.event === "assigned") {
+        await call(`/message/sendLocation/${encodeURIComponent(c.instance)}`, { method: "POST", body: JSON.stringify({ number, latitude: Number(task.lat), longitude: Number(task.lng), name: task.title, address: task.location_text ?? "" }) }).catch(() => null);
+      }
+    }
+    await setStatus(sent ? `sent_${data.event}` : "failed");
+    if (!sent) throw new Error(`فشل إرسال واتساب: ${errors[0] ?? ""}`);
+    return { sent, reason: null };
+  });

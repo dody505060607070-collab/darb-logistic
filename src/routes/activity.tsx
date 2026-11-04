@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db";
 import { errMsg, fmtDateTime, fmtTime } from "@/lib/format";
+import { WhatsAppGatewayPanel } from "@/components/darb/WhatsAppGatewayPanel";
 import { runDailyReportNow } from "@/lib/ai-report.functions";
 
 export const Route = createFileRoute("/activity")({
@@ -68,6 +69,7 @@ function ActivityPage() {
         <Kpi label="عمليات مسجلة" value={(audit.data ?? []).length} tone="gold" />
         <Kpi label="مرات الخروج" value={(ev.data ?? []).filter((e) => e.kind === "sign_out").length} tone="neutral" />
       </div>
+      <WhatsAppGatewayPanel />
       <AiReports />
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="ملخص كل شخص">
