@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Loader2, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
+import { useServerFn } from '@tanstack/react-start';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizePhone } from '@/lib/phone';
+import { requestLoginCode, verifyLoginCode } from '@/lib/whatsapp-login.functions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export function PhoneLogin() {
+  const requestCode = useServerFn(requestLoginCode);
+  const verifyCode = useServerFn(verifyLoginCode);
   const [country, setCountry] = useState('+966');
   const [number, setNumber] = useState('');
   const [sentTo, setSentTo] = useState('');
@@ -18,24 +22,23 @@ export function PhoneLogin() {
     e.preventDefault(); setBusy(true); setError('');
     try {
       if (sentTo) {
-        const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token: code, type: 'sms' });
+        const { tokenHash } = await verifyCode({ data: { phone: sentTo, code } });
+        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' });
         if (error) throw error;
       } else {
         const phone = normalizePhone(country, number);
-        const { error } = await supabase.auth.signInWithOtp({ phone, options: { channel: 'whatsapp' } });
-        if (error) throw error;
+        await requestCode({ data: { phone } });
         setSentTo(phone); toast.success('أرسلنا رمز الدخول إلى واتساب');
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'تعذر تسجيل الدخول';
-      setError(/provider|phone.*disabled|unsupported|sms.*configured/i.test(message) ? 'إرسال رمز الدخول عبر واتساب غير مفعّل بعد. استخدم الدخول بالبريد مؤقتًا.' : message);
+      setError(err instanceof Error ? err.message : 'تعذر تسجيل الدخول');
     } finally { setBusy(false); }
   }
   return <form onSubmit={submit} className="space-y-4">
     {sentTo ? <>
       <p className="text-center text-sm text-muted-foreground">أرسلنا رمز التحقق على واتساب إلى <b dir="ltr">{sentTo}</b></p>
       <Label htmlFor="sms-code">رمز التحقق</Label>
-      <Input id="sms-code" dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} required minLength={6} maxLength={8} className="h-12 text-center text-xl" />
+      <Input id="sms-code" dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} required minLength={6} maxLength={6} className="h-12 text-center text-xl" />
     </> : <>
       <Label htmlFor="phone-number">رقم الجوال</Label>
       <div className="flex gap-2" dir="ltr">
