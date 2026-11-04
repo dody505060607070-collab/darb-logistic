@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, PageHeader, Panel, Status } from "@/components/darb/ui";
+import { WhatsAppGatewayPanel } from "@/components/darb/WhatsAppGatewayPanel";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -208,6 +209,7 @@ function SettingsPage() {
               </div>
             </div>
           </Panel>
+          <div className="mt-5"><WhatsAppGatewayPanel /></div>
         </TabsContent>
         <TabsContent value="alerts">
           <Panel title="التنبيهات" icon={<Bell />}>
