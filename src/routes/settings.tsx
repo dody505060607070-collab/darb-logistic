@@ -39,7 +39,7 @@ const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOptio
     { label: "Traccar", url: "https://www.traccar.org/", note: "مفتوح المصدر ومجاني، يدعم أغلب أجهزة GPS للشاحنات." },
   ] },
   { name: "مزود توجيه الشاحنات", desc: "مسارات تراعي قيود الشاحنات ووقت الوصول", needs: "مفتاح API", free: [
-    { label: "OpenRouteService", url: "https://openrouteservice.org/dev/#/signup", note: "مجاني (حتى 2000 طلب يوميًا) ويدعم مسارات الشاحنات الثقيلة." },
+    { label: "OpenRouteService", url: "https://account.heigit.org/signup", note: "مجاني (حتى 2000 طلب يوميًا) ويدعم مسارات الشاحنات الثقيلة." },
   ] },
   { name: "الفوترة الإلكترونية (ZATCA)", desc: "إصدار الفواتير الإلكترونية واستلام حالتها", needs: "الرقم الضريبي وشهادة الربط من بوابة فاتورة", free: [
     { label: "بيئة مطوري فاتورة", url: "https://sandbox.zatca.gov.sa/", note: "بيئة تجربة مجانية من الهيئة قبل الربط الفعلي." },
@@ -48,9 +48,6 @@ const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOptio
   { name: "نظام المحاسبة", desc: "ترحيل الفواتير والدفعات والمصروفات", needs: "رابط النظام ومفتاح API", free: [
     { label: "Odoo Community", url: "https://www.odoo.com/ar/page/download", note: "مجاني ومفتوح المصدر، يحتاج استضافة." },
     { label: "Zoho Books", url: "https://www.zoho.com/books/", note: "خطة مجانية للشركات الصغيرة في بعض الدول." },
-  ] },
-  { name: "منصة نقل / وصل", desc: "التكامل الرسمي لبوليصات الشحن", needs: "حساب رسمي للشركة وموافقة الهيئة", free: [
-    { label: "منصة نقل (هيئة النقل)", url: "https://naql.sa/", note: "حكومية؛ الربط يتطلب سجلًا تجاريًا وموافقة رسمية، لا يوجد ربط تجريبي عام." },
   ] },
 ];
 
