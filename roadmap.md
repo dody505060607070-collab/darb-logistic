@@ -61,4 +61,4 @@
 - [x] Remove SMS wording from phone login (WhatsApp channel)
 - [ ] Truck routing via OpenRouteService — blocked: user must create free API key
 - [ ] GPS devices via Traccar — blocked: user must provide Traccar server URL/token
-- [ ] ZATCA sandbox, accounting (Odoo/Zoho), Naql — blocked: user choice + official accounts
+- [ ] ZATCA sandbox, accounting (Odoo/Zoho) (Naql removed by user) — blocked: user choice + official accounts
