@@ -11,7 +11,7 @@
 
 # DARB project rules
 - Data access is client-side through the Supabase client with RLS; every sensitive multi-step operation (resource allocation, trip events, invoicing, payment allocation, expense review, advance settlement, work-order status, re-inspection) is a SECURITY DEFINER RPC that checks roles itself — why: atomicity and server-side enforcement.
-- Roles live only in `user_roles` (enum `app_role`); first signup becomes owner, later accounts get roles via `invitations` — why: invite-only access without self-promotion.
+- Roles live only in `user_roles` (enum `app_role`); the signup trigger gives invited accounts their invited role and every other new account the owner role — why: owner chose open full access for anyone who signs in.
 - Trip money lives in `trip_financials` (finance roles only), never on `trips` — why: drivers must not see revenue/margins.
 - Overlap prevention for drivers/tractors/trailers is the `no_overlapping_bookings` exclusion constraint on `resource_bookings` — why: correct under concurrent requests.
 - Shared form field configs and helpers live in `src/components/darb/*`, never exported from route files — why: route files must only export `Route`.
@@ -24,6 +24,6 @@
 
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
 - WhatsApp number management matches the unique configured instance, verifies disconnection server-side, and requires explicit in-app confirmation — why: prevents selecting another company's number or interrupting messaging accidentally.
-- Login is phone-only: `src/lib/whatsapp-login.functions.ts` sends HMAC-hashed, 5-minute, attempt- and rate-limited codes via the company WhatsApp gateway, then exchanges a verified code for a real Cloud Auth session (admin magic-link token hash); accounts match only on `profiles.phone`, new numbers get no role — why: owner chose WhatsApp delivery while permissions stay in `user_roles`.
+- Login is phone-only: `src/lib/whatsapp-login.functions.ts` sends HMAC-hashed, 5-minute, attempt- and rate-limited codes via the company WhatsApp gateway, then exchanges a verified code for a real Cloud Auth session (admin magic-link token hash); accounts match only on `profiles.phone`, role assignment is left to the signup trigger — why: owner chose WhatsApp delivery while permissions stay in `user_roles`.
 - Keep the React auth context in a separate browser-safe module with HMR identity preservation, not in the provider/hook module — why: split routes can temporarily retain different module versions during preview updates.
 - CRM lives in a focused home-page component and role-restricted opportunity/activity tables; pipeline values use integer-cent calculations and remain forecasts, not revenue — why: preserves existing dashboards and finance boundaries.

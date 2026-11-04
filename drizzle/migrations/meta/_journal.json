@@ -71,6 +71,13 @@
       "when": 1793794420621,
       "tag": "0009_whatsapp_login_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793810408751,
+      "tag": "0010_new_accounts_get_owner_access",
+      "breakpoints": true
     }
   ]
 }

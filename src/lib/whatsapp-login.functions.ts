@@ -5,7 +5,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
  * WhatsApp login codes sent from the company's own WhatsApp gateway.
  * Codes are 6 digits, HMAC-hashed, valid 5 minutes, max 5 attempts, rate limited per number.
  * A verified code is exchanged for a real Cloud Auth session (magic-link token hash),
- * so permissions still come only from user_roles — new numbers get no role.
+ * so permissions still come only from user_roles — the signup trigger assigns them.
  */
 const TTL_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
@@ -77,7 +77,7 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
     const { data: used } = await supabaseAdmin.from("login_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id).is("consumed_at", null).select("id");
     if (!used?.length) throw new Error("الرمز مستخدم مسبقًا");
 
-    // Find the account that owns this verified number (profile phone), else create a new role-less account.
+    // Find the account that owns this verified number (profile phone), else create a new account (the signup trigger grants its role).
     let userId: string | null = null;
     const { data: prof } = await supabaseAdmin.from("profiles").select("id").eq("phone", data.phone).limit(2);
     if (prof && prof.length > 1) throw new Error("هذا الرقم مرتبط بأكثر من حساب. تواصل مع المدير.");
