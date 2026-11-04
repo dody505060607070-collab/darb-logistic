@@ -22,18 +22,18 @@ export function PhoneLogin() {
         if (error) throw error;
       } else {
         const phone = normalizePhone(country, number);
-        const { error } = await supabase.auth.signInWithOtp({ phone });
+        const { error } = await supabase.auth.signInWithOtp({ phone, options: { channel: 'whatsapp' } });
         if (error) throw error;
-        setSentTo(phone); toast.success('تم طلب رمز الدخول عبر SMS');
+        setSentTo(phone); toast.success('أرسلنا رمز الدخول إلى واتساب');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'تعذر تسجيل الدخول';
-      setError(/provider|phone.*disabled|unsupported|sms.*configured/i.test(message) ? 'لم يتم تفعيل خدمة رسائل SMS بعد. استخدم الدخول بالبريد مؤقتًا.' : message);
+      setError(/provider|phone.*disabled|unsupported|sms.*configured/i.test(message) ? 'إرسال رمز الدخول عبر واتساب غير مفعّل بعد. استخدم الدخول بالبريد مؤقتًا.' : message);
     } finally { setBusy(false); }
   }
   return <form onSubmit={submit} className="space-y-4">
     {sentTo ? <>
-      <p className="text-center text-sm text-muted-foreground">رمز التحقق إلى <b dir="ltr">{sentTo}</b></p>
+      <p className="text-center text-sm text-muted-foreground">أرسلنا رمز التحقق على واتساب إلى <b dir="ltr">{sentTo}</b></p>
       <Label htmlFor="sms-code">رمز التحقق</Label>
       <Input id="sms-code" dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} required minLength={6} maxLength={8} className="h-12 text-center text-xl" />
     </> : <>
@@ -46,7 +46,7 @@ export function PhoneLogin() {
       </div>
     </>}
     {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-    <Button type="submit" variant="gold" disabled={busy} className="h-11 w-full">{busy ? <Loader2 className="animate-spin" /> : <Smartphone />}{sentTo ? 'تحقق وتسجيل الدخول' : 'إرسال رمز SMS'}</Button>
+    <Button type="submit" variant="gold" disabled={busy} className="h-11 w-full">{busy ? <Loader2 className="animate-spin" /> : <Smartphone />}{sentTo ? 'تحقق وتسجيل الدخول' : 'إرسال الرمز على واتساب'}</Button>
     {sentTo && <Button type="button" variant="ghost" className="w-full" onClick={() => { setSentTo(''); setCode(''); setError(''); }}>تغيير الرقم أو طلب رمز جديد</Button>}
   </form>;
 }
