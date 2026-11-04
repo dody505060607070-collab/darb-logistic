@@ -116,7 +116,9 @@ function DriverApp() {
   if (!auth.driverId)
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center p-6">
+        {auth.viewAs && <div className="fixed top-2 left-2 z-50"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
         <div className="panel max-w-sm p-8 text-center">
+          {auth.viewAs && <p className="mb-3 text-xs text-gold">معاينة شاشة السائق — حسابك غير مرتبط بسائق، فتظهر الشاشة بدون رحلات.</p>}
           <Logo className="mb-4 justify-center" />
           <p className="text-sm text-muted-foreground">حسابك غير مرتبط بملف سائق. اطلب من مالك الحساب إرسال دعوة سائق لبريدك.</p>
           {auth.isStaff && <Button className="mt-4" onClick={() => void nav({ to: "/" })}>لوحة الإدارة</Button>}
@@ -131,6 +133,7 @@ function DriverApp() {
 
   return (
     <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20 animate-in fade-in duration-500">
+      {auth.viewAs && <div className="fixed top-2 left-2 z-50"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
       {current?.status === "in_progress" && <LiveGps tripId={current.id} />}
       <header className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
         <Logo light className="scale-90" />
