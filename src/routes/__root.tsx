@@ -39,7 +39,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   useEffect(() => {
-    if (/dynamically imported module|Importing a module script failed/.test(String(error?.message))) {
+    if (/dynamically imported module|Importing a module script failed/.test(String((error as Error)?.message))) {
       try {
         const t = Number(sessionStorage.getItem("darb-chunk-reload") || 0);
         if (Date.now() - t > 10000) { sessionStorage.setItem("darb-chunk-reload", String(Date.now())); location.reload(); }
