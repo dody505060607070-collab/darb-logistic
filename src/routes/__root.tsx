@@ -38,6 +38,14 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
+  useEffect(() => {
+    if (/dynamically imported module|Importing a module script failed/.test(String(error?.message))) {
+      try {
+        const t = Number(sessionStorage.getItem("darb-chunk-reload") || 0);
+        if (Date.now() - t > 10000) { sessionStorage.setItem("darb-chunk-reload", String(Date.now())); location.reload(); }
+      } catch { location.reload(); }
+    }
+  }, [error]);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -102,11 +110,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const STALE_CHUNK_SCRIPT = `(function(){function r(){try{var k="darb-chunk-reload",t=+sessionStorage.getItem(k)||0;if(Date.now()-t<10000)return;sessionStorage.setItem(k,String(Date.now()))}catch(e){}location.reload()}window.addEventListener("vite:preloadError",function(e){e.preventDefault();r()});window.addEventListener("unhandledrejection",function(e){var m=String(e.reason&&e.reason.message||"");if(/dynamically imported module|Importing a module script failed/.test(m))r()})})();`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: STALE_CHUNK_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
