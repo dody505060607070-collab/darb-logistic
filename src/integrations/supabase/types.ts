@@ -280,6 +280,33 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          recipient_id: string | null
+          sender_id: string
+          sender_name: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          recipient_id?: string | null
+          sender_id?: string
+          sender_name?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          recipient_id?: string | null
+          sender_id?: string
+          sender_name?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           company_name: string
@@ -2021,6 +2048,14 @@ export type Database = {
       cancel_trip: {
         Args: { p_reason: string; p_trip_id: string }
         Returns: undefined
+      }
+      chat_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          role: string
+        }[]
       }
       close_trip: { Args: { p_trip_id: string }; Returns: undefined }
       create_invoice_from_trips: {
