@@ -38,7 +38,8 @@
 - [x] Role home pages for dispatcher, accountant, maintenance, fleet supervisor (driver keeps its own app)
 
 ## Batch 2026-11-04 (b)
-- [ ] Fix chat: opening a private chat crashes the page
-- [ ] Click-through check of every page and main button, per role
-- [ ] Driver app preview for Super Admin with sample look (no real data)
-- [ ] AI: explain built-in AI needs no key; WhatsApp server fields (URL, instance, key) saved securely + QR code
+- [x] Fix chat: opening a private chat crashes the page
+- [x] Click-through check of every page and main button, per role
+- [x] Driver app preview for Super Admin with sample look (no real data)
+- [x] WhatsApp server link panel: status, QR, test message (secrets WHATSAPP_SERVER_URL/INSTANCE/KEY)
+- [ ] Auto-send tasks/reminders from the WhatsApp number — blocked: user must add server details and scan QR first
