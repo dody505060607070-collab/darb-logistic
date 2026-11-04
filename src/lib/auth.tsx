@@ -76,6 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (_e === "SIGNED_IN" && s) {
+        // one sign-in record per browser session
+        try {
+          if (sessionStorage.getItem("darb-signin-logged") !== s.user.id) {
+            sessionStorage.setItem("darb-signin-logged", s.user.id);
+            void supabase.from("activity_events").insert({ user_id: s.user.id, kind: "sign_in" });
+          }
+        } catch { /* ignore */ }
+      }
       setTimeout(() => void load(s), 0);
     });
     void supabase.auth.getSession().then(({ data }) => load(data.session));
@@ -97,6 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     can: (...rs) => eff.includes("owner") || rs.some((r) => eff.includes(r)),
     refresh: () => load(session),
     signOut: async () => {
+      if (session) await supabase.from("activity_events").insert({ user_id: session.user.id, kind: "sign_out" });
+      try { sessionStorage.removeItem("darb-signin-logged"); } catch { /* ignore */ }
       await supabase.auth.signOut();
       try {
         localStorage.removeItem("darb-driver-outbox");

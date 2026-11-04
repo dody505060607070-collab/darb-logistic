@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CustodyRouteImport } from './routes/custody'
 import { Route as CustomersRouteImport } from './routes/customers'
@@ -24,6 +25,7 @@ import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TrackingRouteImport } from './routes/tracking'
 import { Route as DriversIndexRouteImport } from './routes/drivers.index'
 import { Route as DriversIdRouteImport } from './routes/drivers.$id'
@@ -33,10 +35,16 @@ import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersNewRouteImport } from './routes/orders.new'
 import { Route as TripsIndexRouteImport } from './routes/trips.index'
 import { Route as TripsIdRouteImport } from './routes/trips.$id'
+import { Route as ApiPublicJobsDailyReportRouteImport } from './routes/api/public/jobs/daily-report'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivityRoute = ActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -109,6 +117,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackingRoute = TrackingRouteImport.update({
   id: '/tracking',
   path: '/tracking',
@@ -154,9 +167,16 @@ const TripsIdRoute = TripsIdRouteImport.update({
   path: '/trips/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsDailyReportRoute =
+  ApiPublicJobsDailyReportRouteImport.update({
+    id: '/api/public/jobs/daily-report',
+    path: '/api/public/jobs/daily-report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/chat': typeof ChatRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
@@ -171,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/tasks': typeof TasksRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -180,9 +201,11 @@ export interface FileRoutesByFullPath {
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/trips/': typeof TripsIndexRoute
+  '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/chat': typeof ChatRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
@@ -197,6 +220,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/tasks': typeof TasksRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -206,10 +230,12 @@ export interface FileRoutesByTo {
   '/fleet': typeof FleetIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/trips': typeof TripsIndexRoute
+  '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/chat': typeof ChatRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
@@ -224,6 +250,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/tasks': typeof TasksRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -233,11 +260,13 @@ export interface FileRoutesById {
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/trips/': typeof TripsIndexRoute
+  '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/activity'
     | '/chat'
     | '/custody'
     | '/customers'
@@ -252,6 +281,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/reset-password'
     | '/settings'
+    | '/tasks'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -261,9 +291,11 @@ export interface FileRouteTypes {
     | '/fleet/'
     | '/orders/'
     | '/trips/'
+    | '/api/public/jobs/daily-report'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/activity'
     | '/chat'
     | '/custody'
     | '/customers'
@@ -278,6 +310,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/reset-password'
     | '/settings'
+    | '/tasks'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -287,9 +320,11 @@ export interface FileRouteTypes {
     | '/fleet'
     | '/orders'
     | '/trips'
+    | '/api/public/jobs/daily-report'
   id:
     | '__root__'
     | '/'
+    | '/activity'
     | '/chat'
     | '/custody'
     | '/customers'
@@ -304,6 +339,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/reset-password'
     | '/settings'
+    | '/tasks'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -313,10 +349,12 @@ export interface FileRouteTypes {
     | '/fleet/'
     | '/orders/'
     | '/trips/'
+    | '/api/public/jobs/daily-report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivityRoute: typeof ActivityRoute
   ChatRoute: typeof ChatRoute
   CustodyRoute: typeof CustodyRoute
   CustomersRoute: typeof CustomersRoute
@@ -331,6 +369,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
+  TasksRoute: typeof TasksRoute
   TrackingRoute: typeof TrackingRoute
   DriversIdRoute: typeof DriversIdRoute
   FleetIdRoute: typeof FleetIdRoute
@@ -340,6 +379,7 @@ export interface RootRouteChildren {
   FleetIndexRoute: typeof FleetIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   TripsIndexRoute: typeof TripsIndexRoute
+  ApiPublicJobsDailyReportRoute: typeof ApiPublicJobsDailyReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -349,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activity': {
+      id: '/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof ActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -449,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tracking': {
       id: '/tracking'
       path: '/tracking'
@@ -512,11 +566,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/daily-report': {
+      id: '/api/public/jobs/daily-report'
+      path: '/api/public/jobs/daily-report'
+      fullPath: '/api/public/jobs/daily-report'
+      preLoaderRoute: typeof ApiPublicJobsDailyReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivityRoute: ActivityRoute,
   ChatRoute: ChatRoute,
   CustodyRoute: CustodyRoute,
   CustomersRoute: CustomersRoute,
@@ -531,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
+  TasksRoute: TasksRoute,
   TrackingRoute: TrackingRoute,
   DriversIdRoute: DriversIdRoute,
   FleetIdRoute: FleetIdRoute,
@@ -540,6 +603,7 @@ const rootRouteChildren: RootRouteChildren = {
   FleetIndexRoute: FleetIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   TripsIndexRoute: TripsIndexRoute,
+  ApiPublicJobsDailyReportRoute: ApiPublicJobsDailyReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

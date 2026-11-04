@@ -27,6 +27,9 @@ import {
   Cog,
   Loader2,
   Plus,
+  ListChecks,
+  Activity,
+  Eye,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -56,7 +59,9 @@ export const NAV: NavItem[] = [
   { to: "/finance", label: "المالية", icon: Landmark, roles: ["ops_manager", "accountant"] },
   { to: "/customers", label: "العملاء", icon: Users, roles: ["ops_manager", "accountant", "dispatcher"] },
   { to: "/incidents", label: "الحوادث والبلاغات", icon: ShieldAlert, roles: ["ops_manager", "fleet_supervisor"] },
+  { to: "/tasks", label: "المهام", icon: ListChecks },
   { to: "/chat", label: "المحادثات", icon: MessageCircle },
+  { to: "/activity", label: "متابعة النشاط", icon: Activity, roles: [] },
   { to: "/reports", label: "التقارير", icon: BarChart3, roles: ["ops_manager", "accountant"] },
   { to: "/settings", label: "الإعدادات", icon: Settings, roles: [] },
 ];
@@ -177,6 +182,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
       </ul>
+      <RolePreview onNavigate={onNavigate} />
     </nav>
   );
 }
@@ -266,7 +272,6 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             )}
           </div>
           <div className="mr-auto flex items-center gap-2">
-            <RolePreview />
             <CommandPalette />
             <ThemeToggle />
             <Notifications />
@@ -282,6 +287,12 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             </Button>
           </div>
         </header>
+        {auth.viewAs && (
+          <div className="flex items-center justify-center gap-2 bg-warning/15 px-4 py-1.5 text-xs text-warning">
+            <Eye className="size-3.5" /> هذا مجرد شكل صفحة «{ROLE_LABELS[auth.viewAs]}» — أنت ما زلت Super Admin
+            <button className="underline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع</button>
+          </div>
+        )}
         <main key={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6">{children}</main>
         <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {[
@@ -307,28 +318,28 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
   );
 }
 
-function RolePreview() {
+function RolePreview({ onNavigate }: { onNavigate?: () => void }) {
   const auth = useAuth();
   const nav = useNavigate();
   if (!auth.isSuperAdmin) return null;
   const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "driver"];
   return (
-    <div className="hidden items-center gap-1 rounded-full border border-border p-1 md:flex" title="معاينة شكل الصفحة لكل دور">
-      {opts.map((r) => {
-        const active = (auth.viewAs ?? "owner") === r;
-        return (
-          <button
-            key={r}
-            onClick={() => {
-              auth.setViewAs(r === "owner" ? null : r);
-              void nav({ to: r === "driver" ? "/driver" : roleHome([r]) });
-            }}
-            className={`rounded-full px-2.5 py-1 text-xs transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            {r === "owner" ? "Super Admin" : ROLE_LABELS[r]}
-          </button>
-        );
-      })}
+    <div className="border-t border-sidebar-border px-3 py-3">
+      <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[11px] text-sidebar-foreground/60">
+        <Eye className="size-3" /> معاينة شكل صفحة كل دور (شكل فقط)
+      </div>
+      <select
+        value={auth.viewAs ?? "owner"}
+        onChange={(e) => {
+          const r = e.target.value as AppRole;
+          auth.setViewAs(r === "owner" ? null : r);
+          onNavigate?.();
+          void nav({ to: r === "driver" ? "/driver" : roleHome([r]) });
+        }}
+        className="h-8 w-full rounded-lg border border-sidebar-border bg-sidebar-accent px-2 text-xs text-sidebar-foreground"
+      >
+        {opts.map((r) => <option key={r} value={r}>{r === "owner" ? "Super Admin (الكل)" : ROLE_LABELS[r]}</option>)}
+      </select>
     </div>
   );
 }
