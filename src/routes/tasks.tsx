@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { db, signedUrl, uploadFile } from "@/lib/db";
 import { ROLE_LABELS, useAuth, type AppRole } from "@/lib/auth";
 import { errMsg, fmtDateTime } from "@/lib/format";
+import { useServerFn } from "@tanstack/react-start";
+import { notifyTask } from "@/lib/whatsapp.functions";
 import { nextReminderAt, REMINDER_HOURS } from "@/lib/tasks";
 
 export const Route = createFileRoute("/tasks")({
@@ -72,6 +74,15 @@ function TasksPage() {
     return all.filter((t) => t.status === "assigned");
   }, [all, tab, me]);
   const refresh = () => void qc.invalidateQueries({ queryKey: ["tasks"] });
+  const notify = useServerFn(notifyTask);
+  const wa = async (taskId: string, event: "assigned" | "submitted" | "returned" | "approved") => {
+    try {
+      const r = await notify({ data: { taskId, event } });
+      if (r.sent) toast.success(`أُرسلت رسالة واتساب (${r.sent})`);
+      else toast.message(r.reason === "no_phone" ? "لا يوجد رقم جوال مسجل للمستلم — لم تُرسل رسالة واتساب" : "واتساب غير مربوط بعد — لم تُرسل رسالة");
+    } catch (e) { toast.error(errMsg(e)); }
+    refresh();
+  };
 
   async function submit(t: Task) {
     const note = window.prompt("اكتب ملاحظة عن إنجاز المهمة (اختياري)") ?? "";
@@ -79,6 +90,7 @@ function TasksPage() {
     if (error) { toast.error(errMsg(error)); return; }
     toast.success("تم إرسال المهمة للمراجعة");
     refresh();
+    void wa(t.id, "submitted");
   }
   async function review(t: Task, approve: boolean) {
     if (approve && !window.confirm("تأكيد نهائي: هل المهمة مكتملة فعلاً؟")) return;
@@ -87,6 +99,7 @@ function TasksPage() {
     if (error) { toast.error(errMsg(error)); return; }
     toast.success(approve ? "تم اعتماد المهمة كمكتملة" : "أُعيدت المهمة للموظف");
     refresh();
+    void wa(t.id, approve ? "approved" : "returned");
   }
 
   const tabs = [
@@ -109,7 +122,7 @@ function TasksPage() {
         <Kpi label="مكتملة" value={all.filter((t) => t.status === "completed").length} tone="success" />
       </div>
       <div className="rounded-2xl border border-warning/40 bg-warning/10 p-3 text-sm">
-        <MessageSquare className="ml-1 inline size-4" /> إرسال واتساب: <b>لم يتم الربط</b> — المهام والتذكيرات تُحفظ وتظهر هنا، وستُرسل على واتساب تلقائياً بعد ربط بوابة واتساب من الإعدادات.
+        <MessageSquare className="ml-1 inline size-4" /> واتساب: عند التكليف تصل للموظف رسالة بكل التفاصيل (الصورة والموقع)، وعند الإنجاز تصلك رسالة، وعند الإرجاع تصله رسالة. يلزم ربط الرقم من صفحة «متابعة النشاط» وتسجيل رقم جوال لكل موظف.
         التذكير: العاجلة كل {REMINDER_HOURS.urgent} ساعة، والعادية كل {REMINDER_HOURS.normal} ساعة حتى الإنجاز.
       </div>
       <div className="flex flex-wrap gap-2">
@@ -162,12 +175,12 @@ function TasksPage() {
           </div>
         )}
       </Panel>
-      {creating && <NewTask people={people.data ?? []} onClose={() => setCreating(false)} onDone={refresh} />}
+      {creating && <NewTask people={people.data ?? []} onClose={() => setCreating(false)} onDone={(id) => void wa(id, "assigned")} />}
     </div>
   );
 }
 
-function NewTask({ people, onClose, onDone }: { people: Person[]; onClose: () => void; onDone: () => void }) {
+function NewTask({ people, onClose, onDone }: { people: Person[]; onClose: () => void; onDone: (id: string) => void }) {
   const [f, setF] = useState({ title: "", description: "", priority: "normal", assignee_id: "", requested_by_external: "", location_text: "", due_at: "" });
   const [photo, setPhoto] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -178,15 +191,15 @@ function NewTask({ people, onClose, onDone }: { people: Person[]; onClose: () =>
     try {
       const m = f.location_text.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
       const photo_path = photo ? await uploadFile(photo, "tasks") : null;
-      const { error } = await db.from("tasks").insert({
+      const { data: row, error } = await db.from("tasks").insert({
         title: f.title.trim(), description: f.description || null, priority: f.priority, assignee_id: f.assignee_id,
         requested_by_external: f.requested_by_external || null, location_text: f.location_text || null,
         lat: m ? Number(m[1]) : null, lng: m ? Number(m[2]) : null, photo_path,
         due_at: f.due_at ? new Date(f.due_at).toISOString() : null,
-      });
+      }).select("id").single();
       if (error) throw error;
-      toast.success("تم إنشاء المهمة — واتساب غير مربوط بعد، فلن تُرسل رسالة");
-      onDone();
+      toast.success("تم إنشاء المهمة");
+      onDone(row.id);
       onClose();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   }

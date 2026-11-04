@@ -42,28 +42,30 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "./ui";
 import { CommandPalette } from "./CommandPalette";
 
-type NavItem = { to: string; label: string; icon: typeof Home; roles?: AppRole[] };
+type NavItem = { to: string; label: string; icon: typeof Home; roles?: AppRole[]; group: string };
+
+export const NAV_GROUPS = ["الرئيسية", "العمليات", "الأسطول والصيانة", "المالية والعملاء", "الفريق والتواصل", "الإدارة والإعدادات"];
 
 export const NAV: NavItem[] = [
-  { to: "/", label: "الرئيسية", icon: Home },
-  { to: "/operations", label: "العمليات", icon: Cog, roles: ["ops_manager", "dispatcher"] },
-  { to: "/orders", label: "أوامر النقل", icon: FileText, roles: ["ops_manager", "dispatcher", "accountant"] },
-  { to: "/trips", label: "الرحلات", icon: RouteIcon },
-  { to: "/tracking", label: "التتبع", icon: MapPin },
-  { to: "/fleet", label: "الأسطول", icon: Truck },
-  { to: "/drivers", label: "السائقون", icon: User },
-  { to: "/custody", label: "العهد والفحص", icon: ClipboardCheck, roles: ["ops_manager", "fleet_supervisor", "maintenance"] },
-  { to: "/documents", label: "المستندات", icon: FolderOpen, roles: ["ops_manager", "fleet_supervisor"] },
-  { to: "/maintenance", label: "الصيانة", icon: Wrench, roles: ["ops_manager", "maintenance", "fleet_supervisor"] },
-  { to: "/expenses", label: "المصروفات", icon: Coins, roles: ["ops_manager", "accountant", "fleet_supervisor"] },
-  { to: "/finance", label: "المالية", icon: Landmark, roles: ["ops_manager", "accountant"] },
-  { to: "/customers", label: "العملاء", icon: Users, roles: ["ops_manager", "accountant", "dispatcher"] },
-  { to: "/incidents", label: "الحوادث والبلاغات", icon: ShieldAlert, roles: ["ops_manager", "fleet_supervisor"] },
-  { to: "/tasks", label: "المهام", icon: ListChecks },
-  { to: "/chat", label: "المحادثات", icon: MessageCircle },
-  { to: "/activity", label: "متابعة النشاط", icon: Activity, roles: [] },
-  { to: "/reports", label: "التقارير", icon: BarChart3, roles: ["ops_manager", "accountant"] },
-  { to: "/settings", label: "الإعدادات", icon: Settings, roles: [] },
+  { to: "/", label: "الرئيسية", icon: Home , group: NAV_GROUPS[0]! },
+  { to: "/operations", label: "العمليات", icon: Cog, roles: ["ops_manager", "dispatcher"] , group: NAV_GROUPS[1]! },
+  { to: "/orders", label: "أوامر النقل", icon: FileText, roles: ["ops_manager", "dispatcher", "accountant"] , group: NAV_GROUPS[1]! },
+  { to: "/trips", label: "الرحلات", icon: RouteIcon , group: NAV_GROUPS[1]! },
+  { to: "/tracking", label: "التتبع", icon: MapPin , group: NAV_GROUPS[1]! },
+  { to: "/fleet", label: "الأسطول", icon: Truck , group: NAV_GROUPS[2]! },
+  { to: "/drivers", label: "السائقون", icon: User , group: NAV_GROUPS[2]! },
+  { to: "/custody", label: "العهد والفحص", icon: ClipboardCheck, roles: ["ops_manager", "fleet_supervisor", "maintenance"] , group: NAV_GROUPS[2]! },
+  { to: "/documents", label: "المستندات", icon: FolderOpen, roles: ["ops_manager", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
+  { to: "/maintenance", label: "الصيانة", icon: Wrench, roles: ["ops_manager", "maintenance", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
+  { to: "/expenses", label: "المصروفات", icon: Coins, roles: ["ops_manager", "accountant", "fleet_supervisor"] , group: NAV_GROUPS[3]! },
+  { to: "/finance", label: "المالية", icon: Landmark, roles: ["ops_manager", "accountant"] , group: NAV_GROUPS[3]! },
+  { to: "/customers", label: "العملاء", icon: Users, roles: ["ops_manager", "accountant", "dispatcher"] , group: NAV_GROUPS[3]! },
+  { to: "/incidents", label: "الحوادث والبلاغات", icon: ShieldAlert, roles: ["ops_manager", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
+  { to: "/tasks", label: "المهام", icon: ListChecks , group: NAV_GROUPS[4]! },
+  { to: "/chat", label: "المحادثات", icon: MessageCircle , group: NAV_GROUPS[4]! },
+  { to: "/activity", label: "متابعة النشاط", icon: Activity, roles: [] , group: NAV_GROUPS[5]! },
+  { to: "/reports", label: "التقارير", icon: BarChart3, roles: ["ops_manager", "accountant"] , group: NAV_GROUPS[5]! },
+  { to: "/settings", label: "الإعدادات", icon: Settings, roles: [] , group: NAV_GROUPS[5]! },
 ];
 
 /** Landing page per role: owners/ops managers keep the full dashboard. */
@@ -293,8 +295,8 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
         <main key={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6">{children}</main>
         <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {[
-            { to: "/", label: "الرئيسية", icon: Home },
-            { to: "/trips", label: "الرحلات", icon: RouteIcon },
+            { to: "/", label: "الرئيسية", icon: Home , group: NAV_GROUPS[0]! },
+            { to: "/trips", label: "الرحلات", icon: RouteIcon , group: NAV_GROUPS[1]! },
           ].map((n) => (
             <Link key={n.to} to={n.to} className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", (n.to === "/" ? path === "/" : path.startsWith(n.to)) ? "text-gold" : "text-muted-foreground")}>
               <n.icon className="size-5" />{n.label}
