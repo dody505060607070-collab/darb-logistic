@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_events: {
+        Row: {
+          at: string
+          detail: string | null
+          id: number
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          at?: string
+          detail?: string | null
+          id?: never
+          kind: string
+          user_id?: string
+        }
+        Update: {
+          at?: string
+          detail?: string | null
+          id?: never
+          kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       advances: {
         Row: {
           amount: number
@@ -70,6 +94,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ai_reports: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          report_date: string
+          source: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          report_date: string
+          source?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          report_date?: string
+          source?: string
+        }
+        Relationships: []
       }
       assets: {
         Row: {
@@ -1522,6 +1570,78 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          assigned_by: string
+          assignee_id: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          done_note: string | null
+          due_at: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          location_text: string | null
+          next_reminder_at: string
+          photo_path: string | null
+          priority: string
+          reminders_sent: number
+          requested_by_external: string | null
+          review_note: string | null
+          status: string
+          submitted_at: string | null
+          title: string
+          whatsapp_status: string
+        }
+        Insert: {
+          assigned_by?: string
+          assignee_id: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          done_note?: string | null
+          due_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          location_text?: string | null
+          next_reminder_at?: string
+          photo_path?: string | null
+          priority?: string
+          reminders_sent?: number
+          requested_by_external?: string | null
+          review_note?: string | null
+          status?: string
+          submitted_at?: string | null
+          title: string
+          whatsapp_status?: string
+        }
+        Update: {
+          assigned_by?: string
+          assignee_id?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          done_note?: string | null
+          due_at?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          location_text?: string | null
+          next_reminder_at?: string
+          photo_path?: string | null
+          priority?: string
+          reminders_sent?: number
+          requested_by_external?: string | null
+          review_note?: string | null
+          status?: string
+          submitted_at?: string | null
+          title?: string
+          whatsapp_status?: string
+        }
+        Relationships: []
+      }
       tire_mounts: {
         Row: {
           asset_id: string
@@ -2150,6 +2270,14 @@ export type Database = {
         Returns: undefined
       }
       settle_advance: { Args: { p_id: string }; Returns: number }
+      task_review: {
+        Args: { p_approve: boolean; p_id: string; p_note: string }
+        Returns: undefined
+      }
+      task_submit: {
+        Args: { p_id: string; p_note: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

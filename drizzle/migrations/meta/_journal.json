@@ -50,6 +50,13 @@
       "when": 1793768639649,
       "tag": "0006_company_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793769614598,
+      "tag": "0007_tasks_activity_ai_reports",
+      "breakpoints": true
     }
   ]
 }
