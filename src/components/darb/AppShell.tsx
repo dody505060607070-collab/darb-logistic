@@ -2,6 +2,7 @@ import { ThemeToggle } from "@/components/darb/ThemeToggle";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  MessageCircle,
   Bell,
   BarChart3,
   Calendar,
@@ -55,6 +56,7 @@ export const NAV: NavItem[] = [
   { to: "/finance", label: "المالية", icon: Landmark, roles: ["ops_manager", "accountant"] },
   { to: "/customers", label: "العملاء", icon: Users, roles: ["ops_manager", "accountant", "dispatcher"] },
   { to: "/incidents", label: "الحوادث والبلاغات", icon: ShieldAlert, roles: ["ops_manager", "fleet_supervisor"] },
+  { to: "/chat", label: "المحادثات", icon: MessageCircle },
   { to: "/reports", label: "التقارير", icon: BarChart3, roles: ["ops_manager", "accountant"] },
   { to: "/settings", label: "الإعدادات", icon: Settings, roles: [] },
 ];
