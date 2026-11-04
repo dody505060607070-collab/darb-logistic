@@ -36,3 +36,9 @@
 - [x] Role preview moved to small sidebar picker with "شكل فقط" banner
 - [ ] WhatsApp sending of tasks/reminders — blocked: WhatsApp gateway (Hostinger) details
 - [x] Role home pages for dispatcher, accountant, maintenance, fleet supervisor (driver keeps its own app)
+
+## Batch 2026-11-04 (b)
+- [ ] Fix chat: opening a private chat crashes the page
+- [ ] Click-through check of every page and main button, per role
+- [ ] Driver app preview for Super Admin with sample look (no real data)
+- [ ] AI: explain built-in AI needs no key; WhatsApp server fields (URL, instance, key) saved securely + QR code
