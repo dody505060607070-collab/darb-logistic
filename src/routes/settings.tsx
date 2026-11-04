@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Building, History, KeyRound, Plug, Plus, Settings as Cog, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
@@ -11,9 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db, useOne, useRows, type Row } from "@/lib/db";
-import { useQuery } from "@tanstack/react-query";
 import { whatsappStatus } from "@/lib/whatsapp.functions";
-import { Link } from "@tanstack/react-router";
 import { ROLE_LABELS, useAuth, type AppRole } from "@/lib/auth";
 import { errMsg, fmtDateTime } from "@/lib/format";
 
