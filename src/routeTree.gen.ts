@@ -33,6 +33,7 @@ import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersNewRouteImport } from './routes/orders.new'
 import { Route as TripsIndexRouteImport } from './routes/trips.index'
 import { Route as TripsIdRouteImport } from './routes/trips.$id'
+import { Route as ApiPublicJobsDailyReportRouteImport } from './routes/api/public/jobs/daily-report'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -154,6 +155,12 @@ const TripsIdRoute = TripsIdRouteImport.update({
   path: '/trips/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsDailyReportRoute =
+  ApiPublicJobsDailyReportRouteImport.update({
+    id: '/api/public/jobs/daily-report',
+    path: '/api/public/jobs/daily-report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/trips/': typeof TripsIndexRoute
+  '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -206,6 +214,7 @@ export interface FileRoutesByTo {
   '/fleet': typeof FleetIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/trips': typeof TripsIndexRoute
+  '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -233,6 +242,7 @@ export interface FileRoutesById {
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/trips/': typeof TripsIndexRoute
+  '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/fleet/'
     | '/orders/'
     | '/trips/'
+    | '/api/public/jobs/daily-report'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/fleet'
     | '/orders'
     | '/trips'
+    | '/api/public/jobs/daily-report'
   id:
     | '__root__'
     | '/'
@@ -313,6 +325,7 @@ export interface FileRouteTypes {
     | '/fleet/'
     | '/orders/'
     | '/trips/'
+    | '/api/public/jobs/daily-report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -340,6 +353,7 @@ export interface RootRouteChildren {
   FleetIndexRoute: typeof FleetIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   TripsIndexRoute: typeof TripsIndexRoute
+  ApiPublicJobsDailyReportRoute: typeof ApiPublicJobsDailyReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -512,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/daily-report': {
+      id: '/api/public/jobs/daily-report'
+      path: '/api/public/jobs/daily-report'
+      fullPath: '/api/public/jobs/daily-report'
+      preLoaderRoute: typeof ApiPublicJobsDailyReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -540,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   FleetIndexRoute: FleetIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   TripsIndexRoute: TripsIndexRoute,
+  ApiPublicJobsDailyReportRoute: ApiPublicJobsDailyReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

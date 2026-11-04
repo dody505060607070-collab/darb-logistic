@@ -5,11 +5,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const runDailyReportNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: ok } = await context.supabase.rpc("has_any_role", {
-      _user_id: context.userId,
-      _roles: ["owner", "ops_manager"],
-    });
-    if (!ok) throw new Error("غير مصرح");
+    const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+    if (!(roles ?? []).some((r) => r.role === "owner" || r.role === "ops_manager")) throw new Error("غير مصرح");
     const { generateDailyReport } = await import("./ai-report.server");
     const body = await generateDailyReport("manual");
     return { body };
