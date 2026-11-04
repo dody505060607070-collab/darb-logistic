@@ -30,6 +30,9 @@ type AuthState = {
   can: (...roles: AppRole[]) => boolean;
   isStaff: boolean;
   refresh: () => Promise<void>;
+  isSuperAdmin: boolean;
+  viewAs: AppRole | null;
+  setViewAs: (r: AppRole | null) => void;
   signOut: () => Promise<void>;
 };
 
@@ -41,6 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [fullName, setFullName] = useState("");
   const [driverId, setDriverId] = useState<string | null>(null);
+  const [viewAs, setViewAsState] = useState<AppRole | null>(null);
+  useEffect(() => {
+    try { const v = sessionStorage.getItem("darb-view-as"); if (v) setViewAsState(v as AppRole); } catch { /* ignore */ }
+  }, []);
+  function setViewAs(r: AppRole | null) {
+    setViewAsState(r);
+    try { if (r) sessionStorage.setItem("darb-view-as", r); else sessionStorage.removeItem("darb-view-as"); } catch { /* ignore */ }
+  }
 
   async function load(s: Session | null) {
     setSession(s);
@@ -71,14 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const isSuperAdmin = roles.includes("owner");
+  const eff: AppRole[] = isSuperAdmin && viewAs ? [viewAs] : roles;
   const value: AuthState = {
     ready,
     session,
-    roles,
+    roles: eff,
+    isSuperAdmin,
+    viewAs: isSuperAdmin ? viewAs : null,
+    setViewAs,
     fullName,
     driverId,
-    isStaff: roles.some((r) => r !== "driver"),
-    can: (...rs) => roles.includes("owner") || rs.some((r) => roles.includes(r)),
+    isStaff: eff.some((r) => r !== "driver"),
+    can: (...rs) => eff.includes("owner") || rs.some((r) => eff.includes(r)),
     refresh: () => load(session),
     signOut: async () => {
       await supabase.auth.signOut();

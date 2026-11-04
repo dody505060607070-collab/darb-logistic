@@ -264,6 +264,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             )}
           </div>
           <div className="mr-auto flex items-center gap-2">
+            <RolePreview />
             <CommandPalette />
             <ThemeToggle />
             <Notifications />
@@ -300,6 +301,32 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
           </button>
         </nav>
       </div>
+    </div>
+  );
+}
+
+function RolePreview() {
+  const auth = useAuth();
+  const nav = useNavigate();
+  if (!auth.isSuperAdmin) return null;
+  const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "driver"];
+  return (
+    <div className="hidden items-center gap-1 rounded-full border border-border p-1 md:flex" title="معاينة شكل الصفحة لكل دور">
+      {opts.map((r) => {
+        const active = (auth.viewAs ?? "owner") === r;
+        return (
+          <button
+            key={r}
+            onClick={() => {
+              auth.setViewAs(r === "owner" ? null : r);
+              void nav({ to: r === "driver" ? "/driver" : roleHome([r]) });
+            }}
+            className={`rounded-full px-2.5 py-1 text-xs transition-colors ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            {r === "owner" ? "Super Admin" : ROLE_LABELS[r]}
+          </button>
+        );
+      })}
     </div>
   );
 }
