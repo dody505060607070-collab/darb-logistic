@@ -24,6 +24,7 @@ import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TrackingRouteImport } from './routes/tracking'
 import { Route as DriversIndexRouteImport } from './routes/drivers.index'
 import { Route as DriversIdRouteImport } from './routes/drivers.$id'
@@ -110,6 +111,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackingRoute = TrackingRouteImport.update({
   id: '/tracking',
   path: '/tracking',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/tasks': typeof TasksRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/tasks': typeof TasksRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/tasks': typeof TasksRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/reset-password'
     | '/settings'
+    | '/tasks'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/reset-password'
     | '/settings'
+    | '/tasks'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -316,6 +327,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/reset-password'
     | '/settings'
+    | '/tasks'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -344,6 +356,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
+  TasksRoute: typeof TasksRoute
   TrackingRoute: typeof TrackingRoute
   DriversIdRoute: typeof DriversIdRoute
   FleetIdRoute: typeof FleetIdRoute
@@ -463,6 +476,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tracking': {
       id: '/tracking'
       path: '/tracking'
@@ -552,6 +572,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
+  TasksRoute: TasksRoute,
   TrackingRoute: TrackingRoute,
   DriversIdRoute: DriversIdRoute,
   FleetIdRoute: FleetIdRoute,
