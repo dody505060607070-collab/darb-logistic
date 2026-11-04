@@ -62,3 +62,6 @@
 - [ ] Truck routing via OpenRouteService — blocked: user must create free API key
 - [ ] GPS devices via Traccar — blocked: user must provide Traccar server URL/token
 - [ ] ZATCA sandbox, accounting (Odoo/Zoho) (Naql removed by user) — blocked: user choice + official accounts
+
+- [ ] Remove email sign-in from login (blocked: WhatsApp/phone login code must be working first, otherwise everyone is locked out)
+- [ ] Verify OpenRouteService + Traccar connections after keys are saved

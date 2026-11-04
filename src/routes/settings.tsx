@@ -45,10 +45,6 @@ const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOptio
     { label: "بيئة مطوري فاتورة", url: "https://sandbox.zatca.gov.sa/", note: "بيئة تجربة مجانية من الهيئة قبل الربط الفعلي." },
     { label: "بوابة فاتورة", url: "https://fatoora.zatca.gov.sa/", note: "الربط الفعلي مجاني لكنه يتطلب سجل الشركة الضريبي." },
   ] },
-  { name: "نظام المحاسبة", desc: "ترحيل الفواتير والدفعات والمصروفات", needs: "رابط النظام ومفتاح API", free: [
-    { label: "Odoo Community", url: "https://www.odoo.com/ar/page/download", note: "مجاني ومفتوح المصدر، يحتاج استضافة." },
-    { label: "Zoho Books", url: "https://www.zoho.com/books/", note: "خطة مجانية للشركات الصغيرة في بعض الدول." },
-  ] },
 ];
 
 function SettingsPage() {
