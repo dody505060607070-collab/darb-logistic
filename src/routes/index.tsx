@@ -11,16 +11,19 @@ import { CITY_COORDS, daysUntil, fmtNum, fmtSAR, fmtTime } from "@/lib/format";
 import { db } from "@/lib/db";
 import { ClientOnly } from "@tanstack/react-router";
 import { dashboardFor, RoleDashboard } from "@/components/darb/RoleDashboards";
+import { CrmDashboard } from '@/components/darb/CrmDashboard';
 
 const MapView = lazy(() => import("@/components/darb/MapView"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "لوحة الإدارة — دَرب" },
-      { name: "description", content: "مؤشرات التشغيل اليومية وحالة الأسطول والرحلات النشطة على خريطة المملكة." },
-      { property: "og:title", content: "لوحة الإدارة — دَرب" },
-      { property: "og:description", content: "مؤشرات التشغيل وحالة الأسطول والرحلات النشطة." },
+      { title: "الصفحة الرئيسية وإدارة علاقات العملاء — دَرب" },
+      { name: "description", content: "مؤشرات تشغيل دَرب وإدارة العملاء وفرص البيع والتواصل والمتابعات." },
+      { property: "og:title", content: "الصفحة الرئيسية وإدارة علاقات العملاء — دَرب" },
+      { property: "og:description", content: "لوحات التشغيل والعملاء ومسار المبيعات والمتابعات." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
@@ -31,9 +34,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { roles, fullName } = useAuth();
+  const { roles, fullName, can } = useAuth();
   const kind = dashboardFor(roles);
-  return kind ? <RoleDashboard kind={kind} name={fullName} /> : <Dashboard />;
+  return <>{kind ? <RoleDashboard kind={kind} name={fullName} /> : <Dashboard />}{can('ops_manager','accountant') && <CrmDashboard />}</>;
 }
 
 function Dashboard() {

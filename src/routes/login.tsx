@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { ClientOnly } from "@tanstack/react-router";
 import { ThemeToggle, useThemeMode } from "@/components/darb/ThemeToggle";
 import SignaturePenFooter from "@/components/ui/signature-pen-footer";
+import { PhoneLogin } from '@/components/darb/PhoneLogin';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -108,6 +110,10 @@ function LoginPage() {
             </h1>
             <p className="mt-1 mb-8 text-center text-sm text-muted-foreground">إدارة عمليات النقل البري والأسطول</p>
 
+            <Tabs defaultValue="phone" dir="rtl">
+              <TabsList className="mb-5 grid w-full grid-cols-2"><TabsTrigger value="phone">رقم الجوال</TabsTrigger><TabsTrigger value="email">البريد الإلكتروني</TabsTrigger></TabsList>
+              <TabsContent value="phone"><PhoneLogin /></TabsContent>
+              <TabsContent value="email">
             <form onSubmit={submit} className="space-y-4">
               {mode === "signup" && (
                 <div>
@@ -189,7 +195,9 @@ function LoginPage() {
                 </button>
               )}
             </p>
-            <p className="mt-3 text-center text-xs text-muted-foreground">الوصول للنظام عبر دعوة من مالك الحساب فقط.</p>
+              </TabsContent>
+            </Tabs>
+            <p className="mt-3 text-center text-xs text-muted-foreground">صلاحيات الشركة تُمنح من المدير فقط.</p>
           </div>
         </SignaturePenFooter>
       </ClientOnly>

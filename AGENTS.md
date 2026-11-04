@@ -23,3 +23,5 @@
 - Task submit/review go through `task_submit`/`task_review` RPCs; reminder cadence lives in `src/lib/tasks.ts` — why: assignees cannot self-approve.
 
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
+- Phone login uses native Cloud Auth SMS OTP and international phone validation; never issue custom login codes or infer roles from a matching phone — why: verified sessions and existing permissions must stay authoritative.
+- CRM lives in a focused home-page component and role-restricted opportunity/activity tables; pipeline values use integer-cent calculations and remain forecasts, not revenue — why: preserves existing dashboards and finance boundaries.
