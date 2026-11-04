@@ -69,10 +69,7 @@ export const NAV: NavItem[] = [
 /** Landing page per role: owners/ops managers keep the full dashboard. */
 export function roleHome(roles: AppRole[]): string {
   if (roles.includes("owner") || roles.includes("ops_manager")) return "/";
-  if (roles.includes("dispatcher")) return "/operations";
-  if (roles.includes("accountant")) return "/finance";
-  if (roles.includes("maintenance")) return "/maintenance";
-  if (roles.includes("fleet_supervisor")) return "/fleet";
+  // dispatcher, accountant, maintenance and fleet supervisor get their own dashboard on "/"
   return "/";
 }
 
