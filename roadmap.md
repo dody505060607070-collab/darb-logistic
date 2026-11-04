@@ -55,3 +55,10 @@
 - [x] Driver app preview for Super Admin with sample look (no real data)
 - [x] WhatsApp server link panel: status, QR, test message (secrets WHATSAPP_SERVER_URL/INSTANCE/KEY)
 - [ ] Auto-send tasks/reminders from the WhatsApp number — blocked: user must add server details and scan QR first
+
+## Free integrations (requested 2026-11-04)
+- [x] Integrations tab shows live WhatsApp status and free provider options with links
+- [x] Remove SMS wording from phone login (WhatsApp channel)
+- [ ] Truck routing via OpenRouteService — blocked: user must create free API key
+- [ ] GPS devices via Traccar — blocked: user must provide Traccar server URL/token
+- [ ] ZATCA sandbox, accounting (Odoo/Zoho), Naql — blocked: user choice + official accounts

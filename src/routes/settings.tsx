@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Building, History, KeyRound, Plug, Plus, Settings as Cog, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db, useOne, useRows, type Row } from "@/lib/db";
+import { whatsappStatus } from "@/lib/whatsapp.functions";
 import { ROLE_LABELS, useAuth, type AppRole } from "@/lib/auth";
 import { errMsg, fmtDateTime } from "@/lib/format";
 
@@ -31,13 +32,26 @@ export const Route = createFileRoute("/settings")({
   ),
 });
 
-const INTEGRATIONS: { name: string; desc: string; needs: string }[] = [
-  { name: "مزود تتبع GPS", desc: "قراءات المواقع والعداد من الأجهزة", needs: "اسم المزود، وثائق API، مفتاح الوصول" },
-  { name: "الفوترة الإلكترونية (ZATCA)", desc: "إرسال الفواتير واستلام حالة الإصدار", needs: "حساب مزود فوترة معتمد وبيانات الربط" },
-  { name: "نظام المحاسبة", desc: "ترحيل الفواتير والدفعات والمصروفات", needs: "اسم النظام وبيانات الوصول" },
-  { name: "الرسائل النصية / واتساب", desc: "تنبيهات خارجية للسائقين والعملاء", needs: "مزود رسائل وقوالب معتمدة ومستلمون" },
-  { name: "مزود توجيه الشاحنات", desc: "مسارات تراعي قيود الشاحنات وETA", needs: "مزود يدعم قيود الشاحنات ومفتاح API" },
-  { name: "منصة نقل / وصل", desc: "التكامل الرسمي لبوليصات الشحن", needs: "حساب رسمي وبيانات التكامل" },
+type FreeOption = { label: string; url: string; note: string };
+const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOption[] }[] = [
+  { name: "مزود تتبع GPS", desc: "قراءات المواقع والعداد", needs: "رابط خادم التتبع ومفتاح الوصول", free: [
+    { label: "جوال السائق (مجاني)", url: "", note: "يعمل الآن: تطبيق السائق يرسل موقعه عند كل حدث في الرحلة." },
+    { label: "Traccar", url: "https://www.traccar.org/", note: "مفتوح المصدر ومجاني، يدعم أغلب أجهزة GPS للشاحنات." },
+  ] },
+  { name: "مزود توجيه الشاحنات", desc: "مسارات تراعي قيود الشاحنات ووقت الوصول", needs: "مفتاح API", free: [
+    { label: "OpenRouteService", url: "https://openrouteservice.org/dev/#/signup", note: "مجاني (حتى 2000 طلب يوميًا) ويدعم مسارات الشاحنات الثقيلة." },
+  ] },
+  { name: "الفوترة الإلكترونية (ZATCA)", desc: "إصدار الفواتير الإلكترونية واستلام حالتها", needs: "الرقم الضريبي وشهادة الربط من بوابة فاتورة", free: [
+    { label: "بيئة مطوري فاتورة", url: "https://sandbox.zatca.gov.sa/", note: "بيئة تجربة مجانية من الهيئة قبل الربط الفعلي." },
+    { label: "بوابة فاتورة", url: "https://fatoora.zatca.gov.sa/", note: "الربط الفعلي مجاني لكنه يتطلب سجل الشركة الضريبي." },
+  ] },
+  { name: "نظام المحاسبة", desc: "ترحيل الفواتير والدفعات والمصروفات", needs: "رابط النظام ومفتاح API", free: [
+    { label: "Odoo Community", url: "https://www.odoo.com/ar/page/download", note: "مجاني ومفتوح المصدر، يحتاج استضافة." },
+    { label: "Zoho Books", url: "https://www.zoho.com/books/", note: "خطة مجانية للشركات الصغيرة في بعض الدول." },
+  ] },
+  { name: "منصة نقل / وصل", desc: "التكامل الرسمي لبوليصات الشحن", needs: "حساب رسمي للشركة وموافقة الهيئة", free: [
+    { label: "منصة نقل (هيئة النقل)", url: "https://naql.sa/", note: "حكومية؛ الربط يتطلب سجلًا تجاريًا وموافقة رسمية، لا يوجد ربط تجريبي عام." },
+  ] },
 ];
 
 function SettingsPage() {
@@ -195,11 +209,20 @@ function SettingsPage() {
         <TabsContent value="integrations">
           <Panel title="حالة التكاملات (الحالة الحقيقية)" icon={<Plug />}>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <WhatsAppIntegrationCard isOwner={isOwner} />
               {INTEGRATIONS.map((i) => (
                 <div key={i.name} className="rounded-lg border p-4">
                   <div className="flex items-center justify-between"><b className="text-primary">{i.name}</b><Badge>لم يتم الربط</Badge></div>
                   <p className="mt-1 text-sm text-muted-foreground">{i.desc}</p>
                   <p className="mt-2 text-xs"><span className="font-semibold">المطلوب للربط:</span> {i.needs}</p>
+                  <ul className="mt-3 space-y-2 border-t pt-3 text-xs">
+                    {i.free.map((f) => (
+                      <li key={f.label}>
+                        {f.url ? <a href={f.url} target="_blank" rel="noreferrer" className="font-semibold text-primary underline underline-offset-4">{f.label}</a> : <b>{f.label}</b>}
+                        <span className="text-muted-foreground"> — {f.note}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ))}
               <div className="rounded-lg border border-success/40 p-4">
@@ -208,7 +231,6 @@ function SettingsPage() {
               </div>
             </div>
           </Panel>
-          <p className="mt-4 text-sm text-muted-foreground">ربط واتساب ورمز QR موجودان في صفحة «متابعة النشاط» (للمدير العام فقط).</p>
         </TabsContent>
         <TabsContent value="alerts">
           <Panel title="التنبيهات" icon={<Bell />}>
@@ -244,5 +266,20 @@ function SettingsPage() {
           { name: "driver_id", label: "ربط بملف سائق (للسائقين)", type: "ref", ref: { table: "drivers", label: "full_name", filter: (q) => q.is("user_id", null) } },
         ]} />
     </>
+  );
+}
+
+function WhatsAppIntegrationCard({ isOwner }: { isOwner: boolean }) {
+  const st = useQuery({ queryKey: ["whatsapp-status"], queryFn: () => whatsappStatus(), enabled: isOwner });
+  const s = st.data;
+  const linked = s?.state === "open";
+  const label = !isOwner ? "يديره المدير العام" : st.isLoading ? "جارٍ الفحص…" : linked ? "متصل" : s?.configured ? "بانتظار مسح رمز QR" : "لم يتم الربط";
+  return (
+    <div className={`rounded-lg border p-4 ${linked ? "border-success/40" : ""}`}>
+      <div className="flex items-center justify-between"><b className="text-primary">واتساب</b><Badge tone={linked ? "success" : s?.configured ? "warning" : "neutral"}>{label}</Badge></div>
+      <p className="mt-1 text-sm text-muted-foreground">رسائل المهام والتذكيرات للموظفين من رقم الشركة.</p>
+      {linked && s?.number && <p className="mt-2 text-xs">الرقم المربوط: <b dir="ltr" className="num">{s.number}</b></p>}
+      {isOwner && <Link to="/activity" className="mt-3 inline-block text-xs font-semibold text-primary underline underline-offset-4">إدارة الرقم ورمز QR</Link>}
+    </div>
   );
 }
