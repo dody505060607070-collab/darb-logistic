@@ -99,7 +99,7 @@ function Accountant({ name }: { name: string }) {
   const ages = [[0, 30, "حالية (0–30 يوم)"], [31, 60, "31–60 يوم"], [61, 90, "61–90 يوم"], [91, 1e6, "أكثر من 90 يوم"]] as const;
   const total = open.reduce((s, r) => s + due(r), 0);
   const bucket = ages.map(([a, b, l]) => {
-    const v = open.filter((r) => { const d = -daysUntil(r.due_at ?? r.issued_at); return d >= a && d <= b || (a === 0 && d < 0); }).reduce((s, r) => s + due(r), 0);
+    const v = open.filter((r) => { const d = -(daysUntil(r.due_at ?? r.issued_at) ?? 0); return d >= a && d <= b || (a === 0 && d < 0); }).reduce((s, r) => s + due(r), 0);
     return { l, v, p: total ? Math.round((v / total) * 100) : 0 };
   });
   const sum = (rows: Row[] | undefined) => (rows ?? []).reduce((s, r) => s + Number(r.amount ?? r.balance ?? 0), 0);
@@ -166,7 +166,7 @@ function Maintenance({ name }: { name: string }) {
   const insp = useRows(["inspections", "critical"], () => db.from("inspections").select("id").eq("has_critical", true).eq("resolved", false));
   const w = wo.data ?? [];
   const low = (parts.data ?? []).filter((p) => Number(p.qty_on_hand) <= Number(p.reorder_level));
-  const upcoming = (plans.data ?? []).map((p) => {
+  const upcoming = (plans.data ?? []).map((p): Row => {
     const byDays = p.interval_days && p.last_done_at ? new Date(new Date(p.last_done_at).getTime() + p.interval_days * 864e5) : null;
     return { ...p, next: byDays };
   }).filter((p) => p.next).sort((a, b) => +a.next! - +b.next!).slice(0, 5);
@@ -235,7 +235,7 @@ function Fleet({ name }: { name: string }) {
   const insp = useRows(["inspections", "critical-list"], () => db.from("inspections").select("*, asset:assets(code)").eq("has_critical", true).eq("resolved", false));
   const a = (assets.data ?? []);
   const holder = (id: string) => (cust.data ?? []).find((c) => c.asset_id === id)?.driver?.full_name ?? "—";
-  const docSoon = (id: string) => (docs.data ?? []).find((d) => d.entity_id === id && daysUntil(d.expiry_date) <= 7);
+  const docSoon = (id: string) => (docs.data ?? []).find((d) => d.entity_id === id && (daysUntil(d.expiry_date) ?? 99) <= 7);
   const crit = (id: string) => (insp.data ?? []).find((i) => i.asset_id === id);
   const ready = (r: Row) => crit(r.id) || ["maintenance", "stopped"].includes(r.status) ? "no" : docSoon(r.id) ? "limited" : "yes";
   return (
@@ -259,13 +259,13 @@ function Fleet({ name }: { name: string }) {
             { key: "code", label: "المركبة / المقطورة", render: (r: Row) => <Link to="/fleet/$id" params={{ id: r.id }} className="font-semibold text-gold">{r.code}</Link> },
             { key: "driver", label: "السائق", render: (r: Row) => holder(r.id) },
             { key: "ready", label: "الجاهزية", render: (r: Row) => ready(r) === "yes" ? <Badge tone="success"><CheckCircle2 className="size-3" /> جاهزة</Badge> : ready(r) === "limited" ? <Badge tone="warning">جاهزية محدودة</Badge> : <Badge tone="danger"><XCircle className="size-3" /> غير جاهزة</Badge> },
-            { key: "why", label: "السبب", render: (r: Row) => crit(r.id) ? "فحص حرج غير محلول" : r.status === "maintenance" ? "قيد الصيانة" : r.status === "stopped" ? "موقوفة" : docSoon(r.id) ? `وثيقة تنتهي ${fmtDate(docSoon(r.id).expiry_date)}` : "—" },
+            { key: "why", label: "السبب", render: (r: Row) => crit(r.id) ? "فحص حرج غير محلول" : r.status === "maintenance" ? "قيد الصيانة" : r.status === "stopped" ? "موقوفة" : docSoon(r.id) ? `وثيقة تنتهي ${fmtDate(docSoon(r.id)?.expiry_date)}` : "—" },
           ]} />
         </Panel>
         <Panel title="الأولويات اليوم">
           <div className="mb-2 text-sm font-bold">وثائق تنتهي قريباً ({(docs.data ?? []).length})</div>
           {(docs.data ?? []).slice(0, 5).map((d) => (
-            <div key={d.id} className="flex justify-between border-b border-border py-2 text-sm"><span>{d.number ?? d.doc_type}</span><Badge tone="warning" dot={false}>{daysUntil(d.expiry_date) < 0 ? "منتهية" : `بعد ${daysUntil(d.expiry_date)} أيام`}</Badge></div>
+            <div key={d.id} className="flex justify-between border-b border-border py-2 text-sm"><span>{d.number ?? d.doc_type}</span><Badge tone="warning" dot={false}>{(daysUntil(d.expiry_date) ?? 0) < 0 ? "منتهية" : `بعد ${daysUntil(d.expiry_date)} أيام`}</Badge></div>
           ))}
           <div className="mt-4 mb-2 text-sm font-bold">فحوصات حرجة غير محلولة ({(insp.data ?? []).length})</div>
           {(insp.data ?? []).map((i) => (
