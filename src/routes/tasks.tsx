@@ -76,7 +76,7 @@ function TasksPage() {
   async function submit(t: Task) {
     const note = window.prompt("اكتب ملاحظة عن إنجاز المهمة (اختياري)") ?? "";
     const { error } = await supabase.rpc("task_submit", { p_id: t.id, p_note: note });
-    if (error) return toast.error(errMsg(error));
+    if (error) { toast.error(errMsg(error)); return; }
     toast.success("تم إرسال المهمة للمراجعة");
     refresh();
   }
@@ -84,7 +84,7 @@ function TasksPage() {
     if (approve && !window.confirm("تأكيد نهائي: هل المهمة مكتملة فعلاً؟")) return;
     const note = approve ? "" : (window.prompt("سبب الإرجاع") ?? "");
     const { error } = await supabase.rpc("task_review", { p_id: t.id, p_approve: approve, p_note: note });
-    if (error) return toast.error(errMsg(error));
+    if (error) { toast.error(errMsg(error)); return; }
     toast.success(approve ? "تم اعتماد المهمة كمكتملة" : "أُعيدت المهمة للموظف");
     refresh();
   }
@@ -173,7 +173,7 @@ function NewTask({ people, onClose, onDone }: { people: Person[]; onClose: () =>
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
   async function save() {
-    if (!f.title.trim() || !f.assignee_id) return toast.error("اكتب عنوان المهمة واختر الموظف");
+    if (!f.title.trim() || !f.assignee_id) { toast.error("اكتب عنوان المهمة واختر الموظف"); return; }
     setBusy(true);
     try {
       const m = f.location_text.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);

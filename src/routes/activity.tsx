@@ -43,8 +43,8 @@ function ActivityPage() {
   const to = new Date(new Date(from).getTime() + 864e5).toISOString();
   const people = useQuery({ queryKey: ["chat_directory"], queryFn: async () => ((await supabase.rpc("chat_directory")).data ?? []) as { id: string; full_name: string }[] });
   const name = (id: string | null) => people.data?.find((p) => p.id === id)?.full_name ?? "النظام";
-  const ev = useQuery({ queryKey: ["activity", day], queryFn: async () => ((await db.from("activity_events").select("*").gte("at", from).lt("at", to).order("at", { ascending: false }).limit(1000)).data ?? []) as Record<string, string>[] });
-  const audit = useQuery({ queryKey: ["audit", day], queryFn: async () => ((await db.from("audit_log").select("id,actor,table_name,action,at").gte("at", from).lt("at", to).order("at", { ascending: false }).limit(1000)).data ?? []) as Record<string, string>[] });
+  const ev = useQuery({ queryKey: ["activity", day], queryFn: async () => ((await db.from("activity_events").select("*").gte("at", from).lt("at", to).order("at", { ascending: false }).limit(1000)).data ?? []) as any[] }); // eslint-disable-line
+  const audit = useQuery({ queryKey: ["audit", day], queryFn: async () => ((await db.from("audit_log").select("id,actor,table_name,action,at").gte("at", from).lt("at", to).order("at", { ascending: false }).limit(1000)).data ?? []) as any[] }); // eslint-disable-line
 
   const perUser = useMemo(() => {
     const m = new Map<string, { first?: string; last?: string; out?: string; actions: number }>();
@@ -97,7 +97,7 @@ function AiReports() {
   const qc = useQueryClient();
   const run = useServerFn(runDailyReportNow);
   const [busy, setBusy] = useState(false);
-  const rep = useQuery({ queryKey: ["ai_reports"], queryFn: async () => ((await db.from("ai_reports").select("*").order("created_at", { ascending: false }).limit(7)).data ?? []) as Record<string, string>[] });
+  const rep = useQuery({ queryKey: ["ai_reports"], queryFn: async () => ((await db.from("ai_reports").select("*").order("created_at", { ascending: false }).limit(7)).data ?? []) as any[] }); // eslint-disable-line
   const latest = rep.data?.[0];
   return (
     <Panel title="التقرير الصباحي بالذكاء الاصطناعي" actions={
