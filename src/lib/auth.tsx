@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("drivers").select("id").eq("user_id", uid).maybeSingle(),
     ]);
     setRoles(((r.data ?? []) as { role: AppRole }[]).map((x) => x.role));
-    setFullName(p.data?.full_name ?? s.user.email ?? "");
+    setFullName(p.data?.full_name ?? s.user.phone ?? s.user.email ?? "");
     setDriverId(d.data?.id ?? null);
     setReady(true);
   }

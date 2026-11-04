@@ -27,7 +27,7 @@ export function CrmDashboard() {
   const [selected,setSelected] = useState('');
   const open = (kind: typeof dialog, row: Row|null = null) => { setRecord(row); setDialog(kind); };
   const complete = useAction((r: Row) => db.from('crm_activities').update({completed:!r.completed}).eq('id',r.id), {success:'تم تحديث المتابعة',invalidate:['crm_activities']});
-  const metric = crmMetrics(opportunities.data ?? []);
+  const metric = crmMetrics((opportunities.data ?? []).map(r => ({stage:String(r.stage),value:r.value,probability:r.probability,next_follow_up:r.next_follow_up})));
   const customerRows = customers.data ?? [];
   const filter = (rows: Row[]) => selected ? rows.filter(r => r.customer_id === selected) : rows;
   const error = customers.error || opportunities.error || activities.error;
