@@ -35,4 +35,4 @@
 - [x] AI morning report daily 08:00 Riyadh + "generate now"
 - [x] Role preview moved to small sidebar picker with "شكل فقط" banner
 - [ ] WhatsApp sending of tasks/reminders — blocked: WhatsApp gateway (Hostinger) details
-- [ ] Rebuild role home pages to match the 5 uploaded designs — next turn
+- [x] Role home pages for dispatcher, accountant, maintenance, fleet supervisor (driver keeps its own app)

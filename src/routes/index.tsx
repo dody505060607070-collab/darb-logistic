@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { CITY_COORDS, daysUntil, fmtNum, fmtSAR, fmtTime } from "@/lib/format";
 import { db } from "@/lib/db";
 import { ClientOnly } from "@tanstack/react-router";
+import { dashboardFor, RoleDashboard } from "@/components/darb/RoleDashboards";
 
 const MapView = lazy(() => import("@/components/darb/MapView"));
 
@@ -24,10 +25,16 @@ export const Route = createFileRoute("/")({
   }),
   component: () => (
     <AppShell>
-      <Dashboard />
+      <Home />
     </AppShell>
   ),
 });
+
+function Home() {
+  const { roles, fullName } = useAuth();
+  const kind = dashboardFor(roles);
+  return kind ? <RoleDashboard kind={kind} name={fullName} /> : <Dashboard />;
+}
 
 function Dashboard() {
   const { can, fullName } = useAuth();
