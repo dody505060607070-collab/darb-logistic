@@ -1,5 +1,10 @@
 # DARB roadmap
 
+## Current request 2026-11-04 11:01 UTC
+- [ ] WhatsApp-only login and removal of SMS/email/Google — blocked: unsupported Cloud Auth method; do not remove final working sign-in.
+- [x] Show company WhatsApp linked number and owner-only confirmed disconnect/relink; authenticated readback and confirmation cancellation tested. Actual logout/relink intentionally not executed to avoid disrupting the live company number.
+- [ ] Map verified phone identity to pre-authorized staff role / identify عبد الرحمن محمد administrator — blocked: unsupported WhatsApp auth and missing identified administrator account.
+
 ## Current request 2026-11-04 10:52 UTC
 - [x] Phone-first SMS sign-in UI with country selection and email fallback; native OTP verification and international validation tested.
 - [x] Preserve existing role permissions and restricted pending screen for unknown numbers; auth-created profiles retain phone numbers.

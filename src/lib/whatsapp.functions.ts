@@ -1,5 +1,6 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { linkedWhatsAppNumber } from './whatsapp-instance';
 
 /**
  * WhatsApp gateway on the company's own Ubuntu server (Evolution API compatible).
@@ -8,16 +9,17 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 type Ctx = { supabase: { from: (t: string) => any }; userId: string };
 
 async function requireOwner(context: Ctx) {
-  const { data } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+  const { data, error } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+  if (error) throw new Error('تعذر التحقق من صلاحية المالك');
   if (!((data ?? []) as { role: string }[]).some((r) => r.role === "owner")) throw new Error("غير مصرح — للمالك فقط");
 }
 
-function cfg() {
+const cfg = createServerOnlyFn(() => {
   const url = (process.env.WHATSAPP_SERVER_URL ?? "").trim().replace(/\/+$/, "");
   const instance = (process.env.WHATSAPP_INSTANCE ?? "").trim();
   const key = (process.env.WHATSAPP_SERVER_KEY ?? "").trim();
   return { url, instance, key, ready: !!(url && instance && key) };
-}
+});
 
 async function call(path: string, init?: RequestInit) {
   const c = cfg();
@@ -36,15 +38,31 @@ export const whatsappStatus = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await requireOwner(context as unknown as Ctx);
     const c = cfg();
-    if (!c.ready) return { configured: false as const, state: "not_configured", instance: c.instance || null, error: null as string | null };
+    if (!c.ready) return { configured: false as const, state: "not_configured", instance: c.instance || null, number: null as string | null, error: null as string | null };
     try {
       const r = await call(`/instance/connectionState/${encodeURIComponent(c.instance)}`);
-      if (!r.ok) return { configured: true as const, state: r.status === 404 ? "missing" : "error", instance: c.instance, error: `[${r.status}] ${r.text}` };
+      if (!r.ok) return { configured: true as const, state: r.status === 404 ? "missing" : "error", instance: c.instance, number: null, error: `[${r.status}] ${r.text}` };
       const state = r.json?.instance?.state ?? r.json?.state ?? "unknown";
-      return { configured: true as const, state: String(state), instance: c.instance, error: null };
+      if (state !== 'open') return { configured: true as const, state: String(state), instance: c.instance, number: null, error: null };
+      const details = await call(`/instance/fetchInstances?instanceName=${encodeURIComponent(c.instance)}`);
+      return { configured: true as const, state: String(state), instance: c.instance, number: details.ok ? linkedWhatsAppNumber(details.json, c.instance) : null, error: details.ok ? null : `تعذر قراءة الرقم [${details.status}]: ${details.text}` };
     } catch (e) {
-      return { configured: true as const, state: "unreachable", instance: c.instance, error: (e as Error).message };
+      return { configured: true as const, state: "unreachable", instance: c.instance, number: null, error: (e as Error).message };
     }
+  });
+
+export const whatsappDisconnect = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireOwner(context as unknown as Ctx);
+    const c = cfg();
+    if (!c.ready) throw new Error('بيانات خادم واتساب غير مضافة بعد');
+    const result = await call(`/instance/logout/${encodeURIComponent(c.instance)}`, { method: 'DELETE' });
+    if (!result.ok) throw new Error(`تعذر فك الربط [${result.status}]: ${result.text}`);
+    const verify = await call(`/instance/connectionState/${encodeURIComponent(c.instance)}`);
+    if (!verify.ok && verify.status !== 404) throw new Error(`تعذر تأكيد فك الربط [${verify.status}]: ${verify.text}`);
+    if (verify.json?.instance?.state === 'open' || verify.json?.state === 'open') throw new Error('الخادم ما زال يعرض الرقم مربوطًا؛ حدّث الحالة قبل المحاولة مجددًا');
+    return { disconnected: true };
   });
 
 export const whatsappQr = createServerFn({ method: "POST" })
