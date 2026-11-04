@@ -231,7 +231,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
           <Logo className="mb-6 justify-center" />
           <h1 className="text-lg font-bold text-primary">بانتظار منح الصلاحية</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            تم إنشاء حسابك ({auth.session.user.email}) لكن لم تُمنح لك صلاحية بعد. التسجيل في دَرب يتم عبر دعوة من مالك الحساب.
+            تم إنشاء حسابك ({auth.session.user.phone || auth.session.user.email}) لكن لم تُمنح لك صلاحية بعد. يمنح المدير صلاحيات الوصول إلى بيانات الشركة.
           </p>
           <Button variant="outline" className="mt-6" onClick={() => void auth.signOut()}>
             <LogOut /> تسجيل الخروج

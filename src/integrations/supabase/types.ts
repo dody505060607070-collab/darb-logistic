@@ -444,6 +444,97 @@ export type Database = {
           },
         ]
       }
+      crm_activities: {
+        Row: {
+          completed: boolean
+          created_at: string
+          created_by: string
+          customer_id: string
+          due_at: string | null
+          id: string
+          kind: string
+          summary: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          created_by?: string
+          customer_id: string
+          due_at?: string | null
+          id?: string
+          kind?: string
+          summary: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          due_at?: string | null
+          id?: string
+          kind?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_opportunities: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string
+          expected_close: string | null
+          id: string
+          next_follow_up: string | null
+          notes: string | null
+          probability: number
+          stage: string
+          title: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          customer_id: string
+          expected_close?: string | null
+          id?: string
+          next_follow_up?: string | null
+          notes?: string | null
+          probability?: number
+          stage?: string
+          title: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          expected_close?: string | null
+          id?: string
+          next_follow_up?: string | null
+          notes?: string | null
+          probability?: number
+          stage?: string
+          title?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_opportunities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custody: {
         Row: {
           accessories: string | null

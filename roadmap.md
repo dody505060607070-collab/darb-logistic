@@ -1,9 +1,11 @@
 # DARB roadmap
 
 ## Current request 2026-11-04 10:52 UTC
-- [ ] Phone-first sign-in with country selection and optional email — awaiting supported delivery-method choice; WhatsApp login codes are not supported by Cloud Auth.
-- [ ] Preserve permissions for existing staff and restricted access for unknown numbers — no automatic access to company data.
-- [ ] Advanced CRM on the existing home page, retaining current dashboard and using verified calculations.
+- [x] Phone-first SMS sign-in UI with country selection and email fallback; native OTP verification and international validation tested.
+- [x] Preserve existing role permissions and restricted pending screen for unknown numbers; auth-created profiles retain phone numbers.
+- [x] CRM home extension retaining dashboards: customer directory, sales stages, editable opportunities, follow-ups, contact log, weighted forecasts; calculation tests pass.
+- [ ] SMS activation and real delivered-code login — blocked: user must configure Phone auth service in More → Users → Auth settings → Phone.
+- [ ] Authenticated CRM create/edit/readback verification — blocked: no session for requesting user and multiple auth accounts; user must sign in or identify the test account.
 
 ## Done
 - [x] Packages 1–5 core: login, roles/invites, dashboard, ops room, order wizard, trips, tracking, fleet, drivers, custody & inspection, documents & authorizations, maintenance/tires/stock, fuel/expenses/advances, finance/invoices/payments, customers/contracts/carriers, incidents, reports, settings/audit, driver mobile app with offline outbox and POD.
