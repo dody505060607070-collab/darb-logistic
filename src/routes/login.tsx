@@ -61,6 +61,16 @@ function LoginPage() {
 
             <PhoneLogin />
             <p className="mt-3 text-center text-xs text-muted-foreground">صلاحيات الشركة تُمنح من المدير فقط.</p>
+            <p className="mt-6 text-center">
+              <a
+                href="https://abdelrahmanstudio.store/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-muted-foreground/40 transition-colors hover:text-muted-foreground/70"
+              >
+                صُنع بواسطة Abdelrahman Studio
+              </a>
+            </p>
           </div>
         </SignaturePenFooter>
       </ClientOnly>
