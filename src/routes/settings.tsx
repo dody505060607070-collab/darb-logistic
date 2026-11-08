@@ -85,7 +85,7 @@ function SettingsPage() {
     <>
       <PageHeader title="الإعدادات والموظفون" icon={<Cog />} />
       <Tabs defaultValue={tab ?? (isOwner ? "users" : "alerts")} dir="rtl">
-        <TabsList className="flex-wrap">
+        <TabsList className="h-auto w-full flex-wrap gap-1 lg:w-auto">
           {isOwner && <TabsTrigger value="users">الموظفون</TabsTrigger>}
           {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           <TabsTrigger value="integrations">التكاملات</TabsTrigger>
