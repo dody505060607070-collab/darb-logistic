@@ -35,6 +35,7 @@ import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersNewRouteImport } from './routes/orders.new'
 import { Route as TripsIndexRouteImport } from './routes/trips.index'
 import { Route as TripsIdRouteImport } from './routes/trips.$id'
+import { Route as SettingsEmployeesIdRouteImport } from './routes/settings_.employees.$id'
 import { Route as ApiPublicJobsDailyReportRouteImport } from './routes/api/public/jobs/daily-report'
 
 const IndexRoute = IndexRouteImport.update({
@@ -167,6 +168,11 @@ const TripsIdRoute = TripsIdRouteImport.update({
   path: '/trips/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsEmployeesIdRoute = SettingsEmployeesIdRouteImport.update({
+  id: '/settings_/employees/$id',
+  path: '/settings/employees/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJobsDailyReportRoute =
   ApiPublicJobsDailyReportRouteImport.update({
     id: '/api/public/jobs/daily-report',
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/trips/': typeof TripsIndexRoute
+  '/settings/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRoutesByTo {
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/fleet': typeof FleetIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/trips': typeof TripsIndexRoute
+  '/settings/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRoutesById {
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/fleet/': typeof FleetIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/trips/': typeof TripsIndexRoute
+  '/settings_/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
 }
 export interface FileRouteTypes {
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/fleet/'
     | '/orders/'
     | '/trips/'
+    | '/settings/employees/$id'
     | '/api/public/jobs/daily-report'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/fleet'
     | '/orders'
     | '/trips'
+    | '/settings/employees/$id'
     | '/api/public/jobs/daily-report'
   id:
     | '__root__'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/fleet/'
     | '/orders/'
     | '/trips/'
+    | '/settings_/employees/$id'
     | '/api/public/jobs/daily-report'
   fileRoutesById: FileRoutesById
 }
@@ -379,6 +391,7 @@ export interface RootRouteChildren {
   FleetIndexRoute: typeof FleetIndexRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
   TripsIndexRoute: typeof TripsIndexRoute
+  SettingsEmployeesIdRoute: typeof SettingsEmployeesIdRoute
   ApiPublicJobsDailyReportRoute: typeof ApiPublicJobsDailyReportRoute
 }
 
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings_/employees/$id': {
+      id: '/settings_/employees/$id'
+      path: '/settings/employees/$id'
+      fullPath: '/settings/employees/$id'
+      preLoaderRoute: typeof SettingsEmployeesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/daily-report': {
       id: '/api/public/jobs/daily-report'
       path: '/api/public/jobs/daily-report'
@@ -603,6 +623,7 @@ const rootRouteChildren: RootRouteChildren = {
   FleetIndexRoute: FleetIndexRoute,
   OrdersIndexRoute: OrdersIndexRoute,
   TripsIndexRoute: TripsIndexRoute,
+  SettingsEmployeesIdRoute: SettingsEmployeesIdRoute,
   ApiPublicJobsDailyReportRoute: ApiPublicJobsDailyReportRoute,
 }
 export const routeTree = rootRouteImport

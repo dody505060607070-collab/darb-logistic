@@ -16,6 +16,8 @@ export const Route = createFileRoute("/incidents")({
       { name: "description", content: "مركز معالجة الحوادث والتلفيات والبلاغات ومطالبات التأمين." },
       { property: "og:title", content: "الحوادث والبلاغات — دَرب" },
       { property: "og:description", content: "مركز معالجة الحوادث والبلاغات." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

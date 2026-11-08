@@ -15,6 +15,8 @@ export const Route = createFileRoute("/orders/")({
       { name: "description", content: "قائمة أوامر النقل والعملاء والبضائع والمواعيد." },
       { property: "og:title", content: "أوامر النقل — دَرب" },
       { property: "og:description", content: "قائمة أوامر النقل والبضائع والمواعيد." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

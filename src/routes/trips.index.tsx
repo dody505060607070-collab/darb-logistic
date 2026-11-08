@@ -17,6 +17,8 @@ export const Route = createFileRoute("/trips/")({
       { name: "description", content: "قائمة الرحلات وحالاتها ومراحلها والموارد المخصصة." },
       { property: "og:title", content: "الرحلات — دَرب" },
       { property: "og:description", content: "قائمة الرحلات وحالاتها والموارد المخصصة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

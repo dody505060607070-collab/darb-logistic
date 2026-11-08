@@ -64,11 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const uid = s.user.id;
     const [r, p, d] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", uid),
-      supabase.from("profiles").select("full_name").eq("id", uid).maybeSingle(),
+      supabase.from("profiles").select("full_name,phone").eq("id", uid).maybeSingle(),
       supabase.from("drivers").select("id").eq("user_id", uid).maybeSingle(),
     ]);
     setRoles(((r.data ?? []) as { role: AppRole }[]).map((x) => x.role));
-    setFullName(p.data?.full_name ?? s.user.phone ?? s.user.email ?? "");
+    setFullName(p.data?.full_name || p.data?.phone || s.user.phone || "موظف");
     setDriverId(d.data?.id ?? null);
     setReady(true);
   }

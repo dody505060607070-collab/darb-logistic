@@ -23,6 +23,8 @@ export const Route = createFileRoute("/trips/$id")({
       { name: "description", content: "تفاصيل الرحلة وخط الأحداث والمحطات وإثبات التسليم." },
       { property: "og:title", content: "تفاصيل الرحلة — دَرب" },
       { property: "og:description", content: "خط الأحداث والمحطات وإثبات التسليم." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

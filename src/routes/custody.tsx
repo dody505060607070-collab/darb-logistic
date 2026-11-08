@@ -24,6 +24,8 @@ export const Route = createFileRoute("/custody")({
       { name: "description", content: "محاضر استلام العهد وقوائم الفحص والعيوب." },
       { property: "og:title", content: "العهد والفحص — دَرب" },
       { property: "og:description", content: "محاضر استلام العهد وقوائم الفحص." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

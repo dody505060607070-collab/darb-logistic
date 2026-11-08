@@ -16,6 +16,8 @@ export const Route = createFileRoute("/reports")({
       { name: "description", content: "تقارير الكيلومترات المحملة والفارغة والانتظار والالتزام والهامش والتحصيل." },
       { property: "og:title", content: "التقارير — دَرب" },
       { property: "og:description", content: "تقارير التشغيل والمالية." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

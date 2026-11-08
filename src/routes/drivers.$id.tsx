@@ -18,6 +18,8 @@ export const Route = createFileRoute("/drivers/$id")({
       { name: "description", content: "ملف السائق: العهد والرحلات والمستندات والسلف." },
       { property: "og:title", content: "ملف السائق — دَرب" },
       { property: "og:description", content: "العهد والرحلات والمستندات للسائق." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

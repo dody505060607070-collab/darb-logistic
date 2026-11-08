@@ -78,6 +78,13 @@
       "when": 1793810408751,
       "tag": "0010_new_accounts_get_owner_access",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794120229866,
+      "tag": "0011_unique_employee_login_phone",
+      "breakpoints": true
     }
   ]
 }

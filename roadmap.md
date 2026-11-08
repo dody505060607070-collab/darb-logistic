@@ -1,5 +1,11 @@
 # DARB roadmap
 
+## Current request 2026-11-08
+- [x] Replace settings users list with employee directory and individual editable details/permissions pages; phone-only visible identity.
+- [x] Add verification checklist: employee edit persisted after reload; 20 owner pages opened without runtime errors, mobile has no horizontal overflow; Traccar reachable with zero devices, ORS route and WhatsApp connection verified.
+- [ ] Live Traccar device ingestion/readback — blocked: no devices exist in the configured provider account.
+- [ ] Exhaustive acceptance of every operation under actual staff roles — blocked: no identified staff-role test accounts/session supplied; owner page smoke checks are not full business-flow verification.
+
 ## Current request 2026-11-04 11:01 UTC
 - [ ] WhatsApp-only login and removal of SMS/email/Google — blocked: unsupported Cloud Auth method; do not remove final working sign-in.
 - [x] Show company WhatsApp linked number and owner-only confirmed disconnect/relink; authenticated readback and confirmation cancellation tested. Actual logout/relink intentionally not executed to avoid disrupting the live company number.

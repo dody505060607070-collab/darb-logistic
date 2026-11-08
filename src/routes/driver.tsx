@@ -26,6 +26,8 @@ export const Route = createFileRoute("/driver")({
       { name: "description", content: "رحلة السائق الحالية والفحص وتحديث المحطات والمصروفات وإثبات التسليم." },
       { property: "og:title", content: "تطبيق السائق — دَرب" },
       { property: "og:description", content: "الرحلة الحالية والفحص وإثبات التسليم." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: DriverApp,

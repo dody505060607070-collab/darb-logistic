@@ -19,6 +19,8 @@ export const Route = createFileRoute("/fleet/")({
       { name: "description", content: "إدارة رؤوس الشاحنات والمقطورات وحالتها وربطها بالرحلات." },
       { property: "og:title", content: "الأسطول — دَرب" },
       { property: "og:description", content: "إدارة رؤوس الشاحنات والمقطورات وحالتها." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

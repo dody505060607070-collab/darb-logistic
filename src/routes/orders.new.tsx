@@ -20,6 +20,8 @@ export const Route = createFileRoute("/orders/new")({
       { name: "description", content: "إنشاء أمر نقل جديد وتخطيط الرحلة وتخصيص السائق والمركبة." },
       { property: "og:title", content: "إنشاء أمر نقل — دَرب" },
       { property: "og:description", content: "إنشاء أمر نقل وتخطيط الرحلة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

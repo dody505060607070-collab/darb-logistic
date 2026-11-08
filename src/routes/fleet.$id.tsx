@@ -20,6 +20,8 @@ export const Route = createFileRoute("/fleet/$id")({
       { name: "description", content: "ملف المركبة: المستندات والعداد والصيانة والرحلات." },
       { property: "og:title", content: "ملف المركبة — دَرب" },
       { property: "og:description", content: "المستندات والعداد والصيانة والرحلات للمركبة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

@@ -19,6 +19,8 @@ export const Route = createFileRoute("/documents")({
       { name: "description", content: "متابعة المستندات والتفويضات وتواريخ الانتهاء." },
       { property: "og:title", content: "المستندات والتفويضات — دَرب" },
       { property: "og:description", content: "متابعة المستندات والتفويضات وتواريخ الانتهاء." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

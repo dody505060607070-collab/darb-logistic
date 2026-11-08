@@ -18,6 +18,8 @@ export const Route = createFileRoute("/customers")({
       { name: "description", content: "العملاء ومواقع التحميل والتفريغ والعقود والأسعار والناقلون الخارجيون." },
       { property: "og:title", content: "العملاء والعقود — دَرب" },
       { property: "og:description", content: "العملاء والمواقع والعقود والناقلون." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

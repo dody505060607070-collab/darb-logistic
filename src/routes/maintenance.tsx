@@ -19,6 +19,8 @@ export const Route = createFileRoute("/maintenance")({
       { name: "description", content: "أوامر العمل والصيانة الدورية والإطارات والمخزون." },
       { property: "og:title", content: "الصيانة والمخزون — دَرب" },
       { property: "og:description", content: "أوامر العمل والصيانة الدورية والإطارات والمخزون." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

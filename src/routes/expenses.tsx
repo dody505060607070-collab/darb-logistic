@@ -20,6 +20,8 @@ export const Route = createFileRoute("/expenses")({
       { name: "description", content: "تعبئة الديزل والمصروفات واعتمادها والسلف وتسويتها." },
       { property: "og:title", content: "الوقود والمصروفات — دَرب" },
       { property: "og:description", content: "تعبئة الديزل والمصروفات والسلف." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

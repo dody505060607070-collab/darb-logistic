@@ -21,6 +21,8 @@ export const Route = createFileRoute("/finance")({
       { name: "description", content: "مسودات الفواتير من الرحلات المسلّمة والدفعات والتحصيل والمتأخرات." },
       { property: "og:title", content: "المالية والفوترة — دَرب" },
       { property: "og:description", content: "الفواتير والدفعات والتحصيل." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

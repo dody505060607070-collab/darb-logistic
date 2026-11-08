@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, Building, History, KeyRound, Plug, Plus, Settings as Cog, Trash2, Users } from "lucide-react";
+import { Bell, Building, History, Plug, Plus, Settings as Cog } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
@@ -12,17 +12,23 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db, useOne, useRows, type Row } from "@/lib/db";
 import { whatsappStatus } from "@/lib/whatsapp.functions";
-import { ROLE_LABELS, useAuth, type AppRole } from "@/lib/auth";
+import { integrationHealth } from "@/lib/integration-health.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { useAuth } from "@/lib/auth";
+import { EmployeeDirectory } from "@/components/darb/EmployeeDirectory";
+import { SystemChecklist } from "@/components/darb/SystemChecklist";
 import { errMsg, fmtDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/settings")({
   validateSearch: (s: Record<string, unknown>) => ({ tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined }),
   head: () => ({
     meta: [
-      { title: "الإعدادات والمستخدمون والصلاحيات — دَرب" },
-      { name: "description", content: "إعداد الشركة والفروع والمستخدمين والصلاحيات وحالة التكاملات وسجل التدقيق." },
+      { title: "الإعدادات والموظفون — دَرب" },
+      { name: "description", content: "إعداد الشركة والفروع والموظفين والصلاحيات وحالة التكاملات وسجل التدقيق." },
       { property: "og:title", content: "الإعدادات — دَرب" },
-      { property: "og:description", content: "الشركة والمستخدمون والصلاحيات والتكاملات." },
+      { property: "og:description", content: "الشركة والموظفون والتكاملات." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
@@ -49,23 +55,18 @@ const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOptio
 
 function SettingsPage() {
   const { tab } = Route.useSearch();
-  const { can, session } = useAuth();
+  const { can } = useAuth();
   const qc = useQueryClient();
   const isOwner = can("owner");
+  const checkHealth = useServerFn(integrationHealth);
+  const health = useQuery({ queryKey: ['integration-health'], queryFn: () => checkHealth(), enabled: isOwner, staleTime: 60000 });
   const company = useOne(["company_settings"], () => db.from("company_settings").select("*").eq("id", 1).maybeSingle());
   const branches = useRows(["branches"], () => db.from("branches").select("*").order("name"));
   const profiles = useRows(["profiles"], () => db.from("profiles").select("*").order("created_at"), isOwner);
-  const roles = useRows(["user_roles"], () => db.from("user_roles").select("*"), isOwner);
-  const invites = useRows(["invitations"], () => db.from("invitations").select("*").order("created_at", { ascending: false }), isOwner);
   const notifs = useRows(["notifications", "all"], () => db.from("notifications").select("*").order("created_at", { ascending: false }).limit(100));
   const audit = useRows(["audit_log"], () => db.from("audit_log").select("*").order("at", { ascending: false }).limit(200), isOwner);
   const [c, setC] = useState<Row>({});
   const [branchOpen, setBranchOpen] = useState(false);
-  const [invOpen, setInvOpen] = useState(false);
-  const [addRole, setAddRole] = useState<Record<string, string>>({});
-  const [linkDriver, setLinkDriver] = useState<Record<string, string>>({});
-  const freeDrivers = useRows(["drivers", "unlinked"], () => db.from("drivers").select("id, full_name, user_id").is("user_id", null).order("full_name"), isOwner);
-  const pending = (profiles.data ?? []).filter((p) => !(roles.data ?? []).some((r) => r.user_id === p.id));
 
   useEffect(() => { if (company.data) setC(company.data); }, [company.data]);
 
@@ -73,26 +74,6 @@ function SettingsPage() {
     const { error } = await db.from("company_settings").update({ company_name: c.company_name, vat_rate: Number(c.vat_rate), vat_number: c.vat_number, cr_number: c.cr_number, doc_expiry_warning_days: Number(c.doc_expiry_warning_days), updated_at: new Date().toISOString() }).eq("id", 1);
     if (error) return void toast.error(errMsg(error));
     toast.success("تم حفظ إعدادات الشركة");
-  }
-  async function grant(uid: string, role?: string) {
-    const r = role ?? addRole[uid];
-    if (!r) return void toast.error("اختر الدور أولًا");
-    if (r === "driver") {
-      const d = linkDriver[uid];
-      if (!d) return void toast.error("اختر ملف السائق المرتبط بهذا الحساب");
-      const { error: e1 } = await db.from("drivers").update({ user_id: uid }).eq("id", d);
-      if (e1) return void toast.error(errMsg(e1));
-      void qc.invalidateQueries({ queryKey: ["drivers"] });
-    }
-    const { error } = await db.from("user_roles").insert({ user_id: uid, role: r });
-    if (error) return void toast.error(errMsg(error));
-    toast.success(`تم منح دور ${ROLE_LABELS[r as AppRole]}`);
-    void qc.invalidateQueries({ queryKey: ["user_roles"] });
-  }
-  async function revoke(id: string) {
-    const { error } = await db.from("user_roles").delete().eq("id", id);
-    if (error) return void toast.error(errMsg(error));
-    void qc.invalidateQueries({ queryKey: ["user_roles"] });
   }
   async function setNotif(id: string, status: string) {
     const { error } = await db.from("notifications").update({ status }).eq("id", id);
@@ -102,39 +83,14 @@ function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="الإعدادات والمستخدمون والصلاحيات والتكاملات" icon={<Cog />} />
-      {isOwner && pending.length > 0 && (
-        <Panel tone="copper" className="mb-5" title={`حسابات جديدة بانتظار الصلاحية (${pending.length})`} icon={<KeyRound />}>
-          <p className="mb-3 text-sm text-muted-foreground">هؤلاء سجّلوا دخولًا ولا يملكون أي دور بعد، فلا يرون أي بيانات. اختر الدور المناسب لكل شخص واضغط «منح».</p>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {pending.map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-2xl bg-black/25 p-3">
-                <div className="min-w-40 flex-1">
-                  <b className="block">{p.full_name}</b>
-                  <span className="num text-xs opacity-70">{p.email}</span>
-                </div>
-                <select aria-label="الدور" className="h-9 rounded-xl border border-white/20 bg-black/40 px-2 text-sm" value={addRole[p.id] ?? ""} onChange={(e) => setAddRole({ ...addRole, [p.id]: e.target.value })}>
-                  <option value="">اختر الدور…</option>
-                  {Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner").map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                </select>
-                {addRole[p.id] === "driver" && (
-                  <select aria-label="ملف السائق" className="h-9 rounded-xl border border-white/20 bg-black/40 px-2 text-sm" value={linkDriver[p.id] ?? ""} onChange={(e) => setLinkDriver({ ...linkDriver, [p.id]: e.target.value })}>
-                    <option value="">ملف السائق…</option>
-                    {(freeDrivers.data ?? []).map((d) => <option key={d.id} value={d.id}>{d.full_name}</option>)}
-                  </select>
-                )}
-                <Button size="sm" variant="gold" onClick={() => void grant(p.id)}>منح</Button>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      )}
+      <PageHeader title="الإعدادات والموظفون" icon={<Cog />} />
       <Tabs defaultValue={tab ?? (isOwner ? "users" : "alerts")} dir="rtl">
         <TabsList className="flex-wrap">
-          {isOwner && <TabsTrigger value="users">المستخدمون والصلاحيات</TabsTrigger>}
+          {isOwner && <TabsTrigger value="users">الموظفون</TabsTrigger>}
           {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           <TabsTrigger value="integrations">التكاملات</TabsTrigger>
           <TabsTrigger value="alerts">التنبيهات</TabsTrigger>
+          {isOwner && <TabsTrigger value="checklist">قائمة التحقق</TabsTrigger>}
           {isOwner && <TabsTrigger value="audit">سجل التدقيق</TabsTrigger>}
         </TabsList>
         {isOwner && (
@@ -158,54 +114,17 @@ function SettingsPage() {
           </TabsContent>
         )}
         {isOwner && (
-          <TabsContent value="users">
-            <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
-              <Panel title="المستخدمون" icon={<Users />}>
-                <DataTable rows={profiles.data} loading={profiles.isLoading} cols={[
-                  { key: "full_name", label: "الاسم", render: (p) => <b>{p.full_name}</b> },
-                  { key: "email", label: "البريد", render: (p) => <span className="num text-xs">{p.email}</span> },
-                  { key: "roles", label: "الأدوار", render: (p) => (
-                    <div className="flex flex-wrap gap-1">
-                      {(roles.data ?? []).filter((r) => r.user_id === p.id).map((r) => (
-                        <Badge key={r.id} tone="gold">{ROLE_LABELS[r.role as AppRole]}{!(r.role === "owner" && p.id === session?.user.id) && <button onClick={() => void revoke(r.id)} className="mr-1 text-danger" aria-label="إزالة"><Trash2 className="size-3" /></button>}</Badge>
-                      ))}
-                    </div>
-                  ) },
-                  { key: "add", label: "منح دور", render: (p) => (
-                    <div className="flex gap-1">
-                      <select className="h-8 rounded-md border bg-card px-1 text-xs" value={addRole[p.id] ?? ""} onChange={(e) => setAddRole({ ...addRole, [p.id]: e.target.value })}>
-                        <option value="">—</option>
-                        {Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner").map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-                      </select>
-                      {addRole[p.id] === "driver" && (
-                        <select aria-label="ملف السائق" className="h-8 rounded-md border bg-card px-1 text-xs" value={linkDriver[p.id] ?? ""} onChange={(e) => setLinkDriver({ ...linkDriver, [p.id]: e.target.value })}>
-                          <option value="">ملف السائق…</option>
-                          {(freeDrivers.data ?? []).map((d) => <option key={d.id} value={d.id}>{d.full_name}</option>)}
-                        </select>
-                      )}
-                      <Button size="sm" variant="soft" onClick={() => void grant(p.id)}>منح</Button>
-                    </div>
-                  ) },
-                ]} />
-              </Panel>
-              <Panel title="الدعوات" icon={<KeyRound />} actions={<Button size="sm" variant="gold" onClick={() => setInvOpen(true)}><Plus /> دعوة</Button>}>
-                <p className="mb-3 text-xs text-muted-foreground">التسجيل خاص: المستخدم يُنشئ حسابه بالبريد المدعو فيحصل على الدور تلقائيًا. لا تُرسل رسائل خارجية من النظام.</p>
-                <DataTable rows={invites.data} loading={invites.isLoading} cols={[
-                  { key: "email", label: "البريد", render: (i) => <span className="num text-xs">{i.email}</span> },
-                  { key: "role", label: "الدور", render: (i) => ROLE_LABELS[i.role as AppRole] },
-                  { key: "st", label: "الحالة", render: (i) => (i.accepted_at ? <Badge tone="success">مقبولة</Badge> : <Badge tone="warning">بانتظار</Badge>) },
-                ]} />
-              </Panel>
-            </div>
-          </TabsContent>
+          <TabsContent value="users"><EmployeeDirectory /></TabsContent>
         )}
+        {isOwner && <TabsContent value="checklist"><SystemChecklist /></TabsContent>}
         <TabsContent value="integrations">
           <Panel title="حالة التكاملات (الحالة الحقيقية)" icon={<Plug />}>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <WhatsAppIntegrationCard isOwner={isOwner} />
-              {INTEGRATIONS.map((i) => (
+              {INTEGRATIONS.map((i, index) => (
                 <div key={i.name} className="rounded-lg border p-4">
-                  <div className="flex items-center justify-between"><b className="text-primary">{i.name}</b><Badge>لم يتم الربط</Badge></div>
+                  <div className="flex flex-wrap items-center justify-between gap-2"><b className="text-primary">{i.name}</b><Badge tone={(index === 0 ? health.data?.tracking.state : index === 1 ? health.data?.routing.state : '') === 'connected' ? 'success' : 'neutral'}>{index < 2 ? health.isPending && isOwner ? 'جارٍ الفحص…' : (index === 0 ? health.data?.tracking.state : health.data?.routing.state) === 'connected' ? 'الخادم متصل' : isOwner ? 'تعذر التحقق أو لم يتم الربط' : 'يديره المدير العام' : 'لم يتم الربط'}</Badge></div>
+                  {index === 0 && health.data && <p className="mt-2 text-xs text-warning">{health.data.tracking.detail}</p>}
                   <p className="mt-1 text-sm text-muted-foreground">{i.desc}</p>
                   <p className="mt-2 text-xs"><span className="font-semibold">المطلوب للربط:</span> {i.needs}</p>
                   <ul className="mt-3 space-y-2 border-t pt-3 text-xs">
@@ -252,12 +171,7 @@ function SettingsPage() {
         )}
       </Tabs>
       <EntityDialog open={branchOpen} onOpenChange={setBranchOpen} title="فرع جديد" table="branches" invalidate={["branches"]} fields={[{ name: "name", label: "اسم الفرع", required: true }, { name: "city", label: "المدينة", required: true }]} />
-      <EntityDialog open={invOpen} onOpenChange={setInvOpen} title="دعوة مستخدم" table="invitations" invalidate={["invitations"]}
-        transform={(v) => ({ ...v, email: String(v["email"]).toLowerCase().trim(), invited_by: session?.user.id })} fields={[
-          { name: "email", label: "البريد الإلكتروني", required: true },
-          { name: "role", label: "الدور", type: "select", required: true, options: Object.entries(ROLE_LABELS).filter(([k]) => k !== "owner") as [string, string][] },
-          { name: "driver_id", label: "ربط بملف سائق (للسائقين)", type: "ref", ref: { table: "drivers", label: "full_name", filter: (q) => q.is("user_id", null) } },
-        ]} />
+
     </>
   );
 }

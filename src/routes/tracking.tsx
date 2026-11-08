@@ -3,6 +3,9 @@ import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { MapPin, Radio, Truck, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { integrationHealth } from "@/lib/integration-health.functions";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,8 @@ export const Route = createFileRoute("/tracking")({
       { name: "description", content: "مواقع الرؤوس على خريطة المملكة وحالة الاتصال وآخر تحديث." },
       { property: "og:title", content: "التتبع المباشر — دَرب" },
       { property: "og:description", content: "مواقع الرؤوس وحالة الاتصال وآخر تحديث." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
@@ -41,6 +46,8 @@ function freshness(at?: string | null): ["success" | "warning" | "danger", strin
 function Tracking() {
   const qc = useQueryClient();
   const { can } = useAuth();
+  const checkHealth = useServerFn(integrationHealth);
+  const health = useQuery({ queryKey: ['integration-health'], queryFn: () => checkHealth(), enabled: can('owner'), staleTime: 60000 });
   const assets = useRows(["assets"], fetchAssets);
   const trips = useRows(["trips"], fetchTrips);
   const [sel, setSel] = useState<string | null>(null);
@@ -84,7 +91,8 @@ function Tracking() {
       <div className="mb-5 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm">
         <WifiOff className="mt-0.5 size-5 text-warning" />
         <div>
-          <b>مزود GPS: لم يتم الربط.</b> المواقع المعروضة هي آخر قراءات مسجلة (يدويًا أو من تطبيق السائق عند تسجيل حدث). لا تُعرض حركة وهمية. لربط مزود فعلي يلزم اسم المزود ووثائق الـ API ومفتاح الوصول.
+          <b>{can('owner') ? health.isPending ? 'جارٍ فحص خادم التتبع…' : health.data?.tracking.detail ?? 'تعذر فحص خادم التتبع' : 'مواقع الشاحنات المسجلة'}</b>
+          <p className="mt-1">المواقع المعروضة من قراءات دَرب المسجلة؛ مزامنة أجهزة Traccar مع الشاحنات غير مفعّلة.</p>
         </div>
       </div>
       <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
