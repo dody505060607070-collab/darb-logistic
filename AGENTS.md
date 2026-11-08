@@ -29,3 +29,4 @@
 - CRM lives in a focused home-page component and role-restricted opportunity/activity tables; pipeline values use integer-cent calculations and remain forecasts, not revenue — why: preserves existing dashboards and finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.
+- Explicit administrator phone reservations are service-only records applied by a service-only RPC after OTP consumption and profile identity matching; new phone-login profiles are normalized to E.164 — why: preserves server-enforced privileges and prevents duplicate identity lookups.

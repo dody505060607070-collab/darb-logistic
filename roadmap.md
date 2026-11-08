@@ -1,5 +1,9 @@
 # DARB roadmap
 
+## Designated administrators 2026-11-08 06:55 UTC
+- [x] Reserve both requested phones for owner after verified WhatsApp sign-in; normalize existing account and confirm its owner role. Database acceptance checks confirm both reservations and service-only enforcement.
+- [ ] Actual delivered-code sign-in for both designated phones — blocked: requires the phone holders to receive and enter their WhatsApp codes; no messages sent during this request.
+
 ## Current request 2026-11-08
 - [x] Replace settings users list with employee directory and individual editable details/permissions pages; phone-only visible identity.
 - [x] Add verification checklist: employee edit persisted after reload; 20 owner pages opened without runtime errors, mobile has no horizontal overflow; Traccar reachable with zero devices, ORS route and WhatsApp connection verified.

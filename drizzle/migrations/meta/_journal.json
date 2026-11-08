@@ -85,6 +85,20 @@
       "when": 1794120229866,
       "tag": "0011_unique_employee_login_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794120964843,
+      "tag": "0012_designated_phone_administrators",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794120981940,
+      "tag": "0013_verified_reserved_owner_assignment",
+      "breakpoints": true
     }
   ]
 }

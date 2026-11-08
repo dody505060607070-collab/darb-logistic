@@ -93,9 +93,17 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
       }
     } else {
       email = `${digits}@phone.darb.app`;
-      const { error } = await supabaseAdmin.auth.admin.createUser({ email, email_confirm: true, phone: data.phone, phone_confirm: true, user_metadata: { full_name: data.phone, phone: data.phone } });
-      if (error && !/already/i.test(error.message)) throw new Error("تعذر إنشاء الحساب");
+      const { data: created, error } = await supabaseAdmin.auth.admin.createUser({ email, email_confirm: true, phone: data.phone, phone_confirm: true, user_metadata: { full_name: data.phone, phone: data.phone } });
+      if (error || !created.user) throw new Error("تعذر إنشاء الحساب؛ تحقق من ربط رقم الجوال بملف الموظف");
+      userId = created.user.id;
+      // Cloud Auth stores phone without '+'. Profiles use E.164 for OTP identity.
+      const { error: profileError } = await supabaseAdmin.from('profiles').update({ phone: data.phone }).eq('id', userId);
+      if (profileError) throw new Error('تعذر تثبيت رقم الجوال للحساب');
     }
+    if (!userId) throw new Error('تعذر تحديد حساب الموظف');
+    // Only after a valid code has been consumed: apply server-owned reservations.
+    const { error: ownerError } = await supabaseAdmin.rpc('apply_reserved_phone_owner', { p_user_id: userId, p_verified_phone: data.phone });
+    if (ownerError) throw new Error('تعذر التحقق من صلاحيات الحساب');
     const { data: link, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
     if (linkErr || !link?.properties?.hashed_token) throw new Error("تعذر إنشاء جلسة الدخول");
     return { tokenHash: link.properties.hashed_token };

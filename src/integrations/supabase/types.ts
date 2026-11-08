@@ -38,6 +38,21 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_phone_reservations: {
+        Row: {
+          created_at: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       advances: {
         Row: {
           amount: number
@@ -2272,6 +2287,10 @@ export type Database = {
     Functions: {
       allocate_payment: {
         Args: { p_amount: number; p_invoice_id: string; p_payment_id: string }
+        Returns: undefined
+      }
+      apply_reserved_phone_owner: {
+        Args: { p_user_id: string; p_verified_phone: string }
         Returns: undefined
       }
       assign_trip_resources: {
