@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Save, ShieldCheck, Trash2, UserRound } from 'lucide-react';
@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { db, useOne, useRows } from '@/lib/db';
 import { ROLE_LABELS, useAuth, type AppRole } from '@/lib/auth';
-import { updateEmployee } from '@/lib/employees.functions';
+import { updateEmployee, deleteEmployee } from '@/lib/employees.functions';
+import { DeleteConfirmation } from '@/components/darb/DeleteConfirmation';
 import { canRemoveEmployeeRole } from '@/lib/employees';
 import { errMsg, fmtDateTime } from '@/lib/format';
 
@@ -32,6 +33,9 @@ function EmployeePage() {
   const owner = auth.can('owner');
   const qc = useQueryClient();
   const save = useServerFn(updateEmployee);
+  const remove = useServerFn(deleteEmployee);
+  const navigate = useNavigate();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const profile = useOne(['employee', id], () => db.from('profiles').select('id,full_name,phone,branch_id,created_at').eq('id', id).maybeSingle(), owner);
   const roles = useRows(['user_roles'], () => db.from('user_roles').select('*'), owner);
   const branches = useRows(['branches'], () => db.from('branches').select('id,name').order('name'), owner);
@@ -66,9 +70,15 @@ function EmployeePage() {
     if (error) return void toast.error(errMsg(error));
     await qc.invalidateQueries({ queryKey: ['user_roles'] }); if (id === auth.session?.user.id) await auth.refresh();
   }
+  async function confirmDelete() {
+    setBusy(true);
+    try { await remove({ data: { id, confirmed: true } }); await qc.invalidateQueries(); toast.success('تم حذف حساب الموظف'); await navigate({ to: '/settings', search: { tab: 'users' } }); }
+    catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  }
   return <>
     <Button asChild variant="ghost" className="mb-4"><Link to="/settings" search={{ tab: 'users' }}><ArrowRight /> الموظفون</Link></Button>
-    <PageHeader title={profile.data.full_name || 'ملف الموظف'} icon={<UserRound />} />
+    <PageHeader title={profile.data.full_name || 'ملف الموظف'} icon={<UserRound />} actions={id !== auth.session?.user.id && <Button variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 /> حذف الحساب</Button>} />
+    <DeleteConfirmation open={deleteOpen} onOpenChange={setDeleteOpen} title="حذف حساب الموظف؟" description="سيُحذف الحساب وصلاحياته نهائيًا، وتبقى السجلات التاريخية. يمكن لصاحب الرقم التسجيل من جديد لاحقًا بصلاحيات التسجيل الحالية." busy={busy} onConfirm={() => void confirmDelete()} />
     <div className="grid gap-8 xl:grid-cols-2">
       <section className="space-y-4"><h2 className="text-lg font-bold">بيانات الموظف</h2>
         <div><Label htmlFor="employee-name">الاسم</Label><Input id="employee-name" value={name} onChange={e => setName(e.target.value)} /></div>

@@ -77,7 +77,7 @@ function DocsPage() {
               <Button size="sm" variant="gold" disabled={!newEntity} onClick={() => setEdit(null)}><Plus /> إضافة</Button>
             </div>
           )}>
-            <DataTable rows={list} loading={docs.isLoading} error={docs.error} searchKeys={["doc_type", "number"]} onRowClick={canEdit ? (r) => setEdit(r) : undefined}
+            <DataTable rows={list} loading={docs.isLoading} error={docs.error} searchKeys={["doc_type", "number"]} onEdit={canEdit ? (r) => setEdit(r) : undefined} onRowClick={canEdit ? (r) => setEdit(r) : undefined}
               filters={<Select value={filter} onChange={setFilter} placeholder="الكل" options={[["expired", "منتهية"], ["soon", "قريبة الانتهاء"], ["valid", "سارية"]]} />}
               cols={[
                 { key: "entity", label: "الجهة", render: (r) => <span><Badge dot={false}>{r.entity_type === "asset" ? "أصل" : r.entity_type === "driver" ? "سائق" : "شركة"}</Badge> {names.get(r.entity_id) ?? "—"}</span> },
@@ -92,7 +92,7 @@ function DocsPage() {
         </TabsContent>
         <TabsContent value="auth">
           <Panel title="التفويضات" icon={<ShieldCheck />}>
-            <DataTable rows={auths.data} loading={auths.isLoading} onRowClick={canEdit ? setAuthEdit : undefined} cols={[
+            <DataTable rows={auths.data} loading={auths.isLoading} onEdit={canEdit ? setAuthEdit : undefined} onRowClick={canEdit ? setAuthEdit : undefined} cols={[
               { key: "number", label: "الرقم", render: (r) => <span className="num">{r.number ?? "—"}</span> },
               { key: "driver", label: "السائق", render: (r) => r.driver?.full_name },
               { key: "asset", label: "المركبة", render: (r) => r.asset?.code ?? "—" },

@@ -1,7 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import { useAuth } from '@/lib/auth';
+import { canDeleteEntity } from '@/lib/record-controls';
+import { DeleteConfirmation } from './DeleteConfirmation';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +78,8 @@ export function EntityDialog({
   onSaved?: (r: Row) => void;
 }) {
   const qc = useQueryClient();
+  const { can } = useAuth();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [vals, setVals] = useState<Row>({});
   const [busy, setBusy] = useState(false);
 
@@ -122,9 +127,21 @@ export function EntityDialog({
   }
 
   const set = (n: string, v: unknown) => setVals((s) => ({ ...s, [n]: v }));
+  async function remove() {
+    if (!canDeleteEntity(table, can('owner'), record?.id)) return;
+    setBusy(true);
+    try {
+      const { data, error } = await db.from(table).delete().eq('id', record?.id).select('id');
+      if (error) throw error;
+      if (!data?.length) throw new Error('لم يتم الحذف؛ تحقق من صلاحياتك');
+      invalidate.forEach(k => void qc.invalidateQueries({ queryKey: [k] }));
+      toast.success('تم حذف السجل'); setDeleteOpen(false); onOpenChange(false);
+    } catch (e) { toast.error((e as { code?: string })?.code === '23503' ? 'لا يمكن حذف سجل مرتبط بعمليات أخرى؛ عالج الارتباطات أولًا' : errMsg(e)); }
+    finally { setBusy(false); }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <><Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-primary">{title}</DialogTitle>
@@ -181,6 +198,7 @@ export function EntityDialog({
             );
           })}
           <DialogFooter className="gap-2 sm:col-span-2">
+            {canDeleteEntity(table, can('owner'), record?.id) && <Button type="button" variant="destructive" disabled={busy} onClick={() => setDeleteOpen(true)}><Trash2 /> حذف السجل</Button>}
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء
             </Button>
@@ -190,6 +208,6 @@ export function EntityDialog({
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog><DeleteConfirmation open={deleteOpen} onOpenChange={setDeleteOpen} title="حذف السجل نهائيًا؟" description="لا يمكن التراجع عن الحذف. السجلات المرتبطة بعمليات أخرى قد لا تقبل الحذف." busy={busy} onConfirm={() => void remove()} /></>
   );
 }

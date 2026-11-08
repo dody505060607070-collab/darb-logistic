@@ -62,7 +62,7 @@ function IncidentsPage() {
         <Kpi label="التكلفة التقديرية" value={fmtSAR(all.reduce((s, i) => s + Number(i.est_cost ?? 0), 0))} />
       </div>
       <Panel title="البلاغات" icon={<ShieldAlert />}>
-        <DataTable rows={all.filter((i) => !status || i.status === status)} loading={inc.isLoading} error={inc.error} searchKeys={["number", "description", "asset.code", "driver.full_name"]} onRowClick={canEdit ? setRec : undefined}
+        <DataTable rows={all.filter((i) => !status || i.status === status)} loading={inc.isLoading} error={inc.error} searchKeys={["number", "description", "asset.code", "driver.full_name"]} onEdit={canEdit ? setRec : undefined} onRowClick={canEdit ? setRec : undefined}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["incident"]!).map(([k, v]) => [k, v[0]])} />}
           cols={[
             { key: "number", label: "الرقم", render: (r) => <span className="num font-semibold">{r.number}</span> },

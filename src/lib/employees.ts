@@ -15,3 +15,8 @@ export const employeeSchema = z.object({
 export function canRemoveEmployeeRole(actorId: string, employeeId: string, role: string) {
   return !(actorId === employeeId && role === 'owner');
 }
+
+export function assertEmployeeDeletion(actorId: string, employeeId: string, confirmed: boolean) {
+  if (!confirmed) throw new Error('يجب تأكيد حذف الحساب');
+  if (actorId === employeeId) throw new Error('لا يمكنك حذف حسابك أثناء استخدامه');
+}

@@ -93,7 +93,7 @@ function DriverProfile() {
           ]} />
         </Panel>
         <Panel title="المستندات" icon={<FileText />} actions={canEdit && <Button size="sm" variant="gold" onClick={() => setDocEdit(null)}><Plus /> مستند</Button>}>
-          <DataTable rows={docs.data} loading={docs.isLoading} onRowClick={canEdit ? setDocEdit : undefined} cols={[
+          <DataTable rows={docs.data} loading={docs.isLoading} onEdit={canEdit ? setDocEdit : undefined} onRowClick={canEdit ? setDocEdit : undefined} cols={[
             { key: "doc_type", label: "النوع" },
             { key: "number", label: "الرقم" },
             { key: "expiry_date", label: "الانتهاء", render: (x) => <DocExpiry d={x.expiry_date} /> },

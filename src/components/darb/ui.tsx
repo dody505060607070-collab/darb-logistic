@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, Download, Inbox, Loader2, Printer, Search } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Download, Inbox, Loader2, Pencil, Printer, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STATUS, type Tone } from "@/lib/format";
 import { Input } from "@/components/ui/input";
@@ -172,6 +172,7 @@ export function DataTable<T extends Record<string, unknown>>({
   filters,
   empty,
   selectedId,
+  onEdit,
 }: {
   rows?: T[];
   cols: Col<T>[];
@@ -183,6 +184,7 @@ export function DataTable<T extends Record<string, unknown>>({
   filters?: ReactNode;
   empty?: ReactNode;
   selectedId?: string | null;
+  onEdit?: (r: T) => void;
 }) {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
@@ -244,6 +246,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     {c.label}
                   </th>
                 ))}
+                {onEdit && <th className="px-3 py-2.5 text-right">تعديل</th>}
               </tr>
             </thead>
             <tbody>
@@ -262,6 +265,7 @@ export function DataTable<T extends Record<string, unknown>>({
                       {c.render ? c.render(r) : String(r[c.key] ?? "—")}
                     </td>
                   ))}
+                  {onEdit && <td className="px-3 py-2.5"><Button variant="ghost" size="icon" title="تعديل السجل" aria-label="تعديل السجل" onClick={e => { e.stopPropagation(); onEdit(r); }}><Pencil className="size-4" /></Button></td>}
                 </tr>
               ))}
             </tbody>

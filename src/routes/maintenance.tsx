@@ -128,7 +128,7 @@ function MaintPage() {
         </TabsContent>
         <TabsContent value="plans">
           <Panel title="خطط الصيانة الدورية" icon={<Wrench />} actions={canEdit && <Button size="sm" variant="gold" onClick={() => { setRec(null); setDlg("plan"); }}><Plus /> خطة</Button>}>
-            <DataTable rows={plans.data} loading={plans.isLoading} onRowClick={canEdit ? (r) => { setRec(r); setDlg("plan"); } : undefined} cols={[
+            <DataTable rows={plans.data} loading={plans.isLoading} onEdit={canEdit ? (r) => { setRec(r); setDlg("plan"); } : undefined} onRowClick={canEdit ? (r) => { setRec(r); setDlg("plan"); } : undefined} cols={[
               { key: "asset", label: "الأصل", render: (r) => <span className="num">{r.asset?.code}</span> },
               { key: "title", label: "الخطة" },
               { key: "interval", label: "الفاصل", render: (r) => [r.interval_km && `${fmtNum(r.interval_km)} كم`, r.interval_days && `${r.interval_days} يوم`].filter(Boolean).join(" أو ") },

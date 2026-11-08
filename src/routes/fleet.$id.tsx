@@ -114,7 +114,7 @@ function AssetProfile() {
       </div>
 
       <Panel title="المستندات" icon={<FileText />} className="mt-5" actions={canEdit && <Button size="sm" variant="gold" onClick={() => setDocEdit(null)}><Plus /> مستند</Button>}>
-        <DataTable rows={docs.data} loading={docs.isLoading} onRowClick={canEdit ? (r) => setDocEdit(r) : undefined}
+        <DataTable rows={docs.data} loading={docs.isLoading} onEdit={canEdit ? (r) => setDocEdit(r) : undefined} onRowClick={canEdit ? (r) => setDocEdit(r) : undefined}
           cols={[
             { key: "doc_type", label: "النوع" },
             { key: "number", label: "الرقم", render: (r) => <span className="num">{r.number ?? "—"}</span> },

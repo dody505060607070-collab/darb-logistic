@@ -67,6 +67,7 @@ function SettingsPage() {
   const audit = useRows(["audit_log"], () => db.from("audit_log").select("*").order("at", { ascending: false }).limit(200), isOwner);
   const [c, setC] = useState<Row>({});
   const [branchOpen, setBranchOpen] = useState(false);
+  const [branchRecord, setBranchRecord] = useState<Row | null>(null);
 
   useEffect(() => { if (company.data) setC(company.data); }, [company.data]);
 
@@ -107,8 +108,8 @@ function SettingsPage() {
                 </div>
                 <Button variant="gold" className="mt-4" onClick={() => void saveCompany()}>حفظ</Button>
               </Panel>
-              <Panel title="الفروع" icon={<Building />} actions={<Button size="sm" variant="gold" onClick={() => setBranchOpen(true)}><Plus /> فرع</Button>}>
-                <DataTable rows={branches.data} loading={branches.isLoading} cols={[{ key: "name", label: "الفرع" }, { key: "city", label: "المدينة" }]} />
+              <Panel title="الفروع" icon={<Building />} actions={<Button size="sm" variant="gold" onClick={() => { setBranchRecord(null); setBranchOpen(true); }}><Plus /> فرع</Button>}>
+                <DataTable rows={branches.data} loading={branches.isLoading} onEdit={r => { setBranchRecord(r); setBranchOpen(true); }} cols={[{ key: "name", label: "الفرع" }, { key: "city", label: "المدينة" }]} />
               </Panel>
             </div>
           </TabsContent>
@@ -170,7 +171,7 @@ function SettingsPage() {
           </TabsContent>
         )}
       </Tabs>
-      <EntityDialog open={branchOpen} onOpenChange={setBranchOpen} title="فرع جديد" table="branches" invalidate={["branches"]} fields={[{ name: "name", label: "اسم الفرع", required: true }, { name: "city", label: "المدينة", required: true }]} />
+      <EntityDialog open={branchOpen} onOpenChange={setBranchOpen} title={branchRecord ? 'تعديل الفرع' : 'فرع جديد'} table="branches" record={branchRecord} invalidate={["branches"]} fields={[{ name: "name", label: "اسم الفرع", required: true }, { name: "city", label: "المدينة", required: true }]} />
 
     </>
   );

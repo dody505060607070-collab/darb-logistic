@@ -1,5 +1,10 @@
 # DARB roadmap
 
+## Edit and delete controls 2026-11-08 06:57 UTC
+- [x] Add explicit employee edit and confirmed owner-only account deletion, with server-side self-deletion protection; confirmation/cancel tested without deleting real staff.
+- [x] Add explicit edit controls to branches, customers, locations, contracts, carriers, documents, authorizations, incidents and maintenance plans; allowlisted owner delete in existing entity editors. Created/deleted a temporary branch and verified absence after reload. Immutable audit and financial workflows retain their controls.
+- [ ] Actual employee account deletion readback — blocked: no disposable employee account identified; real staff accounts were not deleted for testing.
+
 ## Designated administrators 2026-11-08 06:55 UTC
 - [x] Reserve both requested phones for owner after verified WhatsApp sign-in; normalize existing account and confirm its owner role. Database acceptance checks confirm both reservations and service-only enforcement.
 - [ ] Actual delivered-code sign-in for both designated phones — blocked: requires the phone holders to receive and enter their WhatsApp codes; no messages sent during this request.

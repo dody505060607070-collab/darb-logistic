@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { employeeSchema } from './employees';
+import { employeeSchema, assertEmployeeDeletion } from './employees';
+import { z } from 'zod';
 
 export const updateEmployee = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
@@ -14,4 +15,19 @@ export const updateEmployee = createServerFn({ method: 'POST' })
       .eq('id', data.id).select('id, full_name, phone, branch_id').single();
     if (error) throw new Error(error.code === '23505' ? 'رقم الجوال مرتبط بموظف آخر' : 'تعذر حفظ بيانات الموظف');
     return saved;
+  });
+
+export const deleteEmployee = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid(), confirmed: z.literal(true) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: owner, error } = await context.supabase.rpc('has_role', { _user_id: context.userId, _role: 'owner' });
+    if (error || !owner) throw new Error('حذف الموظفين متاح للمدير العام فقط');
+    assertEmployeeDeletion(context.userId, data.id, data.confirmed);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: target, error: targetError } = await supabaseAdmin.from('profiles').select('id').eq('id', data.id).single();
+    if (targetError || !target) throw new Error('الموظف غير موجود');
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(data.id);
+    if (deleteError) throw new Error('تعذر حذف الحساب؛ قد تكون له ملفات مملوكة أو ارتباطات يجب معالجتها أولًا');
+    return { deleted: true };
   });

@@ -1,0 +1,5 @@
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
+export function DeleteConfirmation({ open, onOpenChange, title, description, busy, onConfirm }: { open: boolean; onOpenChange: (open: boolean) => void; title: string; description: string; busy: boolean; onConfirm: () => void }) {
+  return <AlertDialog open={open} onOpenChange={onOpenChange}><AlertDialogContent dir="rtl"><AlertDialogHeader><AlertDialogTitle>{title}</AlertDialogTitle><AlertDialogDescription>{description}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={busy}>إلغاء</AlertDialogCancel><AlertDialogAction disabled={busy} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={e => { e.preventDefault(); onConfirm(); }}>{busy ? 'جارٍ الحذف…' : 'تأكيد الحذف'}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>;
+}
