@@ -374,7 +374,10 @@ export type Database = {
         Row: {
           company_name: string
           cr_number: string | null
+          doc_alert_days: number[]
           doc_expiry_warning_days: number
+          doc_required_asset: string[]
+          doc_required_driver: string[]
           id: number
           timezone: string
           updated_at: string
@@ -384,7 +387,10 @@ export type Database = {
         Insert: {
           company_name?: string
           cr_number?: string | null
+          doc_alert_days?: number[]
           doc_expiry_warning_days?: number
+          doc_required_asset?: string[]
+          doc_required_driver?: string[]
           id?: number
           timezone?: string
           updated_at?: string
@@ -394,7 +400,10 @@ export type Database = {
         Update: {
           company_name?: string
           cr_number?: string | null
+          doc_alert_days?: number[]
           doc_expiry_warning_days?: number
+          doc_required_asset?: string[]
+          doc_required_driver?: string[]
           id?: number
           timezone?: string
           updated_at?: string

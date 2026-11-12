@@ -148,6 +148,13 @@
       "when": 1794504006686,
       "tag": "0020_shitaa_workflow_and_identity_enforcement",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794521961070,
+      "tag": "0021_document_alert_settings",
+      "breakpoints": true
     }
   ]
 }

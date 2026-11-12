@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { parseAlertDays, parseDocTypes } from "@/lib/doc-alerts";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, Building, History, Plug, Plus, Settings as Cog } from "lucide-react";
 import { toast } from "sonner";
@@ -71,10 +72,14 @@ function SettingsPage() {
 
   useEffect(() => { if (company.data) setC(company.data); }, [company.data]);
 
+  const listOf = (text: unknown, current: unknown) => (text === undefined ? (current as string[]) ?? [] : parseDocTypes(String(text)));
   async function saveCompany() {
-    const { error } = await db.from("company_settings").update({ company_name: c.company_name, vat_rate: Number(c.vat_rate), vat_number: c.vat_number, cr_number: c.cr_number, doc_expiry_warning_days: Number(c.doc_expiry_warning_days), updated_at: new Date().toISOString() }).eq("id", 1);
+    const alertDays = parseAlertDays(String(c.doc_alert_days_text ?? (c.doc_alert_days ?? []).join("، ")));
+    if (!alertDays) return void toast.error("أدخل من 1 إلى 5 أيام تنبيه بين 1 و365، مثل: 30، 15، 7");
+    const { error } = await db.from("company_settings").update({ company_name: c.company_name, vat_rate: Number(c.vat_rate), vat_number: c.vat_number, cr_number: c.cr_number, doc_alert_days: alertDays, doc_required_driver: listOf(c.doc_required_driver_text, c.doc_required_driver), doc_required_asset: listOf(c.doc_required_asset_text, c.doc_required_asset), updated_at: new Date().toISOString() }).eq("id", 1);
     if (error) return void toast.error(errMsg(error));
     toast.success("تم حفظ إعدادات الشركة");
+    void qc.invalidateQueries({ queryKey: ["company_settings"] });
   }
   async function setNotif(id: string, status: string) {
     const { error } = await db.from("notifications").update({ status }).eq("id", id);
@@ -103,7 +108,9 @@ function SettingsPage() {
                   <div><Label className="mb-1 block text-xs">السجل التجاري</Label><Input value={c.cr_number ?? ""} onChange={(e) => setC({ ...c, cr_number: e.target.value })} /></div>
                   <div><Label className="mb-1 block text-xs">الرقم الضريبي</Label><Input value={c.vat_number ?? ""} onChange={(e) => setC({ ...c, vat_number: e.target.value })} /></div>
                   <div><Label className="mb-1 block text-xs">نسبة ضريبة القيمة المضافة %</Label><Input type="number" value={c.vat_rate ?? ""} onChange={(e) => setC({ ...c, vat_rate: e.target.value })} /></div>
-                  <div><Label className="mb-1 block text-xs">التنبيه قبل انتهاء المستندات (يوم)</Label><Input type="number" value={c.doc_expiry_warning_days ?? ""} onChange={(e) => setC({ ...c, doc_expiry_warning_days: e.target.value })} /></div>
+                  <div><Label className="mb-1 block text-xs">مواعيد التنبيه قبل انتهاء المستندات (أيام)</Label><Input inputMode="numeric" placeholder="30، 15، 7" value={c.doc_alert_days_text ?? (c.doc_alert_days ?? []).join("، ")} onChange={(e) => setC({ ...c, doc_alert_days_text: e.target.value })} /></div>
+                  <div className="sm:col-span-2"><Label className="mb-1 block text-xs">مستندات السائق المطلوبة</Label><Input value={c.doc_required_driver_text ?? (c.doc_required_driver ?? []).join("، ")} onChange={(e) => setC({ ...c, doc_required_driver_text: e.target.value })} /></div>
+                  <div className="sm:col-span-2"><Label className="mb-1 block text-xs">مستندات المركبة المطلوبة</Label><Input value={c.doc_required_asset_text ?? (c.doc_required_asset ?? []).join("، ")} onChange={(e) => setC({ ...c, doc_required_asset_text: e.target.value })} /></div>
                   <div><Label className="mb-1 block text-xs">المنطقة الزمنية للعرض</Label><Input value="Asia/Riyadh" disabled /></div>
                 </div>
                 <Button variant="gold" className="mt-4" onClick={() => void saveCompany()}>حفظ</Button>
