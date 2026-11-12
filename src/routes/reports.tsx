@@ -121,7 +121,7 @@ function Reports() {
                 <XAxis dataKey="code" fontSize={11} />
                 <YAxis fontSize={11} orientation="right" />
                 <Tooltip />
-                <Bar dataKey="km" name="كم" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="km" name="كم" fill="var(--success)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

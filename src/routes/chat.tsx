@@ -62,7 +62,8 @@ function ChatPage() {
     [msgs, active, me],
   );
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" });
+    const container = endRef.current?.parentElement;
+    if (container && thread.length) container.scrollTop = container.scrollHeight;
   }, [thread.length, active]);
 
   const last = (id: string | null) => {
@@ -88,7 +89,7 @@ function ChatPage() {
     <div className="chat-workspace grid md:grid-cols-[290px_minmax(0,1fr)]">
       <aside className="chat-list flex min-h-0 flex-col">
         <div className="border-b p-3">
-          <h1 className="mb-2 text-lg font-semibold">المحادثات</h1>
+          <h2 className="mb-2 text-lg font-semibold">المحادثات</h2>
           <div className="relative">
             <Search className="absolute right-3 top-2.5 size-4 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن شخص" className="pr-9" />
@@ -128,7 +129,7 @@ function ChatPage() {
           <div ref={endRef} />
         </div>
         <form className="flex gap-2 border-t p-3" onSubmit={(e) => { e.preventDefault(); void send(); }}>
-          <Input autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" maxLength={4000} />
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" maxLength={4000} />
           <Button type="submit" disabled={!text.trim()} aria-label="إرسال"><Send /></Button>
         </form>
       </section>
