@@ -1,0 +1,54 @@
+CREATE OR REPLACE FUNCTION public.shitaa_acceptance_checks() RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+#variable_conflict use_variable
+DECLARE owner_id uuid; employee_id uuid; other_id uuid; asset_id uuid; workshop_one uuid; workshop_two uuid; order_one uuid; order_two uuid; issue_id uuid; spend_id uuid; rejected_id uuid; old_claims text; old_sub text; result jsonb='[]'; v numeric; caught boolean;
+BEGIN
+ IF current_setting('role',true) NOT IN('service_role','none') THEN RAISE EXCEPTION 'service only'; END IF;
+ SELECT user_id INTO owner_id FROM public.user_roles WHERE role='owner' ORDER BY user_id LIMIT 1;
+ SELECT id INTO employee_id FROM public.profiles WHERE id<>owner_id ORDER BY id LIMIT 1;
+ SELECT id INTO other_id FROM public.profiles WHERE id<>owner_id AND id<>employee_id ORDER BY id LIMIT 1;
+ SELECT id INTO asset_id FROM public.assets ORDER BY id LIMIT 1;
+ IF owner_id IS NULL OR employee_id IS NULL OR other_id IS NULL OR asset_id IS NULL THEN RETURN jsonb_build_array(jsonb_build_object('check','fixtures','passed',false,'detail','needs 3 existing profiles and an asset')); END IF;
+ old_claims:=current_setting('request.jwt.claims',true);old_sub:=current_setting('request.jwt.claim.sub',true);
+ BEGIN
+ PERFORM set_config('request.jwt.claim.sub',owner_id::text,true);PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',owner_id,'role','authenticated')::text,true);
+ DELETE FROM public.user_roles WHERE user_id IN(employee_id,other_id);
+ INSERT INTO public.user_roles(user_id,role) VALUES(employee_id,'field_maintenance'),(other_id,'workshop');
+ INSERT INTO public.workshops(name) VALUES('isolated acceptance workshop one') RETURNING id INTO workshop_one;
+ INSERT INTO public.workshops(name) VALUES('isolated acceptance workshop two') RETURNING id INTO workshop_two;
+ INSERT INTO public.workshop_members(workshop_id,user_id) VALUES(workshop_one,other_id);
+ order_one:=public.maintenance_request(asset_id,'isolated acceptance repair','normal','{}');
+ order_two:=public.maintenance_request(asset_id,'isolated other workshop repair','normal','{}');
+ caught:=false;BEGIN PERFORM public.maintenance_transition(order_one,'assigned',NULL,workshop_one,NULL,NULL);EXCEPTION WHEN OTHERS THEN caught:=true;END;
+ result:=result||jsonb_build_array(jsonb_build_object('check','cannot assign before approval','passed',caught));
+ PERFORM public.maintenance_transition(order_one,'approved','approved estimate',NULL,NULL,2000);
+ PERFORM public.maintenance_transition(order_one,'assigned','assigned workshop',workshop_one,NULL,NULL);
+ PERFORM public.maintenance_transition(order_two,'approved','approved estimate',NULL,NULL,2000);
+ PERFORM public.maintenance_transition(order_two,'assigned','assigned workshop',workshop_two,NULL,NULL);
+ PERFORM set_config('request.jwt.claim.sub',other_id::text,true);PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',other_id,'role','authenticated')::text,true);
+ result:=result||jsonb_build_array(jsonb_build_object('check','workshop sees only its assignment','passed',public.can_access_work_order(order_one) AND NOT public.can_access_work_order(order_two)));
+ PERFORM public.maintenance_details(order_one,'diagnosis and repair',1800,1800,'acceptance-'||order_one);
+ PERFORM public.maintenance_transition(order_one,'repairing','repair start');
+ PERFORM public.maintenance_transition(order_one,'ready_delivery','workshop ready');
+ caught:=false;BEGIN PERFORM public.maintenance_transition(order_one,'closed','self close');EXCEPTION WHEN OTHERS THEN caught:=true;END;
+ result:=result||jsonb_build_array(jsonb_build_object('check','workshop cannot close receiving inspection','passed',caught));
+ PERFORM set_config('request.jwt.claim.sub',owner_id::text,true);PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',owner_id,'role','authenticated')::text,true);
+ PERFORM public.maintenance_transition(order_one,'closed','receiving inspection passed');
+ result:=result||jsonb_build_array(jsonb_build_object('check','maintenance full cycle saved closed','passed',(SELECT workflow_status='closed' FROM public.work_orders WHERE id=order_one)));
+ issue_id:=public.wallet_create(employee_id,'issue',5000,'acceptance issue','acceptance-issue-'||order_one);
+ PERFORM public.wallet_review(issue_id,true,'approved');
+ spend_id:=public.wallet_create(employee_id,'expense',1800,'acceptance spend','acceptance-spend-'||order_one,asset_id,order_one,'test supplier','test/receipt.pdf');
+ PERFORM public.wallet_review(spend_id,true,'approved');PERFORM public.wallet_review(spend_id,true,'duplicate approval');
+ result:=result||jsonb_build_array(jsonb_build_object('check','duplicate create returns same entry','passed',public.wallet_create(employee_id,'expense',1800,'acceptance spend','acceptance-spend-'||order_one,asset_id,order_one,'test supplier','test/receipt.pdf')=spend_id));
+ rejected_id:=public.wallet_create(employee_id,'expense',900,'rejected spend','acceptance-reject-'||order_one,asset_id,order_one,'test supplier','test/receipt.pdf');PERFORM public.wallet_review(rejected_id,false,'rejected invoice');
+ SELECT b.balance INTO v FROM public.wallet_balances() b WHERE b.employee_id=employee_id;
+ result:=result||jsonb_build_array(jsonb_build_object('check','5000 minus 1800 remains 3200 after duplicate and rejection','passed',v=3200,'balance',v));
+ PERFORM set_config('request.jwt.claim.sub',employee_id::text,true);PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',employee_id,'role','authenticated')::text,true);
+ caught:=false;BEGIN PERFORM public.wallet_review(rejected_id,true,'self approval');EXCEPTION WHEN OTHERS THEN caught:=true;END;
+ result:=result||jsonb_build_array(jsonb_build_object('check','field employee cannot approve own wallet','passed',caught));
+ result:=result||jsonb_build_array(jsonb_build_object('check','field employee no broad staff access','passed',NOT public.is_staff(employee_id)));
+ RAISE EXCEPTION USING ERRCODE='ZX001',MESSAGE=result::text;
+ EXCEPTION WHEN SQLSTATE 'ZX001' THEN GET STACKED DIAGNOSTICS old_claims=MESSAGE_TEXT;result:=old_claims::jsonb;
+ END;
+ PERFORM set_config('request.jwt.claim.sub',COALESCE(old_sub,''),true);PERFORM set_config('request.jwt.claims','{}',true);
+ RETURN result;
+END $$;

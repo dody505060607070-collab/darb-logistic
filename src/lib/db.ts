@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { errMsg } from "./format";
+import { validateAttachment } from './files';
 
 // Loosely-typed handle: tables are many and screens build dynamic selects.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,8 +53,10 @@ export function useAction<A>(fn: (a: A) => Promise<unknown>, opts: { success?: s
 }
 
 export async function uploadFile(file: File, folder: string) {
+  validateAttachment(file);
   const { data: u } = await supabase.auth.getUser();
-  const path = `${u.user?.id ?? "anon"}/${folder}/${Date.now()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+  if(!u.user)throw new Error('سجل الدخول لرفع الملفات');
+  const path = `${u.user.id}/${folder}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
   const { error } = await supabase.storage.from("attachments").upload(path, file);
   if (error) throw error;
   return path;

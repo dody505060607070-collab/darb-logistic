@@ -2093,6 +2093,47 @@ export type Database = {
           },
         ]
       }
+      trip_assignment_history: {
+        Row: {
+          actor: string | null
+          driver_id: string | null
+          ended_at: string | null
+          id: string
+          started_at: string
+          tractor_id: string | null
+          trailer_id: string | null
+          trip_id: string
+        }
+        Insert: {
+          actor?: string | null
+          driver_id?: string | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          tractor_id?: string | null
+          trailer_id?: string | null
+          trip_id: string
+        }
+        Update: {
+          actor?: string | null
+          driver_id?: string | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          tractor_id?: string | null
+          trailer_id?: string | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_assignment_history_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_events: {
         Row: {
           client_event_id: string | null
@@ -2582,6 +2623,15 @@ export type Database = {
         Returns: string
       }
       current_driver_id: { Args: never; Returns: string }
+      custody_return: {
+        Args: {
+          p_fuel: string
+          p_id: string
+          p_odometer: number
+          p_transfer_to?: string
+        }
+        Returns: string
+      }
       driver_my_trips: {
         Args: never
         Returns: {
@@ -2695,6 +2745,25 @@ export type Database = {
         Returns: undefined
       }
       settle_advance: { Args: { p_id: string }; Returns: number }
+      shitaa_acceptance_checks: { Args: never; Returns: Json }
+      submit_delivery: {
+        Args: {
+          p_captured_at?: string
+          p_client_ref: string
+          p_damaged: number
+          p_lat?: number
+          p_lng?: number
+          p_notes?: string
+          p_phone?: string
+          p_photos: string[]
+          p_quantity: number
+          p_receiver: string
+          p_short: number
+          p_signature: string
+          p_trip_id: string
+        }
+        Returns: string
+      }
       task_review: {
         Args: { p_approve: boolean; p_id: string; p_note: string }
         Returns: undefined

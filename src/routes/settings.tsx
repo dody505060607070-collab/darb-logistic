@@ -23,9 +23,9 @@ export const Route = createFileRoute("/settings")({
   validateSearch: (s: Record<string, unknown>) => ({ tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined }),
   head: () => ({
     meta: [
-      { title: "الإعدادات والموظفون — دَرب" },
+      { title: "الإعدادات والموظفون — شركة شتاء" },
       { name: "description", content: "إعداد الشركة والفروع والموظفين والصلاحيات وحالة التكاملات وسجل التدقيق." },
-      { property: "og:title", content: "الإعدادات — دَرب" },
+      { property: "og:title", content: "الإعدادات — شركة شتاء" },
       { property: "og:description", content: "الشركة والموظفون والتكاملات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -40,13 +40,13 @@ export const Route = createFileRoute("/settings")({
 
 type FreeOption = { label: string; url: string; note: string };
 const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOption[] }[] = [
-  { name: "مزود تتبع GPS", desc: "قراءات المواقع والعداد", needs: "رابط خادم التتبع ومفتاح الوصول", free: [
-    { label: "جوال السائق (مجاني)", url: "", note: "يعمل الآن: تطبيق السائق يرسل موقعه عند كل حدث في الرحلة." },
-    { label: "Traccar", url: "https://www.traccar.org/", note: "مفتوح المصدر ومجاني، يدعم أغلب أجهزة GPS للشاحنات." },
+  { name: "ضمان المهندس — Eco5 Lite", desc: "قراءات أجهزة الشركة حسب الاشتراك الفعلي", needs: "توثيق الربط وعنوان المنصة والوصول الآمن ومعرفات الأجهزة وربطها باللوحات", free: [
+    { label: "لم يتم الربط", url: "", note: "اسم الجهاز لا يثبت خصائصه؛ ينتظر التوثيق الرسمي. الربط السابق مع Traccar منفصل وليس ربط ضمان المهندس." },
   ] },
   { name: "مزود توجيه الشاحنات", desc: "مسارات تراعي قيود الشاحنات ووقت الوصول", needs: "مفتاح API", free: [
-    { label: "OpenRouteService", url: "https://account.heigit.org/signup", note: "مجاني (حتى 2000 طلب يوميًا) ويدعم مسارات الشاحنات الثقيلة." },
+    { label: "OpenRouteService", url: "https://account.heigit.org/signup", note: "اتصال التوجيه السابق متاح للفحص؛ لم يتم اعتماد الأبعاد والحمولات كتوجيه شاحنات رسمي." },
   ] },
+  { name: 'PetroApp — الوقود', desc: 'عمليات التعبئة والبطاقات والمركبات', needs: 'التوثيق الرسمي وبيانات الوصول وعينة عمليات ومعرفات المركبات والبطاقات', free:[{label:'لم يتم الربط',url:'',note:'لا يوجد عنوان API مفترض؛ الاستيراد الرسمي بديل مستقل عند توفر الملف.'}] },
   { name: "الفوترة الإلكترونية (ZATCA)", desc: "إصدار الفواتير الإلكترونية واستلام حالتها", needs: "الرقم الضريبي وشهادة الربط من بوابة فاتورة", free: [
     { label: "بيئة مطوري فاتورة", url: "https://sandbox.zatca.gov.sa/", note: "بيئة تجربة مجانية من الهيئة قبل الربط الفعلي." },
     { label: "بوابة فاتورة", url: "https://fatoora.zatca.gov.sa/", note: "الربط الفعلي مجاني لكنه يتطلب سجل الشركة الضريبي." },
@@ -124,8 +124,7 @@ function SettingsPage() {
               <WhatsAppIntegrationCard isOwner={isOwner} />
               {INTEGRATIONS.map((i, index) => (
                 <div key={i.name} className="rounded-lg border p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2"><b className="text-primary">{i.name}</b><Badge tone={(index === 0 ? health.data?.tracking.state : index === 1 ? health.data?.routing.state : '') === 'connected' ? 'success' : 'neutral'}>{index < 2 ? health.isPending && isOwner ? 'جارٍ الفحص…' : (index === 0 ? health.data?.tracking.state : health.data?.routing.state) === 'connected' ? 'الخادم متصل' : isOwner ? 'تعذر التحقق أو لم يتم الربط' : 'يديره المدير العام' : 'لم يتم الربط'}</Badge></div>
-                  {index === 0 && health.data && <p className="mt-2 text-xs text-warning">{health.data.tracking.detail}</p>}
+                  <div className="flex flex-wrap items-center justify-between gap-2"><b className="text-primary">{i.name}</b><Badge tone={index===1&&health.data?.routing.state==='connected'?'success':'neutral'}>{index===1&&health.data?.routing.state==='connected'?'خادم التوجيه متصل':'لم يتم الربط'}</Badge></div>
                   <p className="mt-1 text-sm text-muted-foreground">{i.desc}</p>
                   <p className="mt-2 text-xs"><span className="font-semibold">المطلوب للربط:</span> {i.needs}</p>
                   <ul className="mt-3 space-y-2 border-t pt-3 text-xs">

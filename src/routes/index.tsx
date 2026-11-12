@@ -18,9 +18,9 @@ const MapView = lazy(() => import("@/components/darb/MapView"));
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "الصفحة الرئيسية وإدارة علاقات العملاء — دَرب" },
-      { name: "description", content: "مؤشرات تشغيل دَرب وإدارة العملاء وفرص البيع والتواصل والمتابعات." },
-      { property: "og:title", content: "الصفحة الرئيسية وإدارة علاقات العملاء — دَرب" },
+      { title: "الصفحة الرئيسية وإدارة علاقات العملاء — شركة شتاء" },
+      { name: "description", content: "مؤشرات تشغيل شركة شتاء وإدارة العملاء وفرص البيع والتواصل والمتابعات." },
+      { property: "og:title", content: "الصفحة الرئيسية وإدارة علاقات العملاء — شركة شتاء" },
       { property: "og:description", content: "لوحات التشغيل والعملاء ومسار المبيعات والمتابعات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -115,11 +115,12 @@ function Dashboard() {
   return (
     <div className="space-y-5">
       <section className="bento bento-glass relative min-h-[220px] overflow-hidden">
-        <img src={truck3d} alt="شاحنة دَرب على طريق سريع في المملكة" width={1536} height={768} className="absolute inset-0 h-full w-full object-cover opacity-90" />
+        <img src={truck3d} alt="شاحنة شركة شتاء على طريق سريع في المملكة" width={1536} height={768} className="absolute inset-0 h-full w-full object-cover opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-l from-background via-background/70 to-transparent" />
         <div className="relative flex h-full max-w-xl flex-col gap-3 p-6 md:p-8">
           <span className="chip w-fit">ملخص الصباح</span>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">{greeting()}، {fullName?.split(" ")[0] ?? ""}</h1>
+          <h1 className="text-3xl font-bold text-foreground md:text-4xl">شركة شتاء</h1>
+          <p className="font-medium">{greeting()}، {fullName?.split(' ')[0]??''} — نظام إدارة الأسطول والصيانة</p>
           <p className="text-sm leading-7 text-muted-foreground">
             لديك <b className="text-foreground">{fmtNum(active.length)}</b> رحلة نشطة و<b className="text-foreground">{fmtNum(todayTrips.length)}</b> رحلة اليوم
             {late.length ? <> — <b className="text-warning">{fmtNum(late.length)} متأخرة</b> تحتاج متابعة</> : <> — لا توجد رحلات متأخرة</>}.

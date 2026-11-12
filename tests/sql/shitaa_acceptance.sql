@@ -1,0 +1,6 @@
+-- Execute SELECT public.shitaa_acceptance_checks();
+-- Every fixture runs inside a caught subtransaction and is rolled back.
+-- The function is service_role-only; it does not expose employee identities.
+-- Results assert the maintenance cycle, assigned workshop isolation, wallet
+-- 5000 - 1800 = 3200, duplicate review, rejected expenses and self-review.
+-- Function definition is stored in migration shitaa_acceptance_checks.

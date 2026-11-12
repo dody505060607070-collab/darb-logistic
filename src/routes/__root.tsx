@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "../lib/auth";
 import { Toaster } from "../components/ui/sonner";
+import { initializePwa } from '@/lib/pwa';
 
 function NotFoundComponent() {
   return (
@@ -83,12 +84,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "دَرب — إدارة عمليات النقل والشاحنات" },
-      { name: "description", content: "نظام دَرب لإدارة نقل البضائع والأسطول والرحلات داخل المملكة العربية السعودية." },
-      { property: "og:title", content: "دَرب — إدارة عمليات النقل والشاحنات" },
-      { property: "og:description", content: "نظام دَرب لإدارة نقل البضائع والأسطول والرحلات داخل المملكة." },
+      { title: "شركة شتاء — إدارة عمليات النقل والشاحنات" },
+      { name: "description", content: "نظام شركة شتاء لإدارة نقل البضائع والأسطول والرحلات داخل المملكة العربية السعودية." },
+      { property: "og:title", content: "شركة شتاء — إدارة عمليات النقل والشاحنات" },
+      { property: "og:description", content: "نظام شركة شتاء لإدارة نقل البضائع والأسطول والرحلات داخل المملكة." },
       { property: "og:type", content: "website" },
-      { name: "theme-color", content: "#000000" },
+      { name: "theme-color", content: "#123C32" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -130,6 +131,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(()=>{void initializePwa();},[]);
 
   return (
     <QueryClientProvider client={queryClient}>

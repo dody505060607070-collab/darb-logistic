@@ -20,9 +20,9 @@ import { errMsg, fmtDateTime, fmtNum } from "@/lib/format";
 export const Route = createFileRoute("/custody")({
   head: () => ({
     meta: [
-      { title: "العهد والفحص — دَرب" },
+      { title: "العهد والفحص — شركة شتاء" },
       { name: "description", content: "محاضر استلام العهد وقوائم الفحص والعيوب." },
-      { property: "og:title", content: "العهد والفحص — دَرب" },
+      { property: "og:title", content: "العهد والفحص — شركة شتاء" },
       { property: "og:description", content: "محاضر استلام العهد وقوائم الفحص." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -60,12 +60,8 @@ function CustodyPage() {
 
   async function closeCustody(transferTo?: string) {
     if (!ret) return;
-    const { error } = await db.from("custody").update({ closed_at: new Date().toISOString(), odometer_in: retOdo ? Number(retOdo) : null, fuel_level_in: retFuel || null }).eq("id", ret.id);
+    const { error } = await db.rpc('custody_return',{p_id:ret.id,p_odometer:retOdo?Number(retOdo):null,p_fuel:retFuel,p_transfer_to:transferTo||null});
     if (error) return void toast.error(errMsg(error));
-    if (transferTo) {
-      const { error: e2 } = await db.from("custody").insert({ asset_id: ret.asset_id, driver_id: transferTo, odometer_out: retOdo ? Number(retOdo) : null, fuel_level_out: retFuel || null, previous_custody_id: ret.id });
-      if (e2) return void toast.error(errMsg(e2));
-    }
     toast.success(transferTo ? "تم نقل العهدة مع حفظ السجل السابق" : "تم إرجاع العهدة");
     setRet(null);
     void qc.invalidateQueries({ queryKey: ["custody"] });

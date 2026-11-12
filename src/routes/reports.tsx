@@ -12,9 +12,9 @@ import { fmtNum, fmtSAR } from "@/lib/format";
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: "التقارير — دَرب" },
+      { title: "التقارير — شركة شتاء" },
       { name: "description", content: "تقارير الكيلومترات المحملة والفارغة والانتظار والالتزام والهامش والتحصيل." },
-      { property: "og:title", content: "التقارير — دَرب" },
+      { property: "og:title", content: "التقارير — شركة شتاء" },
       { property: "og:description", content: "تقارير التشغيل والمالية." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -77,7 +77,8 @@ function Reports() {
     let fl = 0, fk = 0;
     byAsset.forEach((list) => {
       for (let i = 1; i < list.length; i++) {
-        const p = list[i - 1]!, c = list[i]!;
+        const p = list[i - 1], c = list[i];
+        if(!p||!c)continue;
         if (p.full_tank && c.full_tank && p.odometer && c.odometer && c.odometer > p.odometer) { fl += Number(c.liters); fk += c.odometer - p.odometer; }
       }
     });

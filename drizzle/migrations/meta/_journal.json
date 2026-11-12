@@ -120,6 +120,34 @@
       "when": 1794502771673,
       "tag": "0016_shitaa_employee_financial_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794503462833,
+      "tag": "0017_shitaa_atomic_delivery_and_active_trip_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794503604035,
+      "tag": "0018_shitaa_acceptance_checks",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794503727898,
+      "tag": "0019_shitaa_acceptance_variable_resolution",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794504006686,
+      "tag": "0020_shitaa_workflow_and_identity_enforcement",
+      "breakpoints": true
     }
   ]
 }

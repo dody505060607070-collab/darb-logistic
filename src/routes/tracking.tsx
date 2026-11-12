@@ -20,9 +20,9 @@ const MapView = lazy(() => import("@/components/darb/MapView"));
 export const Route = createFileRoute("/tracking")({
   head: () => ({
     meta: [
-      { title: "التتبع المباشر — دَرب" },
+      { title: "التتبع المباشر — شركة شتاء" },
       { name: "description", content: "مواقع الرؤوس على خريطة المملكة وحالة الاتصال وآخر تحديث." },
-      { property: "og:title", content: "التتبع المباشر — دَرب" },
+      { property: "og:title", content: "التتبع المباشر — شركة شتاء" },
       { property: "og:description", content: "مواقع الرؤوس وحالة الاتصال وآخر تحديث." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -91,8 +91,8 @@ function Tracking() {
       <div className="mb-5 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm">
         <WifiOff className="mt-0.5 size-5 text-warning" />
         <div>
-          <b>{can('owner') ? health.isPending ? 'جارٍ فحص خادم التتبع…' : health.data?.tracking.detail ?? 'تعذر فحص خادم التتبع' : 'مواقع الشاحنات المسجلة'}</b>
-          <p className="mt-1">المواقع المعروضة من قراءات دَرب المسجلة؛ مزامنة أجهزة Traccar مع الشاحنات غير مفعّلة.</p>
+          <b>ضمان المهندس — Eco5 Lite: لم يتم الربط</b>
+          <p className="mt-1">المواقع المعروضة آخر قراءات محفوظة مع مصدرها ووقتها، وليست تتبعًا حيًا من ضمان المهندس.</p>
         </div>
       </div>
       <div className="grid gap-5 xl:grid-cols-[1fr_360px]">

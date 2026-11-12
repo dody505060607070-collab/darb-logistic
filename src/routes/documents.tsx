@@ -15,9 +15,9 @@ import { daysUntil, fmtDate } from "@/lib/format";
 export const Route = createFileRoute("/documents")({
   head: () => ({
     meta: [
-      { title: "التفويضات وانتهاء المستندات — دَرب" },
+      { title: "التفويضات وانتهاء المستندات — شركة شتاء" },
       { name: "description", content: "متابعة المستندات والتفويضات وتواريخ الانتهاء." },
-      { property: "og:title", content: "المستندات والتفويضات — دَرب" },
+      { property: "og:title", content: "المستندات والتفويضات — شركة شتاء" },
       { property: "og:description", content: "متابعة المستندات والتفويضات وتواريخ الانتهاء." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

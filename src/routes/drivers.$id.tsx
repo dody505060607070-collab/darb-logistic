@@ -14,9 +14,9 @@ import { DOC_FIELDS, DocExpiry, DRIVER_FIELDS, openFile } from "@/components/dar
 export const Route = createFileRoute("/drivers/$id")({
   head: () => ({
     meta: [
-      { title: "ملف السائق — دَرب" },
+      { title: "ملف السائق — شركة شتاء" },
       { name: "description", content: "ملف السائق: العهد والرحلات والمستندات والسلف." },
-      { property: "og:title", content: "ملف السائق — دَرب" },
+      { property: "og:title", content: "ملف السائق — شركة شتاء" },
       { property: "og:description", content: "العهد والرحلات والمستندات للسائق." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

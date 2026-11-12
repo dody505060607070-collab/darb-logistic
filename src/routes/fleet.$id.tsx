@@ -16,9 +16,9 @@ import { useQueryClient } from "@tanstack/react-query";
 export const Route = createFileRoute("/fleet/$id")({
   head: () => ({
     meta: [
-      { title: "ملف المركبة — دَرب" },
+      { title: "ملف المركبة — شركة شتاء" },
       { name: "description", content: "ملف المركبة: المستندات والعداد والصيانة والرحلات." },
-      { property: "og:title", content: "ملف المركبة — دَرب" },
+      { property: "og:title", content: "ملف المركبة — شركة شتاء" },
       { property: "og:description", content: "المستندات والعداد والصيانة والرحلات للمركبة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

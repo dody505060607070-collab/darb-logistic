@@ -20,9 +20,9 @@ import { nextReminderAt, REMINDER_HOURS } from "@/lib/tasks";
 export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
-      { title: "المهام — دَرب" },
+      { title: "المهام — شركة شتاء" },
       { name: "description", content: "تكليف الموظفين بمهام، متابعة التذكير، ومراجعة الإنجاز واعتماده." },
-      { property: "og:title", content: "المهام — دَرب" },
+      { property: "og:title", content: "المهام — شركة شتاء" },
       { property: "og:description", content: "تكليف ومتابعة واعتماد مهام الفريق." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

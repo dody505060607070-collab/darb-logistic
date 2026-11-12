@@ -16,9 +16,9 @@ import { errMsg, fmtDateTime, fmtNum, fmtSAR } from "@/lib/format";
 export const Route = createFileRoute("/expenses")({
   head: () => ({
     meta: [
-      { title: "الوقود والمصروفات والسلف — دَرب" },
+      { title: "الوقود والمصروفات والسلف — شركة شتاء" },
       { name: "description", content: "تعبئة الديزل والمصروفات واعتمادها والسلف وتسويتها." },
-      { property: "og:title", content: "الوقود والمصروفات — دَرب" },
+      { property: "og:title", content: "الوقود والمصروفات — شركة شتاء" },
       { property: "og:description", content: "تعبئة الديزل والمصروفات والسلف." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

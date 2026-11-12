@@ -14,9 +14,9 @@ import { STATUS } from "@/lib/format";
 export const Route = createFileRoute("/drivers/")({
   head: () => ({
     meta: [
-      { title: "السائقون — دَرب" },
+      { title: "السائقون — شركة شتاء" },
       { name: "description", content: "قائمة السائقين وحالتهم والرخص والعهد." },
-      { property: "og:title", content: "السائقون — دَرب" },
+      { property: "og:title", content: "السائقون — شركة شتاء" },
       { property: "og:description", content: "قائمة السائقين وحالتهم والرخص." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

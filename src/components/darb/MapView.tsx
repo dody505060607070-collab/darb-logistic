@@ -11,7 +11,7 @@ export type MapMarker = {
 };
 export type MapLine = { id: string; points: [number, number][]; color?: string; dashed?: boolean };
 
-const COLORS = { green: "#123C32", gold: "#C5A574", red: "#D14343", blue: "#2E6FD8", gray: "#8A9692" };
+const COLORS = { green: 'var(--primary)', gold: 'var(--gold)', red: 'var(--danger)', blue: 'var(--info)', gray: 'var(--muted-foreground)' };
 
 /** Browser-only Leaflet map. Leaflet is imported dynamically inside the effect so SSR never touches window. */
 export default function MapView({
@@ -47,19 +47,20 @@ export default function MapView({
       layer.clearLayers();
       const bounds: [number, number][] = [];
       lines.forEach((l) => {
-        L.polyline(l.points, { color: l.color ?? "#2E6FD8", weight: 4, opacity: 0.85, dashArray: l.dashed ? "8 8" : undefined }).addTo(layer);
+        L.polyline(l.points, { color: l.color ?? 'var(--info)', weight: 4, opacity: 0.85, dashArray: l.dashed ? "8 8" : undefined }).addTo(layer);
         bounds.push(...l.points);
       });
       markers.forEach((m) => {
         const c = COLORS[m.color ?? "green"];
+        const label=document.createElement('span');label.textContent=m.label;
         const icon = L.divIcon({
           className: "",
           html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);position:absolute">
-            <div style="background:${c};color:#fff;font:600 11px 'IBM Plex Sans Arabic',sans-serif;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25)">${m.label}</div>
-            <div style="width:10px;height:10px;background:${c};border:2px solid #fff;border-radius:50%;margin-top:2px;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div></div>`,
+            <div style="background:${c};color:var(--primary-foreground);font:600 11px 'IBM Plex Sans Arabic',sans-serif;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:var(--shadow-card)">${label.innerHTML}</div>
+            <div style="width:10px;height:10px;background:${c};border:2px solid var(--card);border-radius:50%;margin-top:2px;box-shadow:var(--shadow-card)"></div></div>`,
         });
         const mk = L.marker([m.lat, m.lng], { icon }).addTo(layer);
-        if (m.popup) mk.bindPopup(m.popup);
+        if (m.popup) {const popup=document.createElement('span');popup.textContent=m.popup;mk.bindPopup(popup);}
         if (onMarkerClick) mk.on("click", () => onMarkerClick(m.id));
         bounds.push([m.lat, m.lng]);
       });

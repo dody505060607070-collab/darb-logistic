@@ -11,7 +11,7 @@
 
 # DARB project rules
 - Data access is client-side through the Supabase client with RLS; every sensitive multi-step operation (resource allocation, trip events, invoicing, payment allocation, expense review, advance settlement, work-order status, re-inspection) is a SECURITY DEFINER RPC that checks roles itself — why: atomicity and server-side enforcement.
-- Roles live only in `user_roles` (enum `app_role`); the signup trigger gives invited accounts their invited role and every other new account the owner role — why: owner chose open full access for anyone who signs in.
+- Roles live only in `user_roles` (enum `app_role`); invited accounts keep their role, uninvited new accounts await assignment, and verified administrator reservations apply separately — why: scoped workshop and employee access requires safe onboarding.
 - Trip money lives in `trip_financials` (finance roles only), never on `trips` — why: drivers must not see revenue/margins.
 - Overlap prevention for drivers/tractors/trailers is the `no_overlapping_bookings` exclusion constraint on `resource_bookings` — why: correct under concurrent requests.
 - Shared form field configs and helpers live in `src/components/darb/*`, never exported from route files — why: route files must only export `Route`.
@@ -31,3 +31,9 @@
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.
 - Explicit administrator phone reservations are service-only records applied by a service-only RPC after OTP consumption and profile identity matching; new phone-login profiles are normalized to E.164 — why: preserves server-enforced privileges and prevents duplicate identity lookups.
 - Account deletion uses an owner-checked server function with explicit confirmation and a self-deletion guard; reference-record deletion is allowlisted and RLS-enforced, never enabled implicitly on audit or finance tables — why: avoids erasing history or bypassing atomic financial workflows.
+- Workshop membership and field assignments scope work-order access through role-checked RPCs; legacy status mutation is disabled — why: approvals and receiving inspection must not be bypassed.
+- Maintenance financial custody is an immutable approved ledger with role-checked creation/review RPCs and derived balances — why: disbursement is not expense, retries cannot debit twice, and corrections preserve history.
+- Delivery submission and custody return/transfer use atomic RPCs; active-trip resource and critical-defect checks run in database triggers — why: partial writes and expired planned periods must not violate operational invariants.
+- Replaceable company display identity lives in a browser-safe brand module; legacy source directories remain stable — why: rebranding must not disturb existing data or public URLs.
+- Offline delivery drafts persist account-scoped files in IndexedDB and reuse an atomic RPC reference; uploaded paths persist between retries — why: interrupted uploads must not duplicate delivery or misreport unsent drafts.
+- The generated app-shell service worker registers only through the guarded PWA wrapper outside development, previews and frames — why: preview caches must not retain obsolete application code.

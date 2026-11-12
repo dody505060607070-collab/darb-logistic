@@ -11,9 +11,9 @@ import { fmtDateTime } from "@/lib/format";
 export const Route = createFileRoute("/chat")({
   head: () => ({
     meta: [
-      { title: "المحادثات — دَرب" },
+      { title: "المحادثات — شركة شتاء" },
       { name: "description", content: "محادثة جماعية للشركة ومحادثات خاصة بين الموظفين والسائقين." },
-      { property: "og:title", content: "المحادثات — دَرب" },
+      { property: "og:title", content: "المحادثات — شركة شتاء" },
       { property: "og:description", content: "محادثة الشركة والمحادثات الخاصة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

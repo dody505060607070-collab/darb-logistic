@@ -16,9 +16,9 @@ import { CITY_COORDS, errMsg, fmtSAR, fromLocalInput } from "@/lib/format";
 export const Route = createFileRoute("/orders/new")({
   head: () => ({
     meta: [
-      { title: "معالج إنشاء أمر نقل ورحلة — دَرب" },
+      { title: "معالج إنشاء أمر نقل ورحلة — شركة شتاء" },
       { name: "description", content: "إنشاء أمر نقل جديد وتخطيط الرحلة وتخصيص السائق والمركبة." },
-      { property: "og:title", content: "إنشاء أمر نقل — دَرب" },
+      { property: "og:title", content: "إنشاء أمر نقل — شركة شتاء" },
       { property: "og:description", content: "إنشاء أمر نقل وتخطيط الرحلة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

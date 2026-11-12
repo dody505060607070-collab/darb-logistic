@@ -12,9 +12,9 @@ import { fmtDateTime, fmtSAR, STATUS } from "@/lib/format";
 export const Route = createFileRoute("/incidents")({
   head: () => ({
     meta: [
-      { title: "الحوادث والبلاغات — دَرب" },
+      { title: "الحوادث والبلاغات — شركة شتاء" },
       { name: "description", content: "مركز معالجة الحوادث والتلفيات والبلاغات ومطالبات التأمين." },
-      { property: "og:title", content: "الحوادث والبلاغات — دَرب" },
+      { property: "og:title", content: "الحوادث والبلاغات — شركة شتاء" },
       { property: "og:description", content: "مركز معالجة الحوادث والبلاغات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

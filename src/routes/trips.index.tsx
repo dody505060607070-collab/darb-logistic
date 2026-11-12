@@ -13,9 +13,9 @@ import { EVENT_LABELS, fmtDateTime, fmtNum, STATUS } from "@/lib/format";
 export const Route = createFileRoute("/trips/")({
   head: () => ({
     meta: [
-      { title: "الرحلات — دَرب" },
+      { title: "الرحلات — شركة شتاء" },
       { name: "description", content: "قائمة الرحلات وحالاتها ومراحلها والموارد المخصصة." },
-      { property: "og:title", content: "الرحلات — دَرب" },
+      { property: "og:title", content: "الرحلات — شركة شتاء" },
       { property: "og:description", content: "قائمة الرحلات وحالاتها والموارد المخصصة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

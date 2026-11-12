@@ -18,13 +18,14 @@ import { useAuth } from "@/lib/auth";
 import { enqueue, flushOutbox, readOutbox, removeOp, type OutboxOp } from "@/lib/outbox";
 import { errMsg, EVENT_LABELS, fmtDateTime, fmtNum, fmtTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { deliveryDrafts,saveDeliveryDraft,syncDeliveryDrafts,retryDeliveryDraft,type DeliveryDraft } from '@/lib/delivery-drafts';
 
 export const Route = createFileRoute("/driver")({
   head: () => ({
     meta: [
-      { title: "تطبيق السائق — دَرب" },
+      { title: "تطبيق السائق — شركة شتاء" },
       { name: "description", content: "رحلة السائق الحالية والفحص وتحديث المحطات والمصروفات وإثبات التسليم." },
-      { property: "og:title", content: "تطبيق السائق — دَرب" },
+      { property: "og:title", content: "تطبيق السائق — شركة شتاء" },
       { property: "og:description", content: "الرحلة الحالية والفحص وإثبات التسليم." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -100,6 +101,7 @@ function DriverApp() {
   const [tab, setTab] = useState<Tab>("home");
   const [online, setOnline] = useState(true);
   const [outbox, setOutbox] = useState<OutboxOp[]>([]);
+  const [drafts,setDrafts]=useState<DeliveryDraft[]>([]);
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -124,6 +126,7 @@ function DriverApp() {
     void sync();
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); window.removeEventListener("darb-outbox", ch); };
   }, [sync]);
+  useEffect(()=>{const uid=auth.session?.user.id;if(!uid)return;const update=()=>{void deliveryDrafts(uid).then(setDrafts);};const send=()=>{void syncDeliveryDrafts().then(n=>{if(n){toast.success(`تم إرسال ${n} إثبات تسليم`);void qc.invalidateQueries();}update();});};update();send();window.addEventListener('online',send);window.addEventListener('shitaa-delivery-drafts',update);return()=>{window.removeEventListener('online',send);window.removeEventListener('shitaa-delivery-drafts',update);};},[auth.session?.user.id,qc]);
 
   const trips = useRows(["driver_my_trips"], () => db.rpc("driver_my_trips"), !!auth.driverId);
   const me = useRows(["drivers", "me"], () => db.from("drivers").select("*").eq("id", auth.driverId), !!auth.driverId);
@@ -137,7 +140,7 @@ function DriverApp() {
       <div dir="rtl" className="flex min-h-screen items-center justify-center p-6">
         <div className="panel max-w-sm p-8 text-center">
           <Logo className="mb-4 justify-center" />
-          <p className="text-sm text-muted-foreground">حسابك غير مرتبط بملف سائق. اطلب من مالك الحساب إرسال دعوة سائق لبريدك.</p>
+          <p className="text-sm text-muted-foreground">حسابك غير مرتبط بملف سائق أو مندوب. اطلب من المدير ربط رقم جوالك بملفك.</p>
           {auth.isStaff && <Button className="mt-4" onClick={() => void nav({ to: "/" })}>لوحة الإدارة</Button>}
           <Button variant="outline" className="mt-4 mr-2" onClick={() => void auth.signOut()}><LogOut /> خروج</Button>
         </div>
@@ -188,6 +191,7 @@ function DriverApp() {
           ))}
         </div>
       )}
+      {drafts.length>0&&<div className="mx-4 mt-3 border border-warning bg-warning-soft p-3 text-xs"><b>مسودات إثبات التسليم — غير معتمدة</b>{drafts.map(d=><div key={d.id} className="mt-2"><p>{d.status==='pending'?'بانتظار الاتصال والإرسال':`تعذر الإرسال: ${d.error}`}</p><Button size="sm" variant="outline" onClick={()=>void retryDeliveryDraft(d.id,d.userId).then(()=>qc.invalidateQueries())}><RefreshCw/> إعادة الإرسال</Button></div>)}</div>}
 
       <main className="flex-1 space-y-4 p-4">
         {!demo && trips.isLoading ? <Loading /> : !current ? (
@@ -467,25 +471,20 @@ function PodView({ t, uid, done, demo }: { t: Row; uid: string; done: () => void
   async function submit() {
     if (!name) return void toast.error("اسم المستلم مطلوب");
     if (!sig) return void toast.error("توقيع المستلم مطلوب");
+    if(!photos.length)return void toast.error('أضف صورة لإثبات التسليم');
     if (demo) { demoToast(); return done(); }
-    if (!navigator.onLine) return void toast.error("إثبات التسليم يتطلب اتصالًا لرفع الصور والتوقيع. أعد المحاولة عند الاتصال.");
     setBusy(true);
     try {
       const captured = new Date().toISOString();
       const pos = await getPos();
-      const paths: string[] = [];
-      for (const f of photos) paths.push(await uploadFile(f, `pod/${t.id}`));
-      void uid;
       const cid = crypto.randomUUID();
-      const { error } = await db.from("pods").insert({
-        trip_id: t.id, receiver_name: name, receiver_phone: phone || null, received_at: captured, captured_at: captured,
-        qty_delivered: qty ? Number(qty) : null, qty_short: Number(short), qty_damaged: Number(dmg), notes: notes || null,
-        signature: sig, photo_paths: paths, lat: pos?.lat ?? null, lng: pos?.lng ?? null, location_source: pos ? "device_gps" : "unavailable", client_event_id: cid,
-      });
-      if (error) throw error;
-      const { error: e2 } = await db.rpc("record_trip_event", { p_trip_id: t.id, p_event_type: "delivered", p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null, p_client_event_id: `pod-${cid}` });
-      if (e2) throw e2;
-      toast.success("تم التسليم وإرسال الإثبات");
+      await saveDeliveryDraft({id:cid,userId:uid,tripId:t.id,status:'pending',files:photos,payload:{
+        p_trip_id:t.id,p_receiver:name,p_phone:phone||null,p_captured_at:captured,
+        p_quantity:qty?Number(qty):null,p_short:Number(short),p_damaged:Number(dmg),p_notes:notes||null,
+        p_signature:sig,p_lat:pos?.lat??null,p_lng:pos?.lng??null,
+      }});
+      const sent=await syncDeliveryDrafts();
+      if(sent)toast.success('تم حفظ التسليم وإرسال الإثبات');else toast.info('حُفظت مسودة غير معتمدة؛ راجع حالة الإرسال عند الاتصال');
       void qc.invalidateQueries();
       done();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
