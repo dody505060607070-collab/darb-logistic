@@ -269,3 +269,43 @@ main button { border-radius: 14px; }
 .bento-panel .text-danger { color: #FFD0E6; }
 .bento-panel .bg-muted, .bento-panel .bg-card, .bento-panel [class*="bg-muted"] { background: rgba(0,0,0,.28); }
 html.light .bento-panel > header, html.light .bento-panel > header h2 { color: #fff; }
+
+/* Shitaa identity: semantic overrides replace the legacy finance-bento palette. */
+:root, html.light {
+ --radius: .5rem; --bento-radius: 8px;
+ --background: #F5F7F6; --foreground: #18342d; --card: #fff; --card-foreground: #18342d;
+ --popover: #fff; --popover-foreground: #18342d;
+ --primary: #123C32; --primary-foreground: #fff;
+ --secondary: #eee6d9; --secondary-foreground: #123C32; --muted: #edf1ef; --muted-foreground: #64776e;
+ --accent: #e4ece8; --accent-foreground: #123C32; --border: #dbe4df; --input: #cddbd3; --ring: #123C32;
+ --gold: #C5A574; --gold-foreground: #123C32; --gold-soft: #f3ede2;
+ --success: #246b4e; --success-soft: #e4f1e9; --info: #367b96; --info-soft: #e6f0f5;
+ --warning: #9c722e; --warning-soft: #fbf0da; --danger: #b54446; --danger-soft: #fae9e8;
+ --sidebar: #123C32; --sidebar-foreground: #f0f6f2; --sidebar-primary: #C5A574; --sidebar-primary-foreground: #123C32;
+ --sidebar-accent: #215347; --sidebar-accent-foreground: #fff; --sidebar-border: #346154; --sidebar-ring: #C5A574;
+ --chart-1: #246b4e; --chart-2: #367b96; --chart-3: #C5A574; --chart-4: #77877b; --chart-5: #b54446;
+ --shadow-card: 0 2px 12px color-mix(in srgb, #123C32 5%, transparent); color-scheme: light;
+}
+html:not(.light) {
+ --background: #101d18; --foreground: #edf4ef; --card: #192b23; --card-foreground: #edf4ef;
+ --popover: #192b23; --popover-foreground: #edf4ef; --primary: #8bbea3; --primary-foreground: #123C32;
+ --secondary: #344235; --secondary-foreground: #edf4ef; --muted: #25382e; --muted-foreground: #a4b7ac;
+ --accent: #304d3d; --accent-foreground: #edf4ef; --border: #365044; --input: #436150; --ring: #C5A574;
+ --gold-foreground: #123C32; --gold-soft: #3e392b; --success: #8bbea3; --success-soft: #243e2e;
+ --info: #86bfd2; --info-soft: #233b42; --warning: #dcc08d; --warning-soft: #423827; --danger: #f49b9b; --danger-soft: #442b2b;
+ color-scheme: dark;
+}
+.panel, html.light .panel { background: var(--card); backdrop-filter: none; border-radius: 8px; box-shadow: var(--shadow-card); }
+.panel:hover, html.light .panel:hover { border-color: var(--border); }
+.bento { background: var(--card); color: var(--foreground); border: 1px solid var(--border); border-radius: 8px; }
+.bento::before,.bento::after,.bento>.rim { display:none; }
+.bento .cap,.bento-panel .text-muted-foreground { color:var(--muted-foreground); }
+.bento-solid { background:var(--primary); color:var(--primary-foreground); }
+.bento-solid .cap,.bento-solid .hint { color:var(--primary-foreground); }
+.bento-panel > header h2,html.light .bento-panel > header h2,.bento-panel h2.text-primary { color:var(--foreground); }
+.bento-panel .bg-muted,.bento-panel .bg-card,.bento-panel [class*="bg-muted"] { background:var(--muted); }
+.bento-panel .text-gold,.bento-panel .text-success,.bento-panel .text-primary { color:var(--primary); }
+.bento-panel .text-danger { color:var(--danger); }
+.cap,.big,.panel>header h2,.panel table thead th,main .num.text-2xl,main .text-3xl.num,main .text-4xl { letter-spacing:0; }
+.big {font-weight:600;} main input,main select,main textarea,main [role="combobox"],main button {border-radius:8px;}
+.leaflet-tile-pane {filter:none;} .chip {background:var(--primary);color:var(--primary-foreground);}

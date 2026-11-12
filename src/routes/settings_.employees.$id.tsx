@@ -39,6 +39,8 @@ function EmployeePage() {
   const profile = useOne(['employee', id], () => db.from('profiles').select('id,full_name,phone,branch_id,created_at').eq('id', id).maybeSingle(), owner);
   const roles = useRows(['user_roles'], () => db.from('user_roles').select('*'), owner);
   const branches = useRows(['branches'], () => db.from('branches').select('id,name').order('name'), owner);
+  const workshops = useRows(['workshops'],()=>db.from('workshops').select('id,name').order('name'),owner);
+  const [workshopId,setWorkshopId]=useState('');
   const drivers = useRows(['drivers', 'employee-link'], () => db.from('drivers').select('id,full_name,user_id').or(`user_id.is.null,user_id.eq.${id}`), owner);
   const tasks = useRows(['employee-tasks', id], () => db.from('tasks').select('id,title,status,due_at').eq('assignee_id', id).order('created_at', { ascending: false }).limit(30), owner);
   const activity = useRows(['employee-activity', id], () => db.from('activity_events').select('id,kind,detail,at').eq('user_id', id).order('at', { ascending: false }).limit(30), owner);
@@ -56,10 +58,12 @@ function EmployeePage() {
   }
   async function grantRole() {
     if (!role) return;
-    if (role === 'driver' && !driver && !(drivers.data ?? []).some(d => d.user_id === id)) return void toast.error('اختر ملف السائق');
+    if (['driver','representative'].includes(role) && !driver && !(drivers.data ?? []).some(d => d.user_id === id)) return void toast.error('اختر ملف السائق أو المندوب');
+    if(role==='workshop'&&!workshopId)return void toast.error('اختر الورشة');
     setBusy(true);
     try {
-      if (role === 'driver' && driver) { const { error } = await db.from('drivers').update({ user_id: id }).eq('id', driver); if (error) throw error; }
+      if (['driver','representative'].includes(role) && driver) { const { error } = await db.from('drivers').update({ user_id: id }).eq('id', driver); if (error) throw error; }
+      if(role==='workshop'){const {error}=await db.from('workshop_members').upsert({workshop_id:workshopId,user_id:id},{onConflict:'workshop_id,user_id'});if(error)throw error;}
       const { error } = await db.from('user_roles').insert({ user_id: id, role }); if (error) throw error;
       await qc.invalidateQueries({ queryKey: ['user_roles'] }); if (id === auth.session?.user.id) await auth.refresh(); setRole(''); toast.success('تم منح الصلاحية');
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
@@ -89,7 +93,8 @@ function EmployeePage() {
       <section className="space-y-4"><h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="text-info" /> الصلاحيات</h2>
         <div className="flex flex-wrap gap-2">{employeeRoles.map(r => <div key={r.id} className="flex items-center gap-1"><Badge tone="gold">{ROLE_LABELS[r.role as AppRole]}</Badge>{canRemoveEmployeeRole(auth.session?.user.id ?? '', id, r.role) && <Button size="icon" variant="ghost" aria-label={`إزالة ${ROLE_LABELS[r.role as AppRole]}`} title={`إزالة ${ROLE_LABELS[r.role as AppRole]}`} onClick={() => void revokeRole(r.id, r.role)}><Trash2 className="size-4 text-danger" /></Button>}</div>)}</div>
         <div className="flex flex-wrap gap-2"><select aria-label="إضافة صلاحية" className="h-10 rounded-md border bg-card px-3" value={role} onChange={e => setRole(e.target.value)}><option value="">اختر الصلاحية</option>{Object.entries(ROLE_LABELS).filter(([key]) => !employeeRoles.some(r => r.role === key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><Button variant="outline" disabled={busy || !role} onClick={() => void grantRole()}>منح الصلاحية</Button></div>
-        {role === 'driver' && <select aria-label="ملف السائق" value={driver} onChange={e => setDriver(e.target.value)} className="h-10 w-full rounded-md border bg-card px-3"><option value="">اختر ملف السائق</option>{(drivers.data ?? []).map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}</select>}
+        {['driver','representative'].includes(role) && <select aria-label="ملف السائق" value={driver} onChange={e => setDriver(e.target.value)} className="h-10 w-full rounded-md border bg-card px-3"><option value="">اختر ملف السائق أو المندوب</option>{(drivers.data ?? []).map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}</select>}
+        {role==='workshop'&&<select aria-label="ورشة الموظف" value={workshopId} onChange={e=>setWorkshopId(e.target.value)} className="h-10 w-full border bg-card px-3"><option value="">اختر الورشة</option>{(workshops.data??[]).map(w=><option key={w.id} value={w.id}>{w.name}</option>)}</select>}
         <h3 className="text-sm font-semibold">الصفحات المتاحة</h3><div className="flex flex-wrap gap-2">{NAV.filter(n => !n.roles || employeeRoles.some(r => r.role === 'owner' || n.roles?.includes(r.role))).map(n => <Badge key={n.to} tone="info">{n.label}</Badge>)}</div>
       </section>
     </div>

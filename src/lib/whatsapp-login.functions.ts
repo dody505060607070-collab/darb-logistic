@@ -46,7 +46,7 @@ export const requestLoginCode = createServerFn({ method: "POST" })
     const { error: insErr } = await supabaseAdmin.from("login_codes").insert({ phone: data.phone, code_hash: await hmac(g.key, `${data.phone}:${code}`), expires_at: new Date(Date.now() + TTL_MS).toISOString() });
     if (insErr) throw new Error("تعذر إنشاء الرمز");
 
-    const text = `🔐 رمز الدخول إلى دَرب: *${code}*\nصالح لمدة 5 دقائق. لا تشاركه مع أي أحد.`;
+    const text = `🔐 رمز الدخول إلى شركة شتاء: *${code}*\nصالح لمدة 5 دقائق. لا تشاركه مع أي أحد.`;
     const res = await fetch(`${g.url}/message/sendText/${encodeURIComponent(g.instance)}`, {
       method: "POST",
       headers: { apikey: g.key, "Content-Type": "application/json" },

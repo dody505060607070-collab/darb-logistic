@@ -10,6 +10,9 @@ export type AppRole =
   | "fleet_supervisor"
   | "accountant"
   | "maintenance"
+  | "field_maintenance"
+  | "workshop"
+  | "representative"
   | "driver";
 
 export const ROLE_LABELS: Record<AppRole, string> = {
@@ -19,6 +22,9 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   fleet_supervisor: "مشرف أسطول",
   accountant: "محاسب",
   maintenance: "مسؤول صيانة",
+  field_maintenance: "صيانة ميدانية",
+  workshop: "الورشة",
+  representative: "مندوب",
   driver: "سائق",
 };
 
@@ -101,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setViewAs,
     fullName,
     driverId,
-    isStaff: eff.some((r) => r !== "driver"),
+    isStaff: eff.some((r) => !['driver','representative'].includes(r)),
     can: (...rs) => eff.includes("owner") || rs.some((r) => eff.includes(r)),
     refresh: () => load(session),
     signOut: async () => {

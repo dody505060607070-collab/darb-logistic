@@ -3,17 +3,17 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Logo } from "@/components/darb/Logo";
 import { ClientOnly } from "@tanstack/react-router";
-import { ThemeToggle, useThemeMode } from "@/components/darb/ThemeToggle";
-import SignaturePenFooter from "@/components/ui/signature-pen-footer";
+import { ThemeToggle } from "@/components/darb/ThemeToggle";
+import loginTruck from '@/assets/login-truck.jpg';
 import { PhoneLogin } from '@/components/darb/PhoneLogin';
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — دَرب" },
-      { name: "description", content: "تسجيل الدخول إلى نظام دَرب لإدارة عمليات النقل البري والأسطول." },
-      { property: "og:title", content: "تسجيل الدخول — دَرب" },
-      { property: "og:description", content: "الدخول إلى نظام دَرب لإدارة النقل البري." },
+      { title: "تسجيل الدخول — شركة شتاء" },
+      { name: "description", content: "تسجيل الدخول إلى شركة شتاء لإدارة الأسطول والصيانة." },
+      { property: "og:title", content: "تسجيل الدخول — شركة شتاء" },
+      { property: "og:description", content: "الدخول الآمن بالجوال إلى نظام شركة شتاء." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -23,41 +23,23 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const auth = useAuth();
-  const theme = useThemeMode();
   const nav = useNavigate();
 
   useEffect(() => {
     if (auth.ready && auth.session) void nav({ to: auth.isStaff || auth.roles.length === 0 ? "/" : "/driver" });
   }, [auth.ready, auth.session, auth.isStaff, auth.roles, nav]);
 
-  const light = theme.mode === "light";
   return (
-    <div dir="ltr" className="relative min-h-screen bg-background">
+    <div dir="rtl" className="relative flex min-h-screen items-center justify-center bg-background px-4 py-16">
+      <img src={loginTruck} alt="أسطول الشاحنات" className="absolute inset-0 h-full w-full object-cover opacity-15" />
       <ThemeToggle className="absolute top-4 left-4 z-20" />
       <ClientOnly fallback={<div className="min-h-screen bg-background" />}>
-        <SignaturePenFooter
-          word="دَرب"
-          logo={<Logo />}
-          title=""
-          description=""
-          actions={[]}
-          brand=""
-          links={[]}
-          legal="© دَرب DARB"
-          stamp=""
-          theme={light ? "light" : "dark"}
-          background={light ? "#F7F8F2" : "#000000"}
-          accent={light ? "#6E8F12" : "#E8FF1F"}
-          inkFrom={light ? "#9BBE1E" : "#F4FF9A"}
-          inkTo={light ? "#5E7D0B" : "#E8FF1F"}
-          height="100svh"
-          fontSans='"IBM Plex Sans Arabic", system-ui, sans-serif'
-        >
-          <div dir="rtl" className="panel w-full max-w-md p-6 sm:p-8">
+          <div dir="rtl" className="relative w-full max-w-md border border-border bg-card p-6 shadow-card sm:p-8">
+            <Logo className="mb-8 justify-center" />
             <h1 className="text-center text-2xl font-bold text-primary">
-              تسجيل الدخول إلى نظام دَرب
+              تسجيل الدخول
             </h1>
-            <p className="mt-1 mb-8 text-center text-sm text-muted-foreground">إدارة عمليات النقل البري والأسطول</p>
+            <p className="mt-1 mb-8 text-center text-sm text-muted-foreground">شركة شتاء — نظام إدارة الأسطول والصيانة</p>
 
             <PhoneLogin />
             <p className="mt-3 text-center text-xs text-muted-foreground">صلاحيات الشركة تُمنح من المدير فقط.</p>
@@ -72,7 +54,6 @@ function LoginPage() {
               </a>
             </p>
           </div>
-        </SignaturePenFooter>
       </ClientOnly>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { CircleDot, Package, Plus, ShieldCheck, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -75,7 +75,7 @@ function MaintPage() {
   return (
     <>
       <PageHeader title="الصيانة والإطارات والمخزون" subtitle="عيب/بلاغ ← أمر عمل ← تشخيص ← انتظار قطع ← جارٍ ← مكتمل ← مغلق" icon={<Wrench />}
-        actions={canEdit && <Button variant="gold" onClick={() => { setRec(null); setDlg("wo"); }}><Plus /> أمر عمل</Button>} />
+        actions={<Button asChild><Link to="/repair-center"><Wrench/> مركز الصيانة والموافقات</Link></Button>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
         <Kpi label="أوامر مفتوحة" value={openW.length} tone="warning" />
         <Kpi label="انتظار قطع" value={all.filter((w) => w.status === "waiting_parts").length} />
@@ -87,7 +87,7 @@ function MaintPage() {
       {(crit.data ?? []).length > 0 && (
         <Panel title="عيوب حرجة بانتظار الإصلاح وإعادة الفحص" icon={<ShieldCheck />} className="mb-5">
           <div className="space-y-2">
-            {crit.data!.map((i) => (
+            {(crit.data??[]).map((i) => (
               <div key={i.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-danger-soft p-3 text-sm">
                 <span><b className="num">{i.asset?.code}</b> — {fmtDateTime(i.created_at)}</span>
                 {canEdit && <Button size="sm" onClick={() => void reinspect(i.id)}>إعادة فحص سليم</Button>}
@@ -117,10 +117,7 @@ function MaintPage() {
               { key: "status", label: "الحالة", render: (r) => <Status kind="wo" value={r.status} /> },
               { key: "act", label: "", render: (r) => canEdit && r.status !== "closed" && (
                 <div className="flex gap-1">
-                  <select className="h-8 rounded-md border bg-card px-1 text-xs" value={r.status} onChange={(e) => void setStatus(r.id, e.target.value)}>
-                    {WO_FLOW.map((s) => <option key={s} value={s}>{STATUS["wo"]![s]![0]}</option>)}
-                  </select>
-                  <Button size="sm" variant="outline" onClick={() => { setRec(r); setDlg("wo"); }}>تعديل</Button>
+                  <Button asChild size="sm" variant="outline"><Link to="/repair-center">دورة الاعتماد</Link></Button>
                 </div>
               ) },
             ]} />

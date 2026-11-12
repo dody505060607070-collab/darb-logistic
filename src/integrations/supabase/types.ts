@@ -1321,6 +1321,44 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_history: {
+        Row: {
+          actor: string
+          at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          to_status: string
+          work_order_id: string
+        }
+        Insert: {
+          actor: string
+          at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status: string
+          work_order_id: string
+        }
+        Update: {
+          actor?: string
+          at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_history_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_plans: {
         Row: {
           asset_id: string
@@ -1358,6 +1396,101 @@ export type Database = {
             columns: ["asset_id"]
             isOneToOne: false
             referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_wallet_entries: {
+        Row: {
+          amount: number
+          asset_id: string | null
+          client_ref: string
+          created_at: string
+          created_by: string
+          description: string
+          employee_id: string
+          id: string
+          kind: string
+          occurred_at: string
+          receipt_path: string | null
+          reference: string | null
+          reversal_of: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          supplier: string | null
+          work_order_id: string | null
+        }
+        Insert: {
+          amount: number
+          asset_id?: string | null
+          client_ref: string
+          created_at?: string
+          created_by: string
+          description: string
+          employee_id: string
+          id?: string
+          kind: string
+          occurred_at?: string
+          receipt_path?: string | null
+          reference?: string | null
+          reversal_of?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supplier?: string | null
+          work_order_id?: string | null
+        }
+        Update: {
+          amount?: number
+          asset_id?: string | null
+          client_ref?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          employee_id?: string
+          id?: string
+          kind?: string
+          occurred_at?: string
+          receipt_path?: string | null
+          reference?: string | null
+          reversal_of?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supplier?: string | null
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_wallet_entries_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_wallet_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_wallet_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "maintenance_wallet_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_wallet_entries_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -2213,10 +2346,17 @@ export type Database = {
       }
       work_orders: {
         Row: {
+          approval_note: string | null
+          approved_budget: number | null
+          approved_by: string | null
           asset_id: string
+          assignee_id: string | null
           closed_at: string | null
           created_at: string
           description: string
+          diagnosis: string | null
+          estimate: number | null
+          expected_at: string | null
           id: string
           inspection_id: string | null
           kind: string
@@ -2224,16 +2364,29 @@ export type Database = {
           number: string
           opened_at: string
           parts_cost: number
+          photo_paths: string[]
+          received_by: string | null
+          requested_by: string | null
+          severity: string
           status: string
           technician: string | null
           vendor_invoice_ref: string | null
+          workflow_status: string
           workshop: string | null
+          workshop_id: string | null
         }
         Insert: {
+          approval_note?: string | null
+          approved_budget?: number | null
+          approved_by?: string | null
           asset_id: string
+          assignee_id?: string | null
           closed_at?: string | null
           created_at?: string
           description: string
+          diagnosis?: string | null
+          estimate?: number | null
+          expected_at?: string | null
           id?: string
           inspection_id?: string | null
           kind?: string
@@ -2241,16 +2394,29 @@ export type Database = {
           number?: string
           opened_at?: string
           parts_cost?: number
+          photo_paths?: string[]
+          received_by?: string | null
+          requested_by?: string | null
+          severity?: string
           status?: string
           technician?: string | null
           vendor_invoice_ref?: string | null
+          workflow_status?: string
           workshop?: string | null
+          workshop_id?: string | null
         }
         Update: {
+          approval_note?: string | null
+          approved_budget?: number | null
+          approved_by?: string | null
           asset_id?: string
+          assignee_id?: string | null
           closed_at?: string | null
           created_at?: string
           description?: string
+          diagnosis?: string | null
+          estimate?: number | null
+          expected_at?: string | null
           id?: string
           inspection_id?: string | null
           kind?: string
@@ -2258,10 +2424,16 @@ export type Database = {
           number?: string
           opened_at?: string
           parts_cost?: number
+          photo_paths?: string[]
+          received_by?: string | null
+          requested_by?: string | null
+          severity?: string
           status?: string
           technician?: string | null
           vendor_invoice_ref?: string | null
+          workflow_status?: string
           workshop?: string | null
+          workshop_id?: string | null
         }
         Relationships: [
           {
@@ -2272,10 +2444,92 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "work_orders_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "work_orders_inspection_id_fkey"
             columns: ["inspection_id"]
             isOneToOne: false
             referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workshop_members: {
+        Row: {
+          id: string
+          user_id: string
+          workshop_id: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          workshop_id: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          workshop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workshop_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workshop_members_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workshops: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workshops_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
         ]
@@ -2305,6 +2559,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      can_access_work_order: { Args: { p_id: string }; Returns: boolean }
       cancel_trip: {
         Args: { p_reason: string; p_trip_id: string }
         Returns: undefined
@@ -2387,6 +2642,36 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      maintenance_details: {
+        Args: {
+          p_diagnosis: string
+          p_estimate: number
+          p_id: string
+          p_invoice?: string
+          p_labor: number
+        }
+        Returns: undefined
+      }
+      maintenance_request: {
+        Args: {
+          p_asset_id: string
+          p_description: string
+          p_photos?: string[]
+          p_severity?: string
+        }
+        Returns: string
+      }
+      maintenance_transition: {
+        Args: {
+          p_amount?: number
+          p_assignee_id?: string
+          p_id: string
+          p_note?: string
+          p_target: string
+          p_workshop_id?: string
+        }
+        Returns: undefined
+      }
       record_trip_event: {
         Args: {
           p_client_event_id?: string
@@ -2418,6 +2703,35 @@ export type Database = {
         Args: { p_id: string; p_note: string }
         Returns: undefined
       }
+      wallet_balances: {
+        Args: never
+        Returns: {
+          balance: number
+          employee_id: string
+          maintenance_cost: number
+          pending_expenses: number
+        }[]
+      }
+      wallet_create: {
+        Args: {
+          p_amount: number
+          p_asset?: string
+          p_client_ref: string
+          p_description: string
+          p_employee: string
+          p_kind: string
+          p_receipt?: string
+          p_reference?: string
+          p_reversal?: string
+          p_supplier?: string
+          p_work_order?: string
+        }
+        Returns: string
+      }
+      wallet_review: {
+        Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
@@ -2428,6 +2742,9 @@ export type Database = {
         | "accountant"
         | "maintenance"
         | "driver"
+        | "field_maintenance"
+        | "workshop"
+        | "representative"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2563,6 +2880,9 @@ export const Constants = {
         "accountant",
         "maintenance",
         "driver",
+        "field_maintenance",
+        "workshop",
+        "representative",
       ],
     },
   },

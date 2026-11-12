@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { BRAND } from '@/lib/brand';
 
 export function Logo({ className, light = false }: { className?: string; light?: boolean }) {
   return (
@@ -8,10 +9,8 @@ export function Logo({ className, light = false }: { className?: string; light?:
         <path d="M18 36 C 30 30, 40 20, 60 15 L 60 21 C 46 24, 38 31, 30 36 Z" className="fill-gold opacity-70" />
       </svg>
       <div className="leading-none">
-        <div className={cn("text-2xl font-bold", light ? "text-sidebar-foreground" : "text-primary")}>دَرب</div>
-        <div className={cn("text-xs font-semibold tracking-[0.3em]", light ? "text-sidebar-foreground/80" : "text-primary/80")}>
-          DARB
-        </div>
+        <div className={cn("text-2xl font-bold", light ? "text-sidebar-foreground" : "text-primary")}>{BRAND.name}</div>
+        {BRAND.englishName && <div className="text-xs text-muted-foreground">{BRAND.englishName}</div>}
       </div>
     </div>
   );

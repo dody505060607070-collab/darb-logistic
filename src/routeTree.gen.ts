@@ -21,7 +21,9 @@ import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as IncidentsRouteImport } from './routes/incidents'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as MaintenanceWalletRouteImport } from './routes/maintenance-wallet'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as RepairCenterRouteImport } from './routes/repair-center'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -98,9 +100,19 @@ const MaintenanceRoute = MaintenanceRouteImport.update({
   path: '/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MaintenanceWalletRoute = MaintenanceWalletRouteImport.update({
+  id: '/maintenance-wallet',
+  path: '/maintenance-wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OperationsRoute = OperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepairCenterRoute = RepairCenterRouteImport.update({
+  id: '/repair-center',
+  path: '/repair-center',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -193,7 +205,9 @@ export interface FileRoutesByFullPath {
   '/incidents': typeof IncidentsRoute
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
+  '/maintenance-wallet': typeof MaintenanceWalletRoute
   '/operations': typeof OperationsRoute
+  '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -223,7 +237,9 @@ export interface FileRoutesByTo {
   '/incidents': typeof IncidentsRoute
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
+  '/maintenance-wallet': typeof MaintenanceWalletRoute
   '/operations': typeof OperationsRoute
+  '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -254,7 +270,9 @@ export interface FileRoutesById {
   '/incidents': typeof IncidentsRoute
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
+  '/maintenance-wallet': typeof MaintenanceWalletRoute
   '/operations': typeof OperationsRoute
+  '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -286,7 +304,9 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/login'
     | '/maintenance'
+    | '/maintenance-wallet'
     | '/operations'
+    | '/repair-center'
     | '/reports'
     | '/reset-password'
     | '/settings'
@@ -316,7 +336,9 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/login'
     | '/maintenance'
+    | '/maintenance-wallet'
     | '/operations'
+    | '/repair-center'
     | '/reports'
     | '/reset-password'
     | '/settings'
@@ -346,7 +368,9 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/login'
     | '/maintenance'
+    | '/maintenance-wallet'
     | '/operations'
+    | '/repair-center'
     | '/reports'
     | '/reset-password'
     | '/settings'
@@ -377,7 +401,9 @@ export interface RootRouteChildren {
   IncidentsRoute: typeof IncidentsRoute
   LoginRoute: typeof LoginRoute
   MaintenanceRoute: typeof MaintenanceRoute
+  MaintenanceWalletRoute: typeof MaintenanceWalletRoute
   OperationsRoute: typeof OperationsRoute
+  RepairCenterRoute: typeof RepairCenterRoute
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
@@ -481,11 +507,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/maintenance-wallet': {
+      id: '/maintenance-wallet'
+      path: '/maintenance-wallet'
+      fullPath: '/maintenance-wallet'
+      preLoaderRoute: typeof MaintenanceWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/operations': {
       id: '/operations'
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/repair-center': {
+      id: '/repair-center'
+      path: '/repair-center'
+      fullPath: '/repair-center'
+      preLoaderRoute: typeof RepairCenterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -609,7 +649,9 @@ const rootRouteChildren: RootRouteChildren = {
   IncidentsRoute: IncidentsRoute,
   LoginRoute: LoginRoute,
   MaintenanceRoute: MaintenanceRoute,
+  MaintenanceWalletRoute: MaintenanceWalletRoute,
   OperationsRoute: OperationsRoute,
+  RepairCenterRoute: RepairCenterRoute,
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,

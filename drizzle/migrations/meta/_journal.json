@@ -99,6 +99,27 @@
       "when": 1794120981940,
       "tag": "0013_verified_reserved_owner_assignment",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794502647402,
+      "tag": "0014_shitaa_scoped_roles_and_safe_signup",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794502694484,
+      "tag": "0015_shitaa_workshops_maintenance_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794502771673,
+      "tag": "0016_shitaa_employee_financial_ledger",
+      "breakpoints": true
     }
   ]
 }

@@ -50,13 +50,15 @@ export const NAV: NavItem[] = [
   { to: "/", label: "الرئيسية", icon: Home , group: NAV_GROUPS[0]! },
   { to: "/operations", label: "العمليات", icon: Cog, roles: ["ops_manager", "dispatcher"] , group: NAV_GROUPS[1]! },
   { to: "/orders", label: "أوامر النقل", icon: FileText, roles: ["ops_manager", "dispatcher", "accountant"] , group: NAV_GROUPS[1]! },
-  { to: "/trips", label: "الرحلات", icon: RouteIcon , group: NAV_GROUPS[1]! },
-  { to: "/tracking", label: "التتبع", icon: MapPin , group: NAV_GROUPS[1]! },
-  { to: "/fleet", label: "الأسطول", icon: Truck , group: NAV_GROUPS[2]! },
-  { to: "/drivers", label: "السائقون", icon: User , group: NAV_GROUPS[2]! },
+  { to: "/trips", label: "الرحلات", icon: RouteIcon, roles:['ops_manager','dispatcher','fleet_supervisor','accountant'], group: NAV_GROUPS[1]! },
+  { to: "/tracking", label: "التتبع", icon: MapPin, roles:['ops_manager','dispatcher','fleet_supervisor'], group: NAV_GROUPS[1]! },
+  { to: "/fleet", label: "الأسطول", icon: Truck, roles:['ops_manager','fleet_supervisor','maintenance'], group: NAV_GROUPS[2]! },
+  { to: "/drivers", label: "السائقون والمندوبون", icon: User, roles:['ops_manager','fleet_supervisor'], group: NAV_GROUPS[2]! },
   { to: "/custody", label: "العهد والفحص", icon: ClipboardCheck, roles: ["ops_manager", "fleet_supervisor", "maintenance"] , group: NAV_GROUPS[2]! },
   { to: "/documents", label: "المستندات", icon: FolderOpen, roles: ["ops_manager", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
   { to: "/maintenance", label: "الصيانة", icon: Wrench, roles: ["ops_manager", "maintenance", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
+  { to: '/repair-center', label: 'مركز الصيانة والورش', icon: Wrench, roles:['ops_manager','maintenance','field_maintenance','workshop','fleet_supervisor'], group:'الأسطول والصيانة' },
+  { to: '/maintenance-wallet', label: 'عهدة الصيانة المالية', icon: Coins, roles:['accountant','field_maintenance'], group:'المالية والعملاء' },
   { to: "/expenses", label: "المصروفات", icon: Coins, roles: ["ops_manager", "accountant", "fleet_supervisor"] , group: NAV_GROUPS[3]! },
   { to: "/finance", label: "المالية", icon: Landmark, roles: ["ops_manager", "accountant"] , group: NAV_GROUPS[3]! },
   { to: "/customers", label: "العملاء", icon: Users, roles: ["ops_manager", "accountant", "dispatcher"] , group: NAV_GROUPS[3]! },
@@ -71,6 +73,8 @@ export const NAV: NavItem[] = [
 /** Landing page per role: owners/ops managers keep the full dashboard. */
 export function roleHome(roles: AppRole[]): string {
   if (roles.includes("owner") || roles.includes("ops_manager")) return "/";
+  if(roles.includes('workshop')||roles.includes('field_maintenance')) return '/repair-center';
+  if(roles.includes('driver')||roles.includes('representative')) return '/driver';
   // dispatcher, accountant, maintenance and fleet supervisor get their own dashboard on "/"
   return "/";
 }
@@ -156,7 +160,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="px-5 pt-6 pb-4">
         <Logo light />
-        <p className="mt-2 text-xs text-sidebar-foreground/70">إدارة عمليات النقل والشاحنات</p>
+        <p className="mt-2 text-xs text-sidebar-foreground/70">نظام إدارة الأسطول والصيانة</p>
       </div>
       <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
         {NAV_GROUPS.map((g) => {
@@ -207,7 +211,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
   useEffect(() => {
     if (!auth.ready) return;
     if (!auth.session) void nav({ to: "/login" });
-    else if (staffOnly && !auth.isStaff && auth.roles.includes("driver")) void nav({ to: "/driver" });
+    else if (staffOnly && !auth.isStaff && auth.roles.some(r=>['driver','representative'].includes(r))) void nav({ to: "/driver" });
     else if (auth.roles.length) {
       // Role-specific home and page guard
       const item = NAV.filter((n) => n.to !== "/").find((n) => path.startsWith(n.to));
@@ -342,7 +346,7 @@ function RolePreview({ onNavigate }: { onNavigate?: () => void }) {
   const auth = useAuth();
   const nav = useNavigate();
   if (!auth.isSuperAdmin) return null;
-  const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "driver"];
+  const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "field_maintenance", "workshop", "driver", "representative"];
   return (
     <div className="border-t border-sidebar-border px-3 py-3">
       <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[11px] text-sidebar-foreground/60">

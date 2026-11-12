@@ -1,0 +1,4 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { AppShell } from '@/components/darb/AppShell';
+import { MaintenanceWorkflow } from '@/components/darb/MaintenanceWorkflow';
+export const Route=createFileRoute('/repair-center')({head:()=>({meta:[{title:'مركز الصيانة والورش — شركة شتاء'},{name:'description',content:'بلاغات الصيانة واعتمادها وتوجيه الأعمال للورش والفنيين ومتابعة الإصلاح والاستلام.'},{property:'og:title',content:'مركز الصيانة — شركة شتاء'},{property:'og:description',content:'الأعمال المسندة ومراحل الصيانة والموافقات وفحص الاستلام.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:()=> <AppShell><MaintenanceWorkflow/></AppShell>});
