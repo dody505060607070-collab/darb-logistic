@@ -38,3 +38,4 @@
 - Shared Panel/Kpi cards use a page-scoped drag context with account-scoped browser layout storage and CSS order; dragging never changes workflow status — why: preserve permissions and React ownership while supporting touch and keyboard arrangement.
 - Offline delivery drafts persist account-scoped files in IndexedDB and reuse an atomic RPC reference; uploaded paths persist between retries — why: interrupted uploads must not duplicate delivery or misreport unsent drafts.
 - The generated app-shell service worker registers only through the guarded PWA wrapper outside development, previews and frames — why: preview caches must not retain obsolete application code.
+- Route errors use an eagerly imported fallback and one session-scoped reload for verified lazy-import failures — why: obsolete route chunks must not blank the app or create reload loops.
