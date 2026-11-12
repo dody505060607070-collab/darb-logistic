@@ -15,3 +15,12 @@ describe('Shitaa operating rules',()=>{
  it('representative lands in mobile workflow',()=>expect(roleHome(['representative'])).toBe('/driver'));
  it('attachment limit is 10MiB and executable types rejected',()=>{expect(MAX_ATTACHMENT_BYTES).toBe(10485760);expect(()=>validateAttachment({size:10485761,type:'application/pdf'})).toThrow();expect(()=>validateAttachment({size:1,type:'text/html'})).toThrow();expect(()=>validateAttachment({size:10485760,type:'application/pdf'})).not.toThrow();});
 });
+import { navItemForPath } from "@/components/darb/AppShell";
+describe("page guard matching", () => {
+  it("maintenance wallet is guarded by its own roles, not the maintenance page", () => {
+    expect(navItemForPath("/maintenance-wallet")?.roles).toEqual(["accountant", "field_maintenance"]);
+  });
+  it("maintenance sub-pages still belong to maintenance", () => {
+    expect(navItemForPath("/maintenance")?.to).toBe("/maintenance");
+  });
+});

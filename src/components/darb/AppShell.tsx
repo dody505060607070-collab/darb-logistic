@@ -70,6 +70,12 @@ export const NAV: NavItem[] = [
   { to: "/settings", label: "الإعدادات", icon: Settings, roles: [] , group: NAV_GROUPS[5]! },
 ];
 
+/** Most specific menu entry owning a path; matches whole path segments so "/maintenance" never claims "/maintenance-wallet". */
+export function navItemForPath(path: string): NavItem | undefined {
+  return NAV.filter((n) => n.to !== "/" && (path === n.to || path.startsWith(n.to + "/")))
+    .sort((a, b) => b.to.length - a.to.length)[0];
+}
+
 /** Landing page per role: owners/ops managers keep the full dashboard. */
 export function roleHome(roles: AppRole[]): string {
   if (roles.includes("owner") || roles.includes("ops_manager")) return "/";
@@ -214,7 +220,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
     else if (staffOnly && !auth.isStaff && auth.roles.some(r=>['driver','representative'].includes(r))) void nav({ to: "/driver" });
     else if (auth.roles.length) {
       // Role-specific home and page guard
-      const item = NAV.filter((n) => n.to !== "/").find((n) => path.startsWith(n.to));
+      const item = navItemForPath(path);
       const home = roleHome(auth.roles);
       if (path === "/" && home !== "/") void nav({ to: home });
       else if (item?.roles && !auth.can(...item.roles)) void nav({ to: home });
