@@ -16,7 +16,7 @@
 }
 :root, html.light {
  --radius: .5rem; --bento-radius: 8px;
- --brand-green: #123C32; --brand-on-green: #fff; --gold: #C5A574; --background: #F5F7F6; --foreground: #18342d; --primary: var(--brand-green); --primary-foreground: #fff;
+ --brand-green: #123C32; --brand-on-green: #fff; --logo-surface: #F5F7F6; --gold: #C5A574; --background: #F5F7F6; --foreground: #18342d; --primary: var(--brand-green); --primary-foreground: #fff;
  --card: #ffffff; --popover: #ffffff; --secondary: #eee6d9; --muted: #edf1ef; --muted-foreground: #64776e; --accent: #e4ece8; --border: #dbe4df; --input: #cddbd3;
  --gold-soft: #f3ede2; --success: #246b4e; --success-soft: #e4f1e9; --info: #367b96; --info-soft: #e6f0f5; --warning: #9c722e; --warning-soft: #fbf0da; --danger: #b54446; --danger-soft: #fae9e8;
  --glass-surface: color-mix(in srgb, var(--card) 76%, transparent);
@@ -70,7 +70,7 @@ input:focus, textarea:focus, select:focus { box-shadow: 0 0 0 3px color-mix(in s
 .company-logo { width: 196px; height: 68px; object-fit: contain; }
 .driver-toolbar { background: var(--glass-gradient); backdrop-filter: blur(24px); box-shadow: var(--glass-shadow); color: var(--foreground); border-bottom: 1px solid var(--glass-edge); }
 .driver-toolbar .company-logo { width: 170px; height: 58px; }
-html:not(.light) .company-logo { background: var(--gold-soft); border-radius: 8px; padding: 6px; }
+html:not(.light) .company-logo { background: var(--logo-surface); border-radius: 8px; padding: 6px; }
 .card-grip { touch-action: none; cursor: grab; opacity: .55; }
 .card-grip:hover, .card-grip:focus-visible { opacity: 1; }
 .card-grip:active { cursor: grabbing; }
