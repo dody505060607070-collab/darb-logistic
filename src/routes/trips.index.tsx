@@ -70,6 +70,9 @@ function TripsPage() {
             { key: "status", label: "الحالة", render: (r) => <Status kind="trip" value={r.status} /> },
           ]} />
       </Panel>
+      <div className="readonly-flow mt-5" aria-label="مراحل الرحلة">
+        {['مسودة', 'مخططة', 'جاهزة', 'جارية', 'تم التسليم', 'مغلقة تشغيليًا'].map((label, i) => <span key={label} className="flex items-center gap-2">{i > 0 && <span aria-hidden className="text-gold">←</span>}{label}</span>)}
+      </div>
       <EntityDialog open={emptyOpen} onOpenChange={setEmptyOpen} title="رحلة فارغة / عودة" table="trips" invalidate={["trips"]}
         extra={{ is_empty: true }}
         fields={[

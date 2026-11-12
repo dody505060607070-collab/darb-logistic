@@ -121,17 +121,20 @@ function TasksPage() {
         <Kpi label="عاجلة مفتوحة" value={all.filter((t) => t.priority === "urgent" && t.status === "assigned").length} tone="danger" />
         <Kpi label="مكتملة" value={all.filter((t) => t.status === "completed").length} tone="success" />
       </div>
-      <div className="rounded-2xl border border-warning/40 bg-warning/10 p-3 text-sm">
+      <details className="rounded-lg border border-warning/40 bg-warning-soft p-4 text-sm">
+        <summary className="cursor-pointer font-semibold text-primary">إشعارات واتساب والتذكير</summary>
+        <p className="mt-3 leading-7">
         <MessageSquare className="ml-1 inline size-4" /> واتساب: عند التكليف تصل للموظف رسالة بكل التفاصيل (الصورة والموقع)، وعند الإنجاز تصلك رسالة، وعند الإرجاع تصله رسالة. يلزم ربط الرقم من صفحة «متابعة النشاط» وتسجيل رقم جوال لكل موظف.
         التذكير: العاجلة كل {REMINDER_HOURS.urgent} ساعة، والعادية كل {REMINDER_HOURS.normal} ساعة حتى الإنجاز.
-      </div>
-      <div className="flex flex-wrap gap-2">
+        </p>
+      </details>
+      <div className="status-tabs">
         {tabs.map(([k, l]) => (
-          <button key={k} onClick={() => setTab(k)} className={`rounded-full px-4 py-1.5 text-sm ${tab === k ? "bg-foreground text-background" : "border border-border text-muted-foreground"}`}>{l}</button>
+          <Button key={k} variant={tab === k ? "default" : "ghost"} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</Button>
         ))}
       </div>
       <Panel title="القائمة">
-        {list.length === 0 ? <Empty text="لا توجد مهام هنا" /> : (
+        {list.length === 0 ? <Empty text="لا توجد مهام هنا" action={manager && <Button onClick={() => setCreating(true)}><Plus /> مهمة جديدة</Button>} /> : (
           <div className="divide-y divide-border">
             {list.map((t) => (
               <div key={t.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-start">

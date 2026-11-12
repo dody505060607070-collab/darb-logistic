@@ -69,14 +69,15 @@ function FleetPage() {
 
       <div className="mb-4 flex gap-2">
         {(["tractor", "trailer"] as const).map((k) => (
-          <button
+          <Button variant={tab === k ? "default" : "outline"}
             key={k}
             onClick={() => { setTab(k); setSel(null); }}
-            className={cn("flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold", tab === k ? "border-gold bg-gold-soft text-primary" : "bg-card")}
+            aria-pressed={tab === k}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold"
           >
             {k === "tractor" ? <Truck className="size-4" /> : <Container className="size-4" />}
             {k === "tractor" ? "الرؤوس" : "المقطورات"} ({all.filter((a) => (k === "tractor" ? a.kind !== "trailer" : a.kind === "trailer")).length})
-          </button>
+          </Button>
         ))}
       </div>
 

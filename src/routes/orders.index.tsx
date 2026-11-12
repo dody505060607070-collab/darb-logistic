@@ -2,9 +2,9 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { FileText, Plus } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
-import { DataTable, Kpi, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
+import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
-import { db, useRows } from "@/lib/db";
+import { db, useRows, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
 import { fmtDateTime, fmtNum, fmtSAR, STATUS } from "@/lib/format";
 
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/orders/")({
 function OrdersPage() {
   const { can } = useAuth();
   const [status, setStatus] = useState("");
+  const [selected, setSelected] = useState<Row | null>(null);
   const orders = useRows(["orders"], () =>
     db.from("transport_orders").select("*, customer:customers(name), pickup:locations!transport_orders_pickup_location_id_fkey(name,city), delivery:locations!transport_orders_delivery_location_id_fkey(name,city), trips(id,number,status)").order("created_at", { ascending: false }),
   );
@@ -47,7 +48,7 @@ function OrdersPage() {
         <Kpi label="مكتمل" value={c("completed")} tone="gold" />
       </div>
       <Panel title="الأوامر" icon={<FileText />}>
-        <DataTable rows={all.filter((o) => !status || o.status === status)} loading={orders.isLoading} error={orders.error}
+        <DataTable rows={all.filter((o) => !status || o.status === status)} loading={orders.isLoading} error={orders.error} selectedId={selected?.id} onRowClick={setSelected}
           searchKeys={["number", "customer.name", "cargo_type", "consignee"]}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["order"]!).map(([k, v]) => [k, v[0]])} />}
           cols={[
@@ -61,6 +62,12 @@ function OrdersPage() {
             { key: "status", label: "الحالة", render: (r) => <Status kind="order" value={r.status} /> },
           ]} />
       </Panel>
+      {selected && <Panel className="mt-5" title={`الأمر ${selected.number}`} icon={<FileText />} actions={<Status kind="order" value={selected.status} />}>
+        <div className="grid gap-5 md:grid-cols-2">
+          <KV items={[["العميل", selected.customer?.name], ["المسار", `${selected.pickup?.city ?? '—'} ← ${selected.delivery?.city ?? '—'}`], ["البضاعة", `${selected.cargo_type} • ${fmtNum(selected.quantity)} ${selected.unit}`]]} />
+          <div><KV items={[["موعد التسليم", fmtDateTime(selected.delivery_due_at)], ["الرحلات", (selected.trips ?? []).map((t: { id: string; number: string }) => <Link key={t.id} to="/trips/$id" params={{ id: t.id }} className="num ml-3 text-primary underline">{t.number}</Link>)]]} />{showPrice && <KV items={[["السعر", fmtSAR(selected.price)]]} />}</div>
+        </div>
+      </Panel>}
     </>
   );
 }

@@ -254,7 +254,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
   const roleLabel = auth.roles.map((r) => ROLE_LABELS[r]).join("، ");
 
   return (
-    <div className="app-shell flex min-h-screen" dir="rtl">
+    <div className={cn("app-shell flex min-h-screen", path !== "/" && "internal-ui")} dir="rtl">
       <aside className="app-sidebar sticky top-3 hidden w-64 shrink-0 lg:block">
         <Sidebar />
       </aside>
@@ -314,7 +314,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             <button className="underline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع</button>
           </div>
         )}
-        <main key={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6"><CardArrangement account={auth.session.user.id} path={path}>{children}</CardArrangement></main>
+        <main key={path} data-page={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6"><CardArrangement account={auth.session.user.id} path={path}>{children}</CardArrangement></main>
         <footer className="hidden pb-4 text-center lg:block">
           <a
             href="https://abdelrahmanstudio.store/"

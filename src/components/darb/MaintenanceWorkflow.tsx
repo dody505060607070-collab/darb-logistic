@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge, DataTable, PageHeader } from './ui';
+import { Badge, DataTable, PageHeader, Panel } from './ui';
 
 export function MaintenanceWorkflow() {
  const auth=useAuth(); const qc=useQueryClient(); const manager=auth.can('maintenance','ops_manager');
@@ -31,9 +31,11 @@ export function MaintenanceWorkflow() {
  const assignedStaff=(staff.data??[]).filter(p=>(roles.data??[]).some(r=>r.user_id===p.id));
  return <>
  <PageHeader title={auth.roles.includes('workshop')?'أعمال الورشة':auth.roles.includes('field_maintenance')?'أعمال الصيانة الميدانية':'بلاغات الصيانة والموافقات'} icon={<Wrench/>} actions={!auth.roles.includes('workshop')&&<Button onClick={()=>setNewOpen(true)}><Plus/> بلاغ صيانة</Button>}/>
+ <Panel title={auth.roles.includes('workshop')?'الأعمال المسندة':'أوامر الصيانة'} icon={<Wrench/>}>
  <DataTable rows={orders.data} loading={orders.isLoading} error={orders.error} onRowClick={open} searchKeys={['number','description','asset.code']} cols={[
  {key:'number',label:'الأمر'},{key:'asset',label:'المركبة',render:r=>r.asset?.code??'غير متاح'},{key:'description',label:'البلاغ'},{key:'workflow_status',label:'الحالة',render:r=><Badge tone={r.workflow_status==='closed'?'success':r.workflow_status==='rejected'?'danger':'warning'}>{MAINTENANCE_STATES[r.workflow_status]??r.workflow_status}</Badge>},
  {key:'workshop',label:'الجهة',render:r=>r.workshop_entity?.name??(staff.data??[]).find(p=>p.id===r.assignee_id)?.full_name??'غير مسند'},{key:'approved_budget',label:'المعتمد',render:r=>fmtSAR(r.approved_budget)},{key:'action',label:'',render:r=><Button size="sm" variant="outline" onClick={()=>open(r)}>تفاصيل</Button>} ]}/>
+ </Panel>
  {manager&&<section className="mt-6 space-y-3 border-t pt-5"><h2 className="font-bold">الورش</h2><div className="flex gap-2"><Input aria-label="اسم الورشة" placeholder="اسم الورشة" value={workshopName} onChange={e=>setWorkshopName(e.target.value)}/><Button disabled={busy||!workshopName.trim()} onClick={()=>void run(()=>db.from('workshops').insert({name:workshopName.trim()}))}><Plus/> إضافة ورشة</Button></div><DataTable rows={workshops.data} cols={[{key:'name',label:'الورشة'},{key:'kind',label:'النوع',render:r=>r.kind==='external'?'خارجية':'داخلية'}]}/></section>}
  <Dialog open={newOpen} onOpenChange={setNewOpen}><DialogContent dir="rtl"><DialogHeader><DialogTitle>بلاغ صيانة جديد</DialogTitle></DialogHeader><Label>المركبة</Label><select aria-label="مركبة البلاغ" className="h-10 border bg-card px-2" value={asset} onChange={e=>setAsset(e.target.value)}><option value="">اختر المركبة</option>{(assets.data??[]).map(a=><option key={a.id} value={a.id}>{a.code} — {a.plate}</option>)}</select><Label>الوصف</Label><Textarea aria-label="وصف البلاغ" value={description} onChange={e=>setDescription(e.target.value)}/><Label>الخطورة</Label><select aria-label="خطورة البلاغ" className="h-10 border bg-card px-2" value={severity} onChange={e=>setSeverity(e.target.value)}><option value="normal">عادية</option><option value="urgent">عاجلة</option><option value="critical">حرجة — تمنع التشغيل</option></select><Button disabled={busy||!asset||description.trim().length<5} onClick={()=>void run(()=>db.rpc('maintenance_request',{p_asset_id:asset,p_description:description,p_severity:severity}),true)}><Save/> إرسال البلاغ</Button></DialogContent></Dialog>
  <Dialog open={!!selected} onOpenChange={o=>!o&&setSelected(null)}><DialogContent dir="rtl" className="max-h-[90svh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{selected?.number} — {MAINTENANCE_STATES[selected?.workflow_status??'']}</DialogTitle></DialogHeader>

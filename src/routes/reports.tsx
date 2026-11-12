@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BarChart3, Download } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/darb/AppShell";
-import { DataTable, Kpi, PageHeader, Panel } from "@/components/darb/ui";
+import { DataTable, Empty, Kpi, PageHeader, Panel } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
 import { db, useRows, type Row } from "@/lib/db";
 import { fetchFinancials } from "@/lib/queries";
@@ -112,9 +112,9 @@ function Reports() {
         <Kpi label="تكلفة الكيلومتر" value={r.costPerKm === null ? na : `${r.costPerKm.toFixed(2)} ر.س`} hint="مباشرة + صيانة ÷ كم" />
         <Kpi label="الهامش المباشر" value={fmtSAR(r.margin)} hint={`إيراد ${fmtSAR(r.rev)} − تكلفة مباشرة ${fmtSAR(r.direct)}`} tone="gold" />
       </div>
-      <div className="grid gap-5 xl:grid-cols-2">
-        <Panel title="الكيلومترات حسب الرأس" icon={<BarChart3 />}>
-          {r.perAsset.length === 0 ? <p className="text-sm text-muted-foreground">لا توجد بيانات.</p> : (
+      <div className="report-layout grid gap-5">
+        <Panel title="الكيلومترات حسب الرأس" icon={<BarChart3 />} className="report-chart">
+          {r.perAsset.length === 0 ? <Empty text="لا توجد بيانات" /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={r.perAsset}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -135,7 +135,6 @@ function Reports() {
             { key: "outstanding", label: "المتبقي", render: (x) => <b className="num">{fmtSAR(x.outstanding)}</b> },
           ]} empty={<p className="py-6 text-center text-sm text-muted-foreground">لا توجد فواتير معتمدة.</p>} />
         </Panel>
-      </div>
       <Panel title="تشغيل الأصول" icon={<BarChart3 />} className="mt-5" actions={<Button size="sm" variant="outline" onClick={() => csv(r.perAsset, "assets")}><Download /> CSV</Button>}>
         <DataTable rows={r.perAsset} cols={[
           { key: "code", label: "الرأس", render: (x) => <span className="num">{x.code}</span> },
@@ -143,6 +142,7 @@ function Reports() {
           { key: "km", label: "الكيلومترات", render: (x) => <span className="num">{fmtNum(x.km)} كم</span> },
         ]} />
       </Panel>
+      </div>
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, Send, Users } from "lucide-react";
+import { MessageSquare, Search, Send, Users } from "lucide-react";
+import { PageHeader } from "@/components/darb/ui";
 import { AppShell } from "@/components/darb/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,8 +83,10 @@ function ChatPage() {
   const list = people.filter((p) => p.full_name.includes(q));
 
   return (
-    <div className="panel grid h-[calc(100vh-9rem)] min-h-[520px] overflow-hidden p-0 md:grid-cols-[320px_1fr]">
-      <aside className={`flex min-h-0 flex-col border-l ${active !== undefined ? "" : ""}`}>
+    <>
+    <PageHeader title="المحادثات" icon={<MessageSquare />} />
+    <div className="chat-workspace grid md:grid-cols-[290px_minmax(0,1fr)]">
+      <aside className="chat-list flex min-h-0 flex-col">
         <div className="border-b p-3">
           <h1 className="mb-2 text-lg font-semibold">المحادثات</h1>
           <div className="relative">
@@ -100,7 +103,7 @@ function ChatPage() {
           {list.length === 0 && <p className="px-4 py-6 text-center text-sm text-muted-foreground">لا يوجد أشخاص آخرون بعد</p>}
         </div>
       </aside>
-      <section className="flex min-h-0 flex-col">
+      <section className="chat-thread flex min-h-0 flex-col">
         <header className="flex items-center gap-3 border-b p-3">
           <div className="grid size-10 place-items-center rounded-full bg-primary text-primary-foreground">{activePerson ? activePerson.full_name.slice(0, 1) : <Users className="size-5" />}</div>
           <div>
@@ -109,7 +112,7 @@ function ChatPage() {
           </div>
         </header>
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-muted/20 p-4">
-          {thread.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">لا توجد رسائل بعد — ابدأ المحادثة</p>}
+          {thread.length === 0 && <div className="chat-empty"><MessageSquare aria-hidden /><p>لا توجد رسائل بعد — ابدأ المحادثة</p></div>}
           {thread.map((m) => {
             const mine = m.sender_id === me;
             return (
@@ -126,21 +129,22 @@ function ChatPage() {
         </div>
         <form className="flex gap-2 border-t p-3" onSubmit={(e) => { e.preventDefault(); void send(); }}>
           <Input autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" maxLength={4000} />
-          <Button type="submit" variant="gold" disabled={!text.trim()} aria-label="إرسال"><Send /></Button>
+          <Button type="submit" disabled={!text.trim()} aria-label="إرسال"><Send /></Button>
         </form>
       </section>
     </div>
+    </>
   );
 }
 
 function Row({ title, sub, on, onClick, icon }: { title: string; sub: string; on: boolean; onClick: () => void; icon: React.ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 px-4 py-3 text-right transition-colors hover:bg-muted/40 ${on ? "bg-muted/60" : ""}`}>
+    <Button type="button" variant="ghost" aria-pressed={on} onClick={onClick} className={`flex w-full justify-start items-center gap-3 px-4 py-3 text-right transition-colors hover:bg-muted/40 ${on ? "bg-accent" : ""}`}>
       <div className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground">{icon}</div>
       <div className="min-w-0">
         <div className="truncate font-medium">{title}</div>
         <div className="truncate text-xs text-muted-foreground">{sub}</div>
       </div>
-    </button>
+    </Button>
   );
 }

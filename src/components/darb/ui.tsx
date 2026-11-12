@@ -67,7 +67,7 @@ export function Panel({
 
 export function PageHeader({ title, subtitle, actions, icon }: { title: string; subtitle?: string; actions?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="mb-5 grid grid-cols-1 items-end gap-3 sm:flex sm:justify-between">
+    <div className="page-heading mb-5 grid grid-cols-1 items-end gap-3 sm:flex sm:justify-between">
       <div className="min-w-0">
         <h1 className="flex items-center gap-2 text-[28px] font-bold text-primary">
           {icon && <span className="text-gold [&_svg]:size-7">{icon}</span>}
@@ -137,7 +137,7 @@ export function Ticks({ value, count = 40, className }: { value: number; count?:
 
 export function Empty({ text = "لا توجد بيانات بعد", action }: { text?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-muted-foreground">
+    <div className="empty-state flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-muted-foreground">
       <Inbox className="size-8 opacity-50" />
       <p>{text}</p>
       {action}
@@ -207,9 +207,9 @@ export function DataTable<T extends Record<string, unknown>>({
   const view = filtered.slice(cur * pageSize, cur * pageSize + pageSize);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="data-table flex flex-col gap-3">
       {(searchKeys || filters || filtered.length > 0) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="table-tools flex flex-wrap items-center gap-2">
           {searchKeys && (
             <div className="relative min-w-56 flex-1">
               <Search className="absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -257,6 +257,8 @@ export function DataTable<T extends Record<string, unknown>>({
                 <tr
                   key={String(r["id"] ?? i)}
                   onClick={onRowClick ? () => onRowClick(r) : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={onRowClick ? (e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onRowClick(r); } } : undefined}
                   className={cn(
                     "border-t transition-colors",
                     onRowClick && "cursor-pointer hover:bg-accent/60",
@@ -281,13 +283,13 @@ export function DataTable<T extends Record<string, unknown>>({
             عرض {cur * pageSize + 1}–{Math.min(filtered.length, (cur + 1) * pageSize)} من {filtered.length}
           </span>
           <div className="flex items-center gap-1">
-            <Button size="icon" variant="outline" className="size-7" disabled={cur === 0} onClick={() => setPage(cur - 1)}>
+            <Button size="icon" variant="outline" aria-label="الصفحة السابقة" className="size-7" disabled={cur === 0} onClick={() => setPage(cur - 1)}>
               <ChevronRight />
             </Button>
             <span className="num px-2">
               {cur + 1} / {pages}
             </span>
-            <Button size="icon" variant="outline" className="size-7" disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>
+            <Button size="icon" variant="outline" aria-label="الصفحة التالية" className="size-7" disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>
               <ChevronLeft />
             </Button>
           </div>

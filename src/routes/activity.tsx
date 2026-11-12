@@ -69,9 +69,8 @@ function ActivityPage() {
         <Kpi label="عمليات مسجلة" value={(audit.data ?? []).length} tone="gold" />
         <Kpi label="مرات الخروج" value={(ev.data ?? []).filter((e) => e.kind === "sign_out").length} tone="neutral" />
       </div>
-      <WhatsAppGatewayPanel />
-      <AiReports />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="activity-layout grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-4">
         <Panel title="ملخص كل شخص">
           {perUser.length === 0 ? <Empty text="لا يوجد نشاط في هذا اليوم" /> : (
             <table className="w-full text-sm"><thead><tr className="text-muted-foreground"><th className="text-right">الشخص</th><th>أول دخول</th><th>آخر خروج</th><th>عمليات</th></tr></thead>
@@ -90,6 +89,8 @@ function ActivityPage() {
             {!(ev.data ?? []).length && !(audit.data ?? []).length && <Empty text="لا يوجد نشاط" />}
           </div>
         </Panel>
+      </div>
+      <div className="space-y-5"><WhatsAppGatewayPanel /><AiReports /></div>
       </div>
     </div>
   );

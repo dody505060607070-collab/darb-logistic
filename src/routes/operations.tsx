@@ -133,8 +133,9 @@ function Ops() {
         </div>
       </Panel>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-3">
-        <Panel title="رحلات تحتاج تخطيطًا" icon={<AlertTriangle />} className="xl:col-span-2">
+      <div className="operations-layout mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
+        <div className="min-w-0 space-y-5">
+        <Panel title="رحلات تحتاج تخطيطًا" icon={<AlertTriangle />}>
           <DataTable rows={pending} loading={trips.isLoading} onRowClick={(r) => void nav({ to: "/trips/$id", params: { id: r.id } })} cols={[
             { key: "number", label: "الرحلة", render: (r) => <span className="num font-semibold text-primary">{r.number}</span> },
             { key: "route", label: "المسار", render: (r) => `${r.origin_city} ← ${r.dest_city}` },
@@ -155,10 +156,11 @@ function Ops() {
             </tbody>
           </table>
         </Panel>
-      </div>
-      <Panel title="تخصيص موارد لرحلة" icon={<Truck />} className="mt-5">
+        </div>
+      <Panel title="تخصيص موارد لرحلة" icon={<Truck />} className="allocation-panel">
         <AssignForm trips={t} />
       </Panel>
+      </div>
     </>
   );
 }
