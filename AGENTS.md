@@ -35,5 +35,6 @@
 - Maintenance financial custody is an immutable approved ledger with role-checked creation/review RPCs and derived balances — why: disbursement is not expense, retries cannot debit twice, and corrections preserve history.
 - Delivery submission and custody return/transfer use atomic RPCs; active-trip resource and critical-defect checks run in database triggers — why: partial writes and expired planned periods must not violate operational invariants.
 - Replaceable company display identity lives in a browser-safe brand module; legacy source directories remain stable — why: rebranding must not disturb existing data or public URLs.
+- Shared Panel/Kpi cards use a page-scoped drag context with account-scoped browser layout storage and CSS order; dragging never changes workflow status — why: preserve permissions and React ownership while supporting touch and keyboard arrangement.
 - Offline delivery drafts persist account-scoped files in IndexedDB and reuse an atomic RPC reference; uploaded paths persist between retries — why: interrupted uploads must not duplicate delivery or misreport unsent drafts.
 - The generated app-shell service worker registers only through the guarded PWA wrapper outside development, previews and frames — why: preview caches must not retain obsolete application code.

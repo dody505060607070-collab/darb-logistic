@@ -157,15 +157,15 @@ function DriverApp() {
       {auth.viewAs && <div className="fixed top-2 left-2 z-50"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
       {demo && <div className="bg-gold-soft px-4 py-1.5 text-center text-xs font-semibold text-primary">معاينة شكل تطبيق السائق ببيانات تجريبية — لا يتم حفظ أي شيء</div>}
       {!demo && current?.status === "in_progress" && <LiveGps tripId={current.id} />}
-      <header className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
-        <Logo light className="scale-90" />
-        <div className="flex items-center gap-3 text-xs">
-          <span className={cn("flex items-center gap-1", online ? "text-success-soft" : "text-warning")}>
+      <header className="driver-toolbar grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3">
+        <Logo light />
+        <div className="flex shrink-0 items-center gap-2 text-xs">
+          <span className={cn("flex items-center gap-1", online ? "text-success" : "text-warning")}>
             {online ? <span className="size-2 rounded-full bg-success" /> : <CloudOff className="size-4" />}
             {online ? "متصل" : "غير متصل"}
           </span>
           <Bell className="size-5" />
-          <button onClick={() => (demo ? demoToast() : void auth.signOut())} aria-label="خروج"><LogOut className="size-5" /></button>
+          <Button variant="ghost" size="icon" onClick={() => (demo ? demoToast() : void auth.signOut())} aria-label="خروج"><LogOut className="size-5" /></Button>
         </div>
       </header>
 

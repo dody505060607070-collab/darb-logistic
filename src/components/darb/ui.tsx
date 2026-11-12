@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { STATUS, type Tone } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useArrangedCard } from './CardArrangement';
 
 const TONES: Record<Tone, string> = {
   success: "bg-success-soft text-success",
@@ -46,15 +47,16 @@ export function Panel({
   className?: string;
   bodyClass?: string;
 }) {
+  const arrangement = useArrangedCard(typeof title === 'string' ? title : 'panel');
   return (
-    <section className={cn("panel flex flex-col", tone && `bento bento-${tone} bento-panel`, className)}>
+    <section ref={arrangement.ref} style={arrangement.style} className={cn("panel flex flex-col", tone && `bento bento-${tone} bento-panel`, arrangement.className, className)}>
       {(title || actions) && (
-        <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
-          <h2 className="flex items-center gap-2 text-base font-bold text-primary">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-4 py-3 sm:flex sm:justify-between">
+          <h2 className="flex min-w-0 items-center gap-2 text-base font-bold text-primary">
             {icon && <span className="text-gold [&_svg]:size-5">{icon}</span>}
             {title}
           </h2>
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+          <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}{arrangement.handle}</div>
         </header>
       )}
       <div className={cn("flex-1 p-4", bodyClass)}>{children}</div>
@@ -65,9 +67,9 @@ export function Panel({
 
 export function PageHeader({ title, subtitle, actions, icon }: { title: string; subtitle?: string; actions?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="flex items-center gap-2 text-[28px] font-bold tracking-tight text-primary">
+    <div className="mb-5 grid grid-cols-1 items-end gap-3 sm:flex sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="flex items-center gap-2 text-[28px] font-bold text-primary">
           {icon && <span className="text-gold [&_svg]:size-7">{icon}</span>}
           {title}
         </h1>
@@ -103,13 +105,14 @@ export function Kpi({
   variant?: "glass" | "solid";
 }) {
   const cls = variant === "glass" ? "bento-glass" : variant === "solid" ? "bento-solid" : tone ? BENTO[tone] : "bento-auto";
+  const arrangement = useArrangedCard(label);
   return (
-    <div className={cn("bento kpi-tile flex min-h-[132px] flex-col justify-between px-5 py-4 transition-transform duration-300 hover:-translate-y-0.5", cls)}>
+    <div ref={arrangement.ref} style={arrangement.style} className={cn("bento kpi-tile flex min-h-[132px] flex-col justify-between px-5 py-4", cls, arrangement.className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="cap">{label}</span>
-        {icon && <span className="grid size-8 place-items-center rounded-full bg-black/25 [&_svg]:size-4">{icon}</span>}
+        <div className="flex shrink-0 items-center gap-1">{icon && <span className="grid size-8 place-items-center rounded-full bg-gold-soft text-gold [&_svg]:size-4">{icon}</span>}{arrangement.handle}</div>
       </div>
-      <div className="big num mt-3 text-right text-[40px]"><CountUp value={value} /></div>
+      <div className="big num mt-3 break-words text-right text-[32px]"><CountUp value={value} /></div>
       {hint && <div className="hint mt-1 text-xs opacity-75">{hint}</div>}
       <span className="rim" />
     </div>
@@ -342,6 +345,7 @@ function CountUp({ value }: { value: ReactNode }) {
   const [n, setN] = useState(target ?? 0);
   useEffect(() => {
     if (target == null) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setN(target); return; }
     const start = performance.now();
     let raf = 0;
     const step = (t: number) => {

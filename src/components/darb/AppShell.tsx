@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "./ui";
 import { CommandPalette } from "./CommandPalette";
+import { CardArrangement } from './CardArrangement';
 
 type NavItem = { to: string; label: string; icon: typeof Home; roles?: AppRole[]; group: string };
 
@@ -107,14 +108,14 @@ function Notifications() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="relative rounded-full p-2 hover:bg-muted" aria-label="التنبيهات">
+        <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="التنبيهات">
           <Bell className="size-5 text-primary" />
           {n > 0 && (
             <span className="num absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-primary-foreground">
               {n}
             </span>
           )}
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent dir="rtl" align="end" className="w-80 p-0">
         <div className="border-b px-4 py-2 text-sm font-bold text-primary">التنبيهات المفتوحة</div>
@@ -191,7 +192,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                         <n.icon className="size-5" />
                         <span className="flex-1">{n.label}</span>
                         {!!counts[n.to] && (
-                          <span className={cn("num grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold", active ? "bg-black/80 text-white" : "bg-warning text-black")}>{counts[n.to]}</span>
+                          <span className={cn("num grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold", active ? "bg-gold text-gold-foreground" : "bg-warning-soft text-warning")}>{counts[n.to]}</span>
                         )}
                       </Link>
                     </li>
@@ -253,8 +254,8 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
   const roleLabel = auth.roles.map((r) => ROLE_LABELS[r]).join("، ");
 
   return (
-    <div className="flex min-h-screen bg-background" dir="rtl">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 lg:block">
+    <div className="app-shell flex min-h-screen" dir="rtl">
+      <aside className="app-sidebar sticky top-3 hidden w-64 shrink-0 lg:block">
         <Sidebar />
       </aside>
       {open && (
@@ -269,11 +270,11 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-card/95 px-4 py-2.5 backdrop-blur">
-          <button className="rounded-md p-2 hover:bg-muted lg:hidden" onClick={() => setOpen(true)} aria-label="القائمة">
+        <header className="app-toolbar sticky top-2 z-30 flex min-w-0 items-center gap-3 px-4 py-2.5">
+          <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" onClick={() => setOpen(true)} aria-label="القائمة">
             <Menu className="size-5" />
-          </button>
-          <div className="hidden items-center gap-4 text-sm text-muted-foreground md:flex">
+          </Button>
+          <div className="hidden min-w-0 items-center gap-4 text-xs text-muted-foreground xl:flex">
             <span className="flex items-center gap-1.5">
               <MapPin className="size-4 text-gold" /> المملكة العربية السعودية
             </span>
@@ -291,11 +292,11 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
               </>
             )}
           </div>
-          <div className="mr-auto flex items-center gap-2">
+          <div className="mr-auto flex min-w-0 items-center gap-2">
             <CommandPalette />
             <ThemeToggle />
             <Notifications />
-            <div className="hidden text-left sm:block">
+            <div className="hidden min-w-0 max-w-48 text-left sm:block">
               <div className="text-sm font-semibold text-primary">{auth.fullName}</div>
               <div className="text-xs text-muted-foreground">{roleLabel}</div>
             </div>
@@ -313,7 +314,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             <button className="underline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع</button>
           </div>
         )}
-        <main key={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6">{children}</main>
+        <main key={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6"><CardArrangement account={auth.session.user.id} path={path}>{children}</CardArrangement></main>
         <footer className="hidden pb-4 text-center lg:block">
           <a
             href="https://abdelrahmanstudio.store/"

@@ -34,7 +34,7 @@ function LoginPage() {
       <img src={loginTruck} alt="أسطول الشاحنات" className="absolute inset-0 h-full w-full object-cover opacity-15" />
       <ThemeToggle className="absolute top-4 left-4 z-20" />
       <ClientOnly fallback={<div className="min-h-screen bg-background" />}>
-          <div dir="rtl" className="relative w-full max-w-md border border-border bg-card p-6 shadow-card sm:p-8">
+          <div dir="rtl" className="panel relative w-full max-w-md p-6 sm:p-8">
             <Logo className="mb-8 justify-center" />
             <h1 className="text-center text-2xl font-bold text-primary">
               تسجيل الدخول

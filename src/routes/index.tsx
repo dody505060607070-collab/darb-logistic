@@ -132,7 +132,7 @@ function Dashboard() {
         </div>
       </section>
 
-      <section className="panel grid grid-cols-2 gap-3 p-4 md:grid-cols-5">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <div className="col-span-2 flex items-center gap-3 md:col-span-1">
           <Truck className="size-8 text-gold" />
           <div className="text-lg font-bold text-primary">التشغيل اليوم</div>
