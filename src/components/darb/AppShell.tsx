@@ -1,3 +1,4 @@
+import { LanguageToggle } from "@/components/darb/LanguageLayer";
 import { ThemeToggle } from "@/components/darb/ThemeToggle";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -295,6 +296,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
           </div>
           <div className="mr-auto flex min-w-0 items-center gap-2">
             <CommandPalette />
+            <LanguageToggle />
             <ThemeToggle />
             <Notifications />
             <div className="hidden min-w-0 max-w-48 text-left sm:block">

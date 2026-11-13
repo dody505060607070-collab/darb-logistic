@@ -5,6 +5,7 @@ import { ArrowRight, Ban, CheckCircle2, ClipboardList, Coins, FileCheck2, Lock, 
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
+import { ReturnTripPanel } from "@/components/darb/ReturnTrip";
 import { AssignForm } from "@/components/darb/AssignForm";
 import { Badge, DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { openFile } from "@/components/darb/shared";
@@ -108,6 +109,7 @@ function TripDetails() {
         </div>} />
 
       <div className="grid gap-5 xl:grid-cols-3">
+        {ops && ["in_progress", "delivered", "closed"].includes(t.status) && !t.parent_trip_id && <Panel title="رحلة الرجوع" icon={<Truck />} className="xl:col-span-3"><ReturnTripPanel trip={t} /></Panel>}
         <Panel title="بيانات الرحلة" icon={<ClipboardList />}>
           <KV items={[
             ["أمر النقل", t.order?.number],

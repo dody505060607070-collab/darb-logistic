@@ -1,3 +1,4 @@
+import { TranslatableText } from "@/components/darb/TranslatableText";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -148,11 +149,11 @@ function TasksPage() {
               <div key={t.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-start">
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{t.title}</span>
+                    <TranslatableText className="font-semibold" text={t.title} />
                     {t.priority === "urgent" && <Badge tone="danger">عاجلة</Badge>}
                     <Badge tone={STATUS[t.status]?.tone ?? "neutral"}>{STATUS[t.status]?.label ?? t.status}</Badge>
                   </div>
-                  {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
+                  {t.description && <p className="text-sm text-muted-foreground"><TranslatableText text={t.description} /></p>}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span>المكلَّف: <b className="text-foreground">{name(t.assignee_id)}</b></span>
                     <span>كلّفه: {name(t.assigned_by)}{t.requested_by_external ? ` — بطلب من: ${t.requested_by_external}` : ""}</span>

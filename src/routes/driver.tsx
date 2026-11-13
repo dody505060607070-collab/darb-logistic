@@ -1,3 +1,5 @@
+import { LanguageToggle } from "@/components/darb/LanguageLayer";
+import { DriverReturnRequest } from "@/components/darb/ReturnTrip";
 import { flushWa } from "@/lib/wa-flush";
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -174,6 +176,7 @@ function DriverApp() {
             {online ? <span className="size-2 rounded-full bg-success" /> : <CloudOff className="size-4" />}
             {online ? "متصل" : "غير متصل"}
           </span>
+          <LanguageToggle className="h-7 px-2" />
           <Bell className="size-5" />
           <Button variant="ghost" size="icon" onClick={() => (demo ? demoToast() : void auth.signOut())} aria-label="خروج"><LogOut className="size-5" /></Button>
         </div>
@@ -215,6 +218,7 @@ function DriverApp() {
         ) : (
           <PodView t={current} uid={auth.session.user.id} done={() => setTab("home")} demo={demo} />
         )}
+        {tab === "home" && list.filter((t) => ["in_progress", "delivered", "closed"].includes(t.status)).slice(0, 2).map((t) => <DriverReturnRequest key={`ret-${t.id}`} trip={t} demo={demo} />)}
         {tab === "home" && list.filter((t) => t.id !== current?.id).length > 0 && (
           <div className="panel p-4">
             <h3 className="mb-2 font-bold text-primary">رحلاتي الأخرى</h3>

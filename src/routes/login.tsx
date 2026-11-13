@@ -1,3 +1,4 @@
+import { LanguageToggle } from "@/components/darb/LanguageLayer";
 import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
@@ -35,6 +36,7 @@ function LoginPage() {
       <ThemeToggle className="absolute top-4 left-4 z-20" />
       <ClientOnly fallback={<div className="min-h-screen bg-background" />}>
           <div dir="rtl" className="panel relative w-full max-w-md p-6 sm:p-8">
+            <div className="mb-2 flex justify-end"><LanguageToggle /></div>
             <Logo className="mb-8 justify-center" />
             <h1 className="text-center text-2xl font-bold text-primary">
               تسجيل الدخول

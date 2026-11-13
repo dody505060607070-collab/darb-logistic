@@ -1797,6 +1797,67 @@ export type Database = {
           },
         ]
       }
+      return_requests: {
+        Row: {
+          created_at: string
+          depart_at: string
+          driver_id: string
+          id: string
+          notes: string | null
+          return_trip_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          depart_at: string
+          driver_id: string
+          id?: string
+          notes?: string | null
+          return_trip_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          depart_at?: string
+          driver_id?: string
+          id?: string
+          notes?: string | null
+          return_trip_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_requests_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_requests_return_trip_id_fkey"
+            columns: ["return_trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_requests_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_moves: {
         Row: {
           client_ref: string | null
@@ -2779,6 +2840,18 @@ export type Database = {
         }
         Returns: string
       }
+      create_return_trip: {
+        Args: {
+          p_dest_location: string
+          p_distance: number
+          p_end: string
+          p_origin_location: string
+          p_request_id: string
+          p_start: string
+          p_trip_id: string
+        }
+        Returns: string
+      }
       current_driver_id: { Args: never; Returns: string }
       custody_return: {
         Args: {
@@ -2833,6 +2906,10 @@ export type Database = {
           p_trip_id: string
         }
         Returns: undefined
+      }
+      driver_request_return: {
+        Args: { p_depart_at: string; p_notes: string; p_trip_id: string }
+        Returns: string
       }
       driver_trips_for: {
         Args: { p_driver_id: string }
@@ -2935,6 +3012,10 @@ export type Database = {
         Returns: string
       }
       reinspect_ok: { Args: { p_inspection_id: string }; Returns: undefined }
+      reject_return_request: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
+      }
       review_expense: {
         Args: { p_approve: boolean; p_id: string; p_reason?: string }
         Returns: undefined

@@ -1,3 +1,4 @@
+import { LanguageLayer } from "@/components/darb/LanguageLayer";
 import { THEME_BOOT_SCRIPT } from "@/components/darb/ThemeToggle";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -91,6 +92,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <LanguageLayer />
         <Outlet />
         <Toaster position="top-center" richColors dir="rtl" />
       </AuthProvider>
