@@ -8,6 +8,7 @@
  --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px); --radius-2xl: calc(var(--radius) + 8px);
  --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--foreground); --color-popover: var(--popover); --color-popover-foreground: var(--foreground);
  --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-secondary: var(--secondary); --color-secondary-foreground: var(--foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-accent: var(--accent); --color-accent-foreground: var(--foreground);
+ --color-brand-red: var(--brand-red); --color-brand-red-foreground: var(--brand-red-foreground); --color-brand-red-soft: var(--brand-red-soft); --color-brand-red-ink: var(--brand-red-ink);
  --color-destructive: var(--danger); --color-destructive-foreground: var(--primary-foreground); --color-border: var(--border); --color-input: var(--input); --color-ring: var(--primary); --color-ring-offset-background: var(--background);
  --color-gold: var(--gold); --color-gold-foreground: var(--brand-green); --color-gold-soft: var(--gold-soft); --color-success: var(--success); --color-success-soft: var(--success-soft); --color-info: var(--info); --color-info-soft: var(--info-soft); --color-warning: var(--warning); --color-warning-soft: var(--warning-soft); --color-danger: var(--danger); --color-danger-soft: var(--danger-soft);
  --color-chart-1: var(--success); --color-chart-2: var(--info); --color-chart-3: var(--gold); --color-chart-4: var(--muted-foreground); --color-chart-5: var(--danger);
@@ -15,6 +16,7 @@
  --shadow-card: var(--glass-shadow);
 }
 :root, html.light {
+ --brand-red: oklch(0.581314 0.233269 20.410538); --brand-red-foreground: oklch(1 0 0); --brand-red-ink: var(--brand-red); --brand-red-soft: oklch(0.963 0.017 20.41);
  --radius: .5rem; --bento-radius: 8px;
  --brand-green: #123C32; --brand-on-green: #fff; --logo-surface: #F5F7F6; --gold: #C5A574; --background: #F5F7F6; --foreground: #18342d; --primary: var(--brand-green); --primary-foreground: #fff;
  --card: #ffffff; --popover: #ffffff; --secondary: #eee6d9; --muted: #edf1ef; --muted-foreground: #64776e; --accent: #e4ece8; --border: #dbe4df; --input: #cddbd3;
@@ -29,6 +31,7 @@
  color-scheme: light;
 }
 html:not(.light) {
+ --brand-red-ink: oklch(0.78 0.14 20.41); --brand-red-soft: oklch(0.28 0.048 20.41);
  --background: #101d18; --foreground: #edf4ef; --card: #192b23; --popover: #192b23; --primary: #8bbea3; --primary-foreground: #123C32; --secondary: #344235; --muted: #25382e; --muted-foreground: #a4b7ac; --accent: #304d3d; --border: #365044; --input: #436150; --gold-soft: #3e392b;
  --success: #8bbea3; --success-soft: #243e2e; --info: #86bfd2; --info-soft: #233b42; --warning: #dcc08d; --warning-soft: #423827; --danger: #f49b9b; --danger-soft: #442b2b;
  --glass-highlight: color-mix(in srgb, var(--card) 88%, var(--foreground) 12%); --glass-edge: color-mix(in srgb, var(--border) 70%, var(--gold) 30%); color-scheme: dark;
@@ -245,3 +248,13 @@ html:not(.light) .company-logo { background: var(--logo-surface); border-radius:
   .internal-ui .kpi-tile .kpi-icon svg { width: 17px; height: 17px; }
 }
 @container (min-width: 211px) { .internal-ui .kpi-tile > *:not(.kpi-icon) { padding-inline-end: 56px; } }
+
+/* Shata logo accents complement green; operational warning/danger tokens stay independent. */
+.page-heading h1 > span { color: var(--brand-red-ink); }
+.internal-ui .page-heading h1 > span { background: var(--brand-red-soft); }
+.panel > header h2 > span { color: var(--brand-red-ink); }
+.app-sidebar a[aria-current="page"] { box-shadow: inset -3px 0 0 var(--brand-red); }
+.app-sidebar a[aria-current="page"] > svg { color: var(--brand-red-foreground); background: var(--brand-red); border-radius: 4px; padding: 2px; }
+.kpi-tile.bento-auto .kpi-icon, .kpi-tile.bento-graph .kpi-icon, .kpi-tile.bento-glass .kpi-icon { color: var(--brand-red-ink); background: var(--brand-red-soft); }
+.internal-ui [data-slot="tabs-trigger"][data-state="active"] { box-shadow: inset 0 -3px 0 var(--brand-red); }
+.driver-toolbar { border-bottom: 2px solid var(--brand-red); }

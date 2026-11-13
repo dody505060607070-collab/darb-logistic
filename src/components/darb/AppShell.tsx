@@ -183,6 +183,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     <li key={n.to}>
                       <Link
                         to={n.to}
+                        aria-current={active ? 'page' : undefined}
                         onClick={onNavigate}
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
