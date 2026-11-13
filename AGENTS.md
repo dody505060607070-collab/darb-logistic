@@ -25,7 +25,7 @@
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
 - WhatsApp number management matches the unique configured instance, verifies disconnection server-side, and requires explicit in-app confirmation — why: prevents selecting another company's number or interrupting messaging accidentally.
 - Login is phone-only: `src/lib/whatsapp-login.functions.ts` sends HMAC-hashed, 5-minute, attempt- and rate-limited codes via the company WhatsApp gateway, then exchanges a verified code for a real Cloud Auth session (admin magic-link token hash); accounts match only on `profiles.phone`, role assignment is left to the signup trigger — why: owner chose WhatsApp delivery while permissions stay in `user_roles`.
-- Keep the React auth context in a separate browser-safe module with HMR identity preservation, not in the provider/hook module — why: split routes can temporarily retain different module versions during preview updates.
+- React auth context lives in its own HMR-stable module, apart from the provider — why: split routes may hold mixed module versions.
 - CRM lives in a focused home-page component and role-restricted opportunity/activity tables; pipeline values use integer-cent calculations and remain forecasts, not revenue — why: preserves existing dashboards and finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.
@@ -33,10 +33,10 @@
 - Account deletion uses an owner-checked server function with explicit confirmation and a self-deletion guard; reference-record deletion is allowlisted and RLS-enforced, never enabled implicitly on audit or finance tables — why: avoids erasing history or bypassing atomic financial workflows.
 - Workshop membership and field assignments scope work-order access through role-checked RPCs; legacy status mutation is disabled — why: approvals and receiving inspection must not be bypassed.
 - Maintenance financial custody is an immutable approved ledger with role-checked creation/review RPCs and derived balances — why: disbursement is not expense, retries cannot debit twice, and corrections preserve history.
-- Delivery submission and custody return/transfer use atomic RPCs; active-trip resource and critical-defect checks run in database triggers — why: partial writes and expired planned periods must not violate operational invariants.
-- Replaceable company display identity lives in a browser-safe brand module; legacy source directories remain stable — why: rebranding must not disturb existing data or public URLs.
-- Shared Panel/Kpi cards use a page-scoped drag context with account-scoped browser layout storage and CSS order; dragging never changes workflow status — why: preserve permissions and React ownership while supporting touch and keyboard arrangement.
-- Offline delivery drafts persist account-scoped files in IndexedDB and reuse an atomic RPC reference; uploaded paths persist between retries — why: interrupted uploads must not duplicate delivery or misreport unsent drafts.
-- The generated app-shell service worker registers only through the guarded PWA wrapper outside development, previews and frames — why: preview caches must not retain obsolete application code.
-- Route errors use an eagerly imported fallback and one session-scoped reload for verified lazy-import failures — why: obsolete route chunks must not blank the app or create reload loops.
-- Trip/POD/expense invariants live in `trip_status_guard`/`pod_guard`/`expense_guard` triggers; anon executes no public function; `src/start.ts` sets security + noindex headers — why: direct writes and crawlers must not bypass rules.
+- Delivery and custody return/transfer are atomic RPCs; busy-resource and critical-defect checks are triggers — why: no partial writes.
+- Display identity lives in a browser-safe brand module; legacy directories stay — why: rebrand without touching data/URLs.
+- Panel/Kpi drag uses a page-scoped context, account-scoped layout storage and CSS order; never changes workflow status — why: arrangement only.
+- Offline delivery drafts are account-scoped in IndexedDB, reuse one RPC reference and keep uploaded paths — why: no duplicate or misreported deliveries.
+- Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
+- Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
+- Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
