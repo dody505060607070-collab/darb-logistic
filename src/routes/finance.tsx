@@ -7,6 +7,7 @@ import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, Empty, Kpi, KV, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { InvoiceDocument } from "@/components/darb/InvoiceDocument";
+import { AccountingSummary } from "@/components/darb/AccountingSummary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -96,7 +97,8 @@ function FinancePage() {
       </div>
       <div className="mb-5 rounded-xl border bg-gold-soft p-4 text-sm text-primary">PDF أو QR وحده لا يعني توافق ZATCA — حالة مزود الفوترة تُعرض كما هي لكل فاتورة.</div>
       <Tabs defaultValue="unbilled" dir="rtl">
-        <TabsList><TabsTrigger value="unbilled">رحلات للفوترة</TabsTrigger><TabsTrigger value="inv">الفواتير</TabsTrigger><TabsTrigger value="pay">الدفعات</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="unbilled">رحلات للفوترة</TabsTrigger><TabsTrigger value="inv">الفواتير</TabsTrigger><TabsTrigger value="pay">الدفعات</TabsTrigger><TabsTrigger value="acct">المحاسبة الآلية</TabsTrigger></TabsList>
+        <TabsContent value="acct"><AccountingSummary /></TabsContent>
         <TabsContent value="unbilled">
           <Panel title="رحلات مسلّمة غير مفوترة" icon={<FileSpreadsheet />} actions={isAcc && <Button size="sm" variant="gold" disabled={!selTrips.length} onClick={() => void createInvoice()}><Plus /> إنشاء مسودة فاتورة ({selTrips.length})</Button>}>
             <DataTable rows={unbilled} loading={billable.isLoading} searchKeys={["number", "order.customer.name"]} cols={[

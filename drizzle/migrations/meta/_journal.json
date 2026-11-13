@@ -225,6 +225,20 @@
       "when": 1794596215640,
       "tag": "0031_role_requests_notices",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794596776686,
+      "tag": "0032_license_sync_critical_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794596813353,
+      "tag": "0033_workshop_job_report",
+      "breakpoints": true
     }
   ]
 }

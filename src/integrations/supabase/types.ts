@@ -2628,6 +2628,47 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_lines: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          kind: string
+          qty: number
+          unit_price: number
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          kind: string
+          qty?: number
+          unit_price?: number
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          kind?: string
+          qty?: number
+          unit_price?: number
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_lines_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_orders: {
         Row: {
           approval_note: string | null
@@ -2646,6 +2687,7 @@ export type Database = {
           kind: string
           labor_cost: number
           number: string
+          odometer_km: number | null
           opened_at: string
           parts_cost: number
           photo_paths: string[]
@@ -2655,6 +2697,8 @@ export type Database = {
           status: string
           technician: string | null
           vendor_invoice_ref: string | null
+          warranty_days: number | null
+          work_done: string | null
           workflow_status: string
           workshop: string | null
           workshop_id: string | null
@@ -2676,6 +2720,7 @@ export type Database = {
           kind?: string
           labor_cost?: number
           number?: string
+          odometer_km?: number | null
           opened_at?: string
           parts_cost?: number
           photo_paths?: string[]
@@ -2685,6 +2730,8 @@ export type Database = {
           status?: string
           technician?: string | null
           vendor_invoice_ref?: string | null
+          warranty_days?: number | null
+          work_done?: string | null
           workflow_status?: string
           workshop?: string | null
           workshop_id?: string | null
@@ -2706,6 +2753,7 @@ export type Database = {
           kind?: string
           labor_cost?: number
           number?: string
+          odometer_km?: number | null
           opened_at?: string
           parts_cost?: number
           photo_paths?: string[]
@@ -2715,6 +2763,8 @@ export type Database = {
           status?: string
           technician?: string | null
           vendor_invoice_ref?: string | null
+          warranty_days?: number | null
+          work_done?: string | null
           workflow_status?: string
           workshop?: string | null
           workshop_id?: string | null
@@ -3050,6 +3100,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_critical_alerts: { Args: never; Returns: number }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
@@ -3191,6 +3242,19 @@ export type Database = {
       wallet_review: {
         Args: { p_approve: boolean; p_id: string; p_note?: string }
         Returns: undefined
+      }
+      workshop_job_report: {
+        Args: {
+          p_id: string
+          p_invoice: string
+          p_lines: Json
+          p_odometer: number
+          p_photos: string[]
+          p_technician: string
+          p_warranty_days: number
+          p_work_done: string
+        }
+        Returns: Json
       }
     }
     Enums: {

@@ -8,6 +8,9 @@ export const Route = createFileRoute("/api/public/jobs/daily-report")({
         const authFailure = await authenticateCronRequest(request);
         if (authFailure) return authFailure;
         try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const alerts = await supabaseAdmin.rpc("generate_critical_alerts");
+          if (alerts.error) console.error("critical alerts failed", alerts.error);
           const { generateDailyReport } = await import("@/lib/ai-report.server");
           await generateDailyReport("scheduled");
           return Response.json({ success: true });
