@@ -1848,6 +1848,62 @@ export type Database = {
           },
         ]
       }
+      task_notifications: {
+        Row: {
+          accepted_at: string | null
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          error: string | null
+          event: string
+          id: string
+          next_attempt_at: string
+          payload: Json
+          provider_id: string | null
+          recipient_id: string
+          state: string
+          task_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          event: string
+          id?: string
+          next_attempt_at?: string
+          payload: Json
+          provider_id?: string | null
+          recipient_id: string
+          state?: string
+          task_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          event?: string
+          id?: string
+          next_attempt_at?: string
+          payload?: Json
+          provider_id?: string | null
+          recipient_id?: string
+          state?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_by: string
@@ -2622,6 +2678,30 @@ export type Database = {
           role: string
         }[]
       }
+      claim_task_notification: {
+        Args: { p_id: string }
+        Returns: {
+          accepted_at: string | null
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          error: string | null
+          event: string
+          id: string
+          next_attempt_at: string
+          payload: Json
+          provider_id: string | null
+          recipient_id: string
+          state: string
+          task_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "task_notifications"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       close_trip: { Args: { p_trip_id: string }; Returns: undefined }
       create_invoice_from_trips: {
         Args: {
@@ -2683,6 +2763,14 @@ export type Database = {
           p_reading_id: string
           p_speed: number
           p_trip_id: string
+        }
+        Returns: undefined
+      }
+      enqueue_due_task_reminders: { Args: never; Returns: number }
+      enqueue_task_event: {
+        Args: {
+          p_event: string
+          p_task: Database["public"]["Tables"]["tasks"]["Row"]
         }
         Returns: undefined
       }

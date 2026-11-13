@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Banknote, CalendarClock, CheckCircle2, FileSpreadsheet, FileText, Landmark, Plus, Receipt, Truck } from "lucide-react";
+import { Banknote, CalendarClock, CheckCircle2, FileSpreadsheet, FileText, Landmark, Plus, Printer, Receipt, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, Empty, Kpi, KV, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
+import { InvoiceDocument } from "@/components/darb/InvoiceDocument";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { db, useRows, type Row } from "@/lib/db";
+import { db, useRows, useOne, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
 import { daysUntil, errMsg, fmtDate, fmtSAR } from "@/lib/format";
 
@@ -36,7 +37,9 @@ function FinancePage() {
   const qc = useQueryClient();
   const { can } = useAuth();
   const isAcc = can("accountant");
-  const invoices = useRows(["invoices"], () => db.from("invoices").select("*, customer:customers(name), lines:invoice_lines(*), allocs:payment_allocations(amount)").order("created_at", { ascending: false }));
+  const invoices = useRows(["invoices"], () => db.from("invoices").select("*, customer:customers(name,vat_number,cr_number), lines:invoice_lines(*), allocs:payment_allocations(amount)").order("created_at", { ascending: false }));
+  const seller = useOne(['company_settings', 'invoice'], () => db.from('company_settings').select('company_name,vat_number,cr_number').eq('id', 1).maybeSingle());
+  const [printInvoice, setPrintInvoice] = useState<Row | null>(null);
   const payments = useRows(["payments"], () => db.from("payments").select("*, customer:customers(name), allocs:payment_allocations(amount, invoice:invoices(number))").order("paid_at", { ascending: false }));
   const billable = useRows(["trips", "billable"], () =>
     db.from("trips").select("id,number,origin_city,dest_city,status,actual_end, order:transport_orders(customer_id, customer:customers(name)), lines:invoice_lines(id), fin:trip_financials(revenue)").in("status", ["delivered", "closed"]).eq("is_empty", false),
@@ -73,7 +76,8 @@ function FinancePage() {
     inv();
   }
   async function allocate() {
-    const { error } = await db.rpc("allocate_payment", { p_payment_id: alloc!.id, p_invoice_id: allocInv, p_amount: Number(allocAmt) });
+    if (!alloc) return;
+    const { error } = await db.rpc("allocate_payment", { p_payment_id: alloc.id, p_invoice_id: allocInv, p_amount: Number(allocAmt) });
     if (error) return void toast.error(errMsg(error));
     toast.success("تم توزيع الدفعة");
     setAlloc(null);
@@ -139,6 +143,7 @@ function FinancePage() {
                   ["مزود الفوترة", <Status kind="provider" value={selectedInvoice.provider_status} />],
                 ]} />
                 {isAcc && selectedInvoice.status === "draft" && <Button variant="gold" className="w-full" onClick={() => void approve(selectedInvoice.id)}>اعتماد الفاتورة</Button>}
+                <Button variant="outline" className="w-full" disabled={!seller.data} onClick={() => setPrintInvoice(selectedInvoice)}><Printer /> معاينة / طباعة الفاتورة</Button>
               </div>
             ) : <Empty text="لا توجد فواتير بعد" />}
           </Panel>
@@ -177,6 +182,7 @@ function FinancePage() {
           <Button variant="gold" onClick={() => void allocate()}>توزيع</Button>
         </DialogContent>
       </Dialog>
+      {printInvoice && seller.data && <InvoiceDocument invoice={printInvoice} seller={seller.data} onClose={() => setPrintInvoice(null)} />}
     </>
   );
 }

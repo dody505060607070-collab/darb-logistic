@@ -169,6 +169,13 @@
       "when": 1794567260443,
       "tag": "0023_trip_safety_guard_only_on_assignment_changes",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794592486128,
+      "tag": "0024_task_notification_outbox",
+      "breakpoints": true
     }
   ]
 }

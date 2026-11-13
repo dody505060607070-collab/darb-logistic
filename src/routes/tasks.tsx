@@ -15,7 +15,7 @@ import { ROLE_LABELS, useAuth, type AppRole } from "@/lib/auth";
 import { errMsg, fmtDateTime } from "@/lib/format";
 import { useServerFn } from "@tanstack/react-start";
 import { notifyTask } from "@/lib/whatsapp.functions";
-import { nextReminderAt, REMINDER_HOURS } from "@/lib/tasks";
+import { REMINDER_HOURS } from "@/lib/tasks";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
@@ -65,6 +65,14 @@ function TasksPage() {
       return data as Task[];
     },
   });
+  const messages = useQuery({
+    queryKey: ['task_notifications'],
+    queryFn: async () => {
+      const { data, error } = await db.from('task_notifications').select('id,task_id,event,state,provider_id,error,created_at').order('created_at', { ascending: false }).limit(50);
+      if (error) throw error;
+      return data as Task[];
+    },
+  });
   const name = (id: string) => people.data?.find((p) => p.id === id)?.full_name ?? "—";
   const all = tasks.data ?? [];
   const list = useMemo(() => {
@@ -73,13 +81,13 @@ function TasksPage() {
     if (tab === "done") return all.filter((t) => t.status === "completed");
     return all.filter((t) => t.status === "assigned");
   }, [all, tab, me]);
-  const refresh = () => void qc.invalidateQueries({ queryKey: ["tasks"] });
+  const refresh = () => { void qc.invalidateQueries({ queryKey: ["tasks"] }); void qc.invalidateQueries({ queryKey: ['task_notifications'] }); };
   const notify = useServerFn(notifyTask);
   const wa = async (taskId: string, event: "assigned" | "submitted" | "returned" | "approved") => {
     try {
       const r = await notify({ data: { taskId, event } });
-      if (r.sent) toast.success(`أُرسلت رسالة واتساب (${r.sent})`);
-      else toast.message(r.reason === "no_phone" ? "لا يوجد رقم جوال مسجل للمستلم — لم تُرسل رسالة واتساب" : "واتساب غير مربوط بعد — لم تُرسل رسالة");
+      if (r.sent) toast.success(`قبل خادم واتساب الرسالة (${r.sent})`);
+      else if (r.reason !== 'already_processed') toast.message(r.reason === "no_phone" ? "لا يوجد رقم جوال صحيح للمستلم" : r.reason === 'not_configured' ? "واتساب غير مربوط بعد — لم تُرسل رسالة" : "الإشعار محفوظ؛ إرسال واتساب غير مؤكد، راجع سجل الرسائل");
     } catch (e) { toast.error(errMsg(e)); }
     refresh();
   };
@@ -90,7 +98,7 @@ function TasksPage() {
     if (error) { toast.error(errMsg(error)); return; }
     toast.success("تم إرسال المهمة للمراجعة");
     refresh();
-    void wa(t.id, "submitted");
+    await wa(t.id, "submitted");
   }
   async function review(t: Task, approve: boolean) {
     if (approve && !window.confirm("تأكيد نهائي: هل المهمة مكتملة فعلاً؟")) return;
@@ -99,7 +107,7 @@ function TasksPage() {
     if (error) { toast.error(errMsg(error)); return; }
     toast.success(approve ? "تم اعتماد المهمة كمكتملة" : "أُعيدت المهمة للموظف");
     refresh();
-    void wa(t.id, approve ? "approved" : "returned");
+    await wa(t.id, approve ? "approved" : "returned");
   }
 
   const tabs = [
@@ -149,7 +157,8 @@ function TasksPage() {
                     <span>المكلَّف: <b className="text-foreground">{name(t.assignee_id)}</b></span>
                     <span>كلّفه: {name(t.assigned_by)}{t.requested_by_external ? ` — بطلب من: ${t.requested_by_external}` : ""}</span>
                     {t.due_at && <span>الموعد: {fmtDateTime(t.due_at)}</span>}
-                    {t.status === "assigned" && <span>التذكير القادم: {fmtDateTime(nextReminderAt(t.priority, t.created_at, new Date()).toISOString())}</span>}
+                    {t.status === "assigned" && <span>موعد التذكير: {fmtDateTime(t.next_reminder_at)}</span>}
+                    <span>واتساب: {String(t.whatsapp_status).startsWith('accepted_') ? 'قبله خادم الإرسال؛ الوصول غير مؤكد' : t.whatsapp_status === 'unresolved' ? 'يلزم التحقق من الإرسال' : t.whatsapp_status === 'failed' ? 'تعذر الإرسال' : 'بانتظار الإرسال'}</span>
                     {t.location_text && (
                       <a className="text-gold" target="_blank" rel="noreferrer" href={t.lat ? `https://maps.google.com/?q=${t.lat},${t.lng}` : `https://maps.google.com/?q=${encodeURIComponent(t.location_text)}`}>
                         <MapPin className="inline size-3" /> {t.location_text}
@@ -166,7 +175,7 @@ function TasksPage() {
                 </div>
                 <div className="flex shrink-0 gap-2">
                   {t.assignee_id === me && t.status === "assigned" && <Button size="sm" onClick={() => void submit(t)}><Send /> أنهيت المهمة</Button>}
-                  {manager && t.status === "submitted" && (
+                  {manager && t.assignee_id !== me && t.status === "submitted" && (
                     <>
                       <Button size="sm" onClick={() => void review(t, true)}><CheckCircle2 /> المهمة مكتملة</Button>
                       <Button size="sm" variant="outline" onClick={() => void review(t, false)}><RotateCcw /> إرجاع</Button>
@@ -178,6 +187,15 @@ function TasksPage() {
           </div>
         )}
       </Panel>
+      <Panel title="سجل إشعارات المهام" icon={<MessageSquare />}>
+        {messages.isError ? <p className="text-sm text-danger">تعذر قراءة سجل الرسائل</p> : !messages.data?.length ? <p className="text-sm text-muted-foreground">لا توجد إشعارات مسجلة</p> : <div className="divide-y divide-border">
+          {messages.data.map(m => <div key={m.id} className="py-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2"><span>{all.find(t => t.id === m.task_id)?.title ?? 'مهمة'}</span><Badge tone={m.state === 'accepted' ? 'info' : ['failed', 'unresolved'].includes(m.state) ? 'warning' : 'neutral'}>{({ pending: 'بانتظار الإرسال', sending: 'جارٍ الإرسال', accepted: 'قبله خادم واتساب', failed: 'تعذر الإرسال', unresolved: 'الوصول غير مؤكد — يلزم التحقق', cancelled: 'ألغي الإشعار' } as Record<string, string>)[m.state] ?? m.state}</Badge></div>
+            <p className="mt-1 text-xs text-muted-foreground">{fmtDateTime(m.created_at)}{m.provider_id ? ` — معرف الرسالة: ${m.provider_id}` : ''}</p>
+            {m.error && <p className="mt-1 text-xs text-warning">{m.state === 'unresolved' ? 'تحقق من محادثة الموظف قبل إعادة إرسال المهمة.' : 'تعذر إرسال الإشعار؛ تحقق من رقم الموظف واتصال واتساب.'}</p>}
+          </div>)}
+        </div>}
+      </Panel>
       <details className="reminder-details rounded-lg border p-4 text-sm">
         <summary className="cursor-pointer font-semibold text-primary"><MessageSquare className="ml-2 inline size-5 text-gold" />إشعارات واتساب والتذكير</summary>
         <p className="mt-3 leading-7">
@@ -185,12 +203,12 @@ function TasksPage() {
         التذكير: العاجلة كل {REMINDER_HOURS.urgent} ساعة، والعادية كل {REMINDER_HOURS.normal} ساعة حتى الإنجاز.
         </p>
       </details>
-      {creating && <NewTask people={people.data ?? []} onClose={() => setCreating(false)} onDone={(id) => void wa(id, "assigned")} />}
+      {creating && <NewTask people={people.data ?? []} onClose={() => setCreating(false)} onDone={(id) => wa(id, "assigned")} />}
     </div>
   );
 }
 
-function NewTask({ people, onClose, onDone }: { people: Person[]; onClose: () => void; onDone: (id: string) => void }) {
+function NewTask({ people, onClose, onDone }: { people: Person[]; onClose: () => void; onDone: (id: string) => Promise<void> }) {
   const [f, setF] = useState({ title: "", description: "", priority: "normal", assignee_id: "", requested_by_external: "", location_text: "", due_at: "" });
   const [photo, setPhoto] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -209,7 +227,7 @@ function NewTask({ people, onClose, onDone }: { people: Person[]; onClose: () =>
       }).select("id").single();
       if (error) throw error;
       toast.success("تم إنشاء المهمة");
-      onDone(row.id);
+      await onDone(row.id);
       onClose();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   }

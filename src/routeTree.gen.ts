@@ -39,6 +39,7 @@ import { Route as TripsIndexRouteImport } from './routes/trips.index'
 import { Route as TripsIdRouteImport } from './routes/trips.$id'
 import { Route as SettingsEmployeesIdRouteImport } from './routes/settings_.employees.$id'
 import { Route as ApiPublicJobsDailyReportRouteImport } from './routes/api/public/jobs/daily-report'
+import { Route as ApiPublicJobsTaskRemindersRouteImport } from './routes/api/public/jobs/task-reminders'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -191,6 +192,12 @@ const ApiPublicJobsDailyReportRoute =
     path: '/api/public/jobs/daily-report',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicJobsTaskRemindersRoute =
+  ApiPublicJobsTaskRemindersRouteImport.update({
+    id: '/api/public/jobs/task-reminders',
+    path: '/api/public/jobs/task-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/trips/': typeof TripsIndexRoute
   '/settings/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
+  '/api/public/jobs/task-reminders': typeof ApiPublicJobsTaskRemindersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -255,6 +263,7 @@ export interface FileRoutesByTo {
   '/trips': typeof TripsIndexRoute
   '/settings/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
+  '/api/public/jobs/task-reminders': typeof ApiPublicJobsTaskRemindersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -288,6 +297,7 @@ export interface FileRoutesById {
   '/trips/': typeof TripsIndexRoute
   '/settings_/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
+  '/api/public/jobs/task-reminders': typeof ApiPublicJobsTaskRemindersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/trips/'
     | '/settings/employees/$id'
     | '/api/public/jobs/daily-report'
+    | '/api/public/jobs/task-reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/trips'
     | '/settings/employees/$id'
     | '/api/public/jobs/daily-report'
+    | '/api/public/jobs/task-reminders'
   id:
     | '__root__'
     | '/'
@@ -386,6 +398,7 @@ export interface FileRouteTypes {
     | '/trips/'
     | '/settings_/employees/$id'
     | '/api/public/jobs/daily-report'
+    | '/api/public/jobs/task-reminders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -419,6 +432,7 @@ export interface RootRouteChildren {
   TripsIndexRoute: typeof TripsIndexRoute
   SettingsEmployeesIdRoute: typeof SettingsEmployeesIdRoute
   ApiPublicJobsDailyReportRoute: typeof ApiPublicJobsDailyReportRoute
+  ApiPublicJobsTaskRemindersRoute: typeof ApiPublicJobsTaskRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -633,6 +647,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsDailyReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/task-reminders': {
+      id: '/api/public/jobs/task-reminders'
+      path: '/api/public/jobs/task-reminders'
+      fullPath: '/api/public/jobs/task-reminders'
+      preLoaderRoute: typeof ApiPublicJobsTaskRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -667,6 +688,7 @@ const rootRouteChildren: RootRouteChildren = {
   TripsIndexRoute: TripsIndexRoute,
   SettingsEmployeesIdRoute: SettingsEmployeesIdRoute,
   ApiPublicJobsDailyReportRoute: ApiPublicJobsDailyReportRoute,
+  ApiPublicJobsTaskRemindersRoute: ApiPublicJobsTaskRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
