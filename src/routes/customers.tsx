@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Building2, FileSignature, MapPin, Plus, Truck, Users } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
-import { DataTable, Kpi, PageHeader, Panel } from "@/components/darb/ui";
+import { DataTable, Empty, Kpi, KV, PageHeader, Panel } from "@/components/darb/ui";
 import { EntityDialog, type Field } from "@/components/darb/EntityDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +41,8 @@ function CustomersPage() {
   const [rec, setRec] = useState<Row | null>(null);
   const open = (d: typeof dlg, r: Row | null = null) => { setRec(r); setDlg(d); };
   const canCust = can("ops_manager", "accountant");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedCustomer = customers.data?.find((r) => r.id === selectedId) ?? customers.data?.[0] ?? null;
   const canLoc = can("ops_manager", "dispatcher");
 
   const CUST: Field[] = [
@@ -86,12 +88,12 @@ function CustomersPage() {
 
   return (
     <>
-      <PageHeader title="العملاء والعقود والناقلون الخارجيون" icon={<Users />} />
+      <PageHeader title="العملاء والعقود والناقلون الخارجيون" icon={<Users />} actions={canCust && <Button variant="gold" onClick={() => open("cust")}><Plus /> إضافة عميل</Button>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="العملاء" value={customers.data?.length ?? 0} />
-        <Kpi label="مواقع التحميل/التفريغ" value={locations.data?.length ?? 0} />
-        <Kpi label="عقود سارية" value={(contracts.data ?? []).filter((c) => c.status === "active").length} tone="success" />
-        <Kpi label="ناقلون خارجيون" value={carriers.data?.length ?? 0} />
+        <Kpi label="العملاء" value={customers.data?.length ?? 0} icon={<Users />} />
+        <Kpi label="مواقع التحميل/التفريغ" value={locations.data?.length ?? 0} icon={<MapPin />} />
+        <Kpi label="عقود سارية" value={(contracts.data ?? []).filter((c) => c.status === "active").length} tone="success" icon={<FileSignature />} />
+        <Kpi label="ناقلون خارجيون" value={carriers.data?.length ?? 0} icon={<Truck />} />
       </div>
       <Tabs defaultValue="cust" dir="rtl">
         <TabsList>
@@ -101,8 +103,9 @@ function CustomersPage() {
           <TabsTrigger value="car">الناقلون الخارجيون</TabsTrigger>
         </TabsList>
         <TabsContent value="cust">
-          <Panel title="العملاء" icon={<Building2 />} actions={canCust && <Button size="sm" variant="gold" onClick={() => open("cust")}><Plus /> عميل</Button>}>
-            <DataTable rows={customers.data} loading={customers.isLoading} error={customers.error} searchKeys={["name", "cr_number", "vat_number", "city"]} onEdit={canCust ? (r) => open("cust", r) : undefined} onRowClick={canCust ? (r) => open("cust", r) : undefined} cols={[
+          <div className="split-layout min-w-0">
+          <Panel className="min-w-0" title="العملاء" icon={<Building2 />}>
+            <DataTable rows={customers.data} loading={customers.isLoading} error={customers.error} searchKeys={["name", "cr_number", "vat_number", "city"]} onEdit={canCust ? (r) => open("cust", r) : undefined} selectedId={selectedCustomer?.id} onRowClick={(r) => setSelectedId(r.id)} cols={[
               { key: "name", label: "العميل", render: (r) => <b className="text-primary">{r.name}</b> },
               { key: "cr_number", label: "السجل", render: (r) => <span className="num">{r.cr_number ?? "—"}</span> },
               { key: "vat_number", label: "الرقم الضريبي", render: (r) => <span className="num">{r.vat_number ?? "—"}</span> },
@@ -113,6 +116,24 @@ function CustomersPage() {
               { key: "n", label: "المواقع / العقود", render: (r) => <span className="num">{r.locations?.length} / {r.contracts?.length}</span> },
             ]} />
           </Panel>
+          <Panel className="record-preview side-detail" title="معاينة العميل" icon={<Building2 />}>
+            {selectedCustomer ? (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">{selectedCustomer.name}</h3>
+                <KV items={[
+                  ["السجل التجاري", <span className="num">{selectedCustomer.cr_number ?? "—"}</span>],
+                  ["الرقم الضريبي", <span className="num">{selectedCustomer.vat_number ?? "—"}</span>],
+                  ["جهة الاتصال", selectedCustomer.contact_name ?? "—"],
+                  ["الجوال", <span className="num">{selectedCustomer.phone ?? "—"}</span>],
+                  ["المدينة", selectedCustomer.city ?? "—"],
+                  ["شروط السداد", selectedCustomer.payment_terms_days == null ? "—" : `${selectedCustomer.payment_terms_days} يوم`],
+                  ["المواقع / العقود", <span className="num">{selectedCustomer.locations?.length ?? 0} / {selectedCustomer.contracts?.length ?? 0}</span>],
+                ]} />
+                {canCust && <Button variant="gold" className="w-full" onClick={() => open("cust", selectedCustomer)}>تعديل البيانات</Button>}
+              </div>
+            ) : <Empty text="لا يوجد عملاء بعد" />}
+          </Panel>
+          </div>
         </TabsContent>
         <TabsContent value="loc">
           <Panel title="مواقع التحميل والتفريغ" icon={<MapPin />} actions={canLoc && <Button size="sm" variant="gold" onClick={() => open("loc")}><Plus /> موقع</Button>}>

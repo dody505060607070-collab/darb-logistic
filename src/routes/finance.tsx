@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Banknote, FileSpreadsheet, Landmark, Plus, Receipt } from "lucide-react";
+import { Banknote, CalendarClock, CheckCircle2, FileSpreadsheet, FileText, Landmark, Plus, Receipt, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
-import { Badge, DataTable, Kpi, PageHeader, Panel, Status } from "@/components/darb/ui";
+import { Badge, DataTable, Empty, Kpi, KV, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,7 @@ function FinancePage() {
     db.from("trips").select("id,number,origin_city,dest_city,status,actual_end, order:transport_orders(customer_id, customer:customers(name)), lines:invoice_lines(id), fin:trip_financials(revenue)").in("status", ["delivered", "closed"]).eq("is_empty", false),
   );
   const [selTrips, setSelTrips] = useState<string[]>([]);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [payOpen, setPayOpen] = useState(false);
   const [alloc, setAlloc] = useState<Row | null>(null);
   const [allocInv, setAllocInv] = useState("");
@@ -52,6 +53,7 @@ function FinancePage() {
   const unbilled = (billable.data ?? []).filter((t) => !(t.lines ?? []).length);
   const custOfSel = useMemo(() => new Set(unbilled.filter((t) => selTrips.includes(t.id)).map((t) => t.order?.customer_id)), [unbilled, selTrips]);
   const all = invoices.data ?? [];
+  const selectedInvoice = all.find((i) => i.id === selectedInvoiceId) ?? all[0] ?? null;
   const approved = all.filter((i) => i.status === "approved");
   const outstanding = approved.reduce((s, i) => s + Number(i.total) - paidOf(i), 0);
   const overdue = approved.filter((i) => Number(i.total) - paidOf(i) > 0.01 && (daysUntil(i.due_at) ?? 1) < 0);
@@ -80,14 +82,15 @@ function FinancePage() {
 
   return (
     <>
-      <PageHeader title="المالية والفوترة والتحصيل" subtitle="PDF أو QR وحده لا يعني توافق ZATCA — حالة مزود الفوترة تُعرض كما هي." icon={<Landmark />} />
+      <PageHeader title="المالية والفوترة والتحصيل" subtitle="فوترة الرحلات المسلّمة، اعتماد الفواتير، وتسجيل الدفعات وتوزيعها." icon={<Landmark />} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label="رحلات غير مفوترة" value={unbilled.length} tone="info" />
-        <Kpi label="فواتير مسودة" value={all.filter((i) => i.status === "draft").length} />
-        <Kpi label="فواتير معتمدة" value={approved.length} tone="success" />
-        <Kpi label="المستحق القائم" value={fmtSAR(outstanding)} tone="warning" />
-        <Kpi label="فواتير متأخرة" value={overdue.length} tone={overdue.length ? "danger" : undefined} />
+        <Kpi label="رحلات غير مفوترة" value={unbilled.length} tone="info" icon={<Truck />} />
+        <Kpi label="فواتير مسودة" value={all.filter((i) => i.status === "draft").length} icon={<FileText />} />
+        <Kpi label="فواتير معتمدة" value={approved.length} tone="success" icon={<CheckCircle2 />} />
+        <Kpi label="المستحق القائم" value={fmtSAR(outstanding)} tone="warning" icon={<Banknote />} />
+        <Kpi label="فواتير متأخرة" value={overdue.length} tone={overdue.length ? "danger" : undefined} icon={<CalendarClock />} />
       </div>
+      <div className="mb-5 rounded-xl border bg-gold-soft p-4 text-sm text-primary">PDF أو QR وحده لا يعني توافق ZATCA — حالة مزود الفوترة تُعرض كما هي لكل فاتورة.</div>
       <Tabs defaultValue="unbilled" dir="rtl">
         <TabsList><TabsTrigger value="unbilled">رحلات للفوترة</TabsTrigger><TabsTrigger value="inv">الفواتير</TabsTrigger><TabsTrigger value="pay">الدفعات</TabsTrigger></TabsList>
         <TabsContent value="unbilled">
@@ -104,8 +107,10 @@ function FinancePage() {
           </Panel>
         </TabsContent>
         <TabsContent value="inv">
+          <div className="split-layout min-w-0">
+          <div className="min-w-0">
           <Panel title="الفواتير" icon={<Receipt />}>
-            <DataTable rows={all} loading={invoices.isLoading} error={invoices.error} searchKeys={["number", "customer.name"]} cols={[
+            <DataTable rows={all} loading={invoices.isLoading} error={invoices.error} selectedId={selectedInvoice?.id} onRowClick={(r) => setSelectedInvoiceId(r.id)} searchKeys={["number", "customer.name"]} cols={[
               { key: "number", label: "الرقم", render: (r) => <span className="num font-semibold">{r.number}</span> },
               { key: "customer", label: "العميل", render: (r) => r.customer?.name },
               { key: "lines", label: "الرحلات", render: (r) => <span className="num">{r.lines?.length}</span> },
@@ -119,6 +124,25 @@ function FinancePage() {
               { key: "act", label: "", render: (r) => isAcc && r.status === "draft" && <Button size="sm" onClick={() => void approve(r.id)}>اعتماد</Button> },
             ]} />
           </Panel>
+          </div>
+          <Panel className="record-preview side-detail" title="معاينة الفاتورة" icon={<Receipt />} actions={selectedInvoice && <Status kind="invoice" value={selectedInvoice.status} />}>
+            {selectedInvoice ? (
+              <div className="space-y-4">
+                <div><p className="num text-lg font-semibold text-primary">{selectedInvoice.number}</p><p className="mt-1 text-sm">{selectedInvoice.customer?.name ?? "—"}</p></div>
+                <KV items={[
+                  ["عدد الرحلات", <span className="num">{selectedInvoice.lines?.length ?? 0}</span>],
+                  ["قبل الضريبة", <span className="num">{fmtSAR(selectedInvoice.subtotal)}</span>],
+                  ["الضريبة", <span className="num">{fmtSAR(selectedInvoice.vat)}</span>],
+                  ["الإجمالي", <span className="num font-semibold">{fmtSAR(selectedInvoice.total)}</span>],
+                  ["المحصل", <span className="num">{fmtSAR(paidOf(selectedInvoice))}</span>],
+                  ["الاستحقاق", <span className="num">{fmtDate(selectedInvoice.due_at)}</span>],
+                  ["مزود الفوترة", <Status kind="provider" value={selectedInvoice.provider_status} />],
+                ]} />
+                {isAcc && selectedInvoice.status === "draft" && <Button variant="gold" className="w-full" onClick={() => void approve(selectedInvoice.id)}>اعتماد الفاتورة</Button>}
+              </div>
+            ) : <Empty text="لا توجد فواتير بعد" />}
+          </Panel>
+          </div>
         </TabsContent>
         <TabsContent value="pay">
           <Panel title="الدفعات الفعلية" icon={<Banknote />} actions={isAcc && <Button size="sm" variant="gold" onClick={() => setPayOpen(true)}><Plus /> تسجيل دفعة</Button>}>

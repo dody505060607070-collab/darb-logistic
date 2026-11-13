@@ -34,8 +34,8 @@ export function EmployeeDirectory() {
   if (profiles.error || roles.error) return <p role="alert" className="text-danger">تعذر تحميل الموظفين</p>;
   const rows = (profiles.data ?? []).filter(p => `${p.full_name ?? ''} ${p.phone ?? ''}`.includes(search));
   const selected = rows.find(p => p.id === selectedId) ?? rows[0];
-  return <section className="employee-workspace grid items-start gap-5">
-    <div className="employee-directory space-y-5">
+  return <section className="employee-workspace grid min-w-0 items-start gap-5">
+    <div className="employee-directory min-w-0 space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 className="flex items-center gap-2 text-xl font-bold"><Users className="text-primary" /> الموظفون <span className="num text-muted-foreground">{profiles.data?.length ?? 0}</span></h2>
       <div className="relative w-full sm:w-72"><Search className="absolute right-3 top-3 size-4 text-muted-foreground" /><Input aria-label="البحث عن موظف" placeholder="اسم الموظف أو رقم الجوال" value={search} onChange={e => setSearch(e.target.value)} className="pr-9" /></div>
@@ -47,7 +47,7 @@ export function EmployeeDirectory() {
       {key:'actions',label:'الإجراءات',render:p=><div className="flex items-center gap-1"><Button asChild variant="outline" size="sm"><Link to="/settings/employees/$id" params={{id:p.id}} search={{tab:undefined}}>ملف الموظف <ArrowLeft/></Link></Button><Button asChild variant="ghost" size="icon" title="تعديل الموظف"><Link aria-label={`تعديل ${p.full_name || 'الموظف'}`} to="/settings/employees/$id" params={{id:p.id}}><Pencil className="size-4"/></Link></Button>{p.id!==auth.session?.user.id&&<Button variant="ghost" size="icon" title="حذف الحساب" aria-label={`حذف ${p.full_name || 'الموظف'}`} onClick={()=>setTarget({id:p.id,name:p.full_name||'الموظف'})}><Trash2 className="size-4 text-danger"/></Button>}</div>}
     ]}/>
     </div>
-    {selected && <Panel className="record-preview" title="ملخص الموظف" icon={<UserRound />}>
+    {selected && <Panel className="record-preview side-detail" title="ملخص الموظف" icon={<UserRound />}>
       <div className="mb-4 flex items-center gap-3 border-b pb-4"><span className="grid size-14 shrink-0 place-items-center rounded-full bg-accent text-primary"><UserRound className="size-7" /></span><h3 className="text-lg font-bold">{selected.full_name || 'موظف دون اسم'}</h3></div>
       <KV items={[
         ['الأدوار', <div className="flex flex-wrap justify-end gap-1">{(roles.data ?? []).filter(r => r.user_id === selected.id).map(r => <Badge key={r.id} tone={r.role === 'owner' ? 'gold' : 'neutral'}>{ROLE_LABELS[r.role as AppRole]}</Badge>)}</div>],

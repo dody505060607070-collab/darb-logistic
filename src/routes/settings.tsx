@@ -91,7 +91,7 @@ function SettingsPage() {
     <>
       <PageHeader title="الإعدادات والموظفون" icon={<Cog />} />
       <Tabs defaultValue={tab ?? (isOwner ? "users" : "alerts")} dir="rtl">
-        <TabsList className="h-auto w-full flex-wrap gap-1 lg:w-auto">
+        <TabsList className="mb-5 flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 [&>button]:rounded-xl [&>button]:border [&>button]:bg-card [&>button]:px-4 [&>button]:py-3 [&>button]:text-sm [&>button[data-state=active]]:bg-primary [&>button[data-state=active]]:text-primary-foreground">
           {isOwner && <TabsTrigger value="users">الموظفون</TabsTrigger>}
           {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           <TabsTrigger value="integrations">التكاملات</TabsTrigger>

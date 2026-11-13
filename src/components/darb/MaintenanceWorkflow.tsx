@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Save, Wrench } from 'lucide-react';
+import { CircleCheck, ClipboardList, Package, Plus, Save, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { db, useRows, type Row } from '@/lib/db';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge, DataTable, PageHeader, Panel } from './ui';
+import { Badge, DataTable, Kpi, PageHeader, Panel } from './ui';
 
 export function MaintenanceWorkflow() {
  const auth=useAuth(); const qc=useQueryClient(); const manager=auth.can('maintenance','ops_manager');
@@ -31,6 +31,7 @@ export function MaintenanceWorkflow() {
  const assignedStaff=(staff.data??[]).filter(p=>(roles.data??[]).some(r=>r.user_id===p.id));
  return <>
  <PageHeader title={auth.roles.includes('workshop')?'أعمال الورشة':auth.roles.includes('field_maintenance')?'أعمال الصيانة الميدانية':'بلاغات الصيانة والموافقات'} icon={<Wrench/>} actions={!auth.roles.includes('workshop')&&<Button onClick={()=>setNewOpen(true)}><Plus/> بلاغ صيانة</Button>}/>
+ {(()=>{const o=orders.data??[];const n=(st:string[])=>orders.isLoading||orders.error?'—':o.filter(r=>st.includes(r.workflow_status)).length;return <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4"><Kpi label={auth.roles.includes('workshop')?'الأعمال المسندة':'أوامر مفتوحة'} value={orders.isLoading||orders.error?'—':o.filter(r=>!['closed','rejected'].includes(r.workflow_status)).length} icon={<ClipboardList/>}/><Kpi label="تحت الصيانة" value={n(['repairing'])} tone="info" icon={<Wrench/>}/><Kpi label="بانتظار قطع غيار" value={n(['waiting_parts'])} tone="warning" icon={<Package/>}/><Kpi label="جاهزة للتسليم" value={n(['ready_delivery'])} tone="success" icon={<CircleCheck/>}/></div>;})()}
  <Panel title={auth.roles.includes('workshop')?'الأعمال المسندة':'أوامر الصيانة'} icon={<Wrench/>}>
  <DataTable rows={orders.data} loading={orders.isLoading} error={orders.error} onRowClick={open} searchKeys={['number','description','asset.code']} cols={[
  {key:'number',label:'الأمر'},{key:'asset',label:'المركبة',render:r=>r.asset?.code??'غير متاح'},{key:'description',label:'البلاغ'},{key:'workflow_status',label:'الحالة',render:r=><Badge tone={r.workflow_status==='closed'?'success':r.workflow_status==='rejected'?'danger':'warning'}>{MAINTENANCE_STATES[r.workflow_status]??r.workflow_status}</Badge>},

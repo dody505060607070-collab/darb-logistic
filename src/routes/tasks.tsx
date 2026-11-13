@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, ClipboardList, ImageIcon, MapPin, MessageSquare, Plus, RotateCcw, Send } from "lucide-react";
+import { CheckCircle2, CircleAlert, Clock3, LoaderCircle, ClipboardList, ImageIcon, MapPin, MessageSquare, Plus, RotateCcw, Send } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
-import { Badge, Empty, Kpi, PageHeader, Panel } from "@/components/darb/ui";
+import { Badge, Kpi, PageHeader, Panel } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -116,18 +116,25 @@ function TasksPage() {
         actions={manager && <Button onClick={() => setCreating(true)}><Plus /> مهمة جديدة</Button>}
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="قيد التنفيذ" value={all.filter((t) => t.status === "assigned").length} tone="info" />
-        <Kpi label="بانتظار مراجعتك" value={all.filter((t) => t.status === "submitted").length} tone="warning" />
-        <Kpi label="عاجلة مفتوحة" value={all.filter((t) => t.priority === "urgent" && t.status === "assigned").length} tone="danger" />
-        <Kpi label="مكتملة" value={all.filter((t) => t.status === "completed").length} tone="success" />
+        <Kpi label="قيد التنفيذ" value={all.filter((t) => t.status === "assigned").length} tone="info" icon={<LoaderCircle />} />
+        <Kpi label="بانتظار مراجعتك" value={all.filter((t) => t.status === "submitted").length} tone="warning" icon={<Clock3 />} />
+        <Kpi label="عاجلة مفتوحة" value={all.filter((t) => t.priority === "urgent" && t.status === "assigned").length} tone="danger" icon={<CircleAlert />} />
+        <Kpi label="مكتملة" value={all.filter((t) => t.status === "completed").length} tone="success" icon={<CheckCircle2 />} />
       </div>
-      <div className="status-tabs">
+      <div className="status-tabs grid grid-cols-2 gap-2 rounded-xl border bg-card p-2 md:flex">
         {tabs.map(([k, l]) => (
-          <Button key={k} variant={tab === k ? "default" : "ghost"} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</Button>
+          <Button key={k} className="min-w-0 flex-1" variant={tab === k ? "default" : "ghost"} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</Button>
         ))}
       </div>
       <Panel title="القائمة" bodyClass="task-list-body">
-        {list.length === 0 ? <Empty text="لا توجد مهام هنا" action={manager && <Button onClick={() => setCreating(true)}><Plus /> مهمة جديدة</Button>} /> : (
+        {list.length === 0 ? (
+          <div className="flex min-h-80 flex-col items-center justify-center gap-4 px-4 py-10 text-center">
+            <div className="rounded-3xl bg-gold-soft p-5"><ClipboardList className="size-20 text-primary" strokeWidth={1.5} /></div>
+            <h3 className="text-2xl font-bold text-primary">لا توجد مهام هنا</h3>
+            <p className="text-sm text-muted-foreground">{manager ? "ابدأ بإنشاء مهمة جديدة لتنظيم ومتابعة أعمال فريقك." : "ستظهر هنا المهام المكلَّف بها."}</p>
+            {manager && <Button onClick={() => setCreating(true)}><Plus /> مهمة جديدة</Button>}
+          </div>
+        ) : (
           <div className="divide-y divide-border">
             {list.map((t) => (
               <div key={t.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-start">

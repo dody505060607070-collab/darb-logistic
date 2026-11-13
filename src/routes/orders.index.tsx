@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileText, Plus } from "lucide-react";
+import { Layers, CheckSquare, Truck, CheckCircle2, FileText, Plus } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
 import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
@@ -40,15 +40,15 @@ function OrdersPage() {
   return (
     <>
       <PageHeader title="أوامر النقل" subtitle="أمر واحد قد يتضمن عدة رحلات" icon={<FileText />}
-        actions={can("ops_manager", "dispatcher") && <Button variant="gold" asChild><Link to="/orders/new"><Plus /> إنشاء أمر نقل</Link></Button>} />
+        actions={can("ops_manager", "dispatcher") && <Button asChild><Link to="/orders/new"><Plus /> إنشاء أمر نقل</Link></Button>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label="الإجمالي" value={all.length} />
-        <Kpi label="مسودة" value={c("draft")} />
-        <Kpi label="مؤكد" value={c("confirmed")} tone="info" />
-        <Kpi label="قيد التنفيذ" value={c("in_progress")} tone="success" />
-        <Kpi label="مكتمل" value={c("completed")} tone="gold" />
+        <Kpi icon={<Layers />} label="الإجمالي" value={all.length} />
+        <Kpi icon={<FileText />} label="مسودة" value={c("draft")} />
+        <Kpi icon={<CheckSquare />} label="مؤكد" value={c("confirmed")} tone="info" />
+        <Kpi icon={<Truck />} label="قيد التنفيذ" value={c("in_progress")} tone="success" />
+        <Kpi icon={<CheckCircle2 />} label="مكتمل" value={c("completed")} tone="gold" />
       </div>
-      <div className="record-layout grid items-start gap-5">
+      <div className="split-layout">
       <Panel title="الأوامر" icon={<FileText />}>
         <DataTable rows={all.filter((o) => !status || o.status === status)} loading={orders.isLoading} error={orders.error} selectedId={preview?.id} onRowClick={setSelected}
           searchKeys={["number", "customer.name", "cargo_type", "consignee"]}
@@ -64,7 +64,7 @@ function OrdersPage() {
             { key: "status", label: "الحالة", render: (r) => <Status kind="order" value={r.status} /> },
           ]} />
       </Panel>
-      {preview && <Panel className="record-preview" title={`الأمر ${preview.number}`} icon={<FileText />} actions={<Status kind="order" value={preview.status} />}>
+      {preview && <Panel className="record-preview side-detail" title={`الأمر ${preview.number}`} icon={<FileText />} actions={<Status kind="order" value={preview.status} />}>
         <div className="space-y-3">
           <KV items={[["العميل", preview.customer?.name], ["المسار", `${preview.pickup?.city ?? '—'} ← ${preview.delivery?.city ?? '—'}`], ["البضاعة", `${preview.cargo_type} • ${fmtNum(preview.quantity)} ${preview.unit}`]]} />
           <div><KV items={[["موعد التسليم", fmtDateTime(preview.delivery_due_at)], ["الرحلات", (preview.trips ?? []).map((t: { id: string; number: string }) => <Link key={t.id} to="/trips/$id" params={{ id: t.id }} className="num ml-3 text-primary underline">{t.number}</Link>)]]} />{showPrice && <KV items={[["السعر", fmtSAR(preview.price)]]} />}</div>

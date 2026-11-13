@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Coins, Fuel, HandCoins, Plus, X } from "lucide-react";
+import { Check, CircleCheck, Clock, Coins, FileText, Fuel, HandCoins, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
-import { DataTable, Kpi, PageHeader, Panel, Status } from "@/components/darb/ui";
+import { DataTable, Empty, Kpi, KV, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { openFile } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ function ExpensesPage() {
   const exp = useRows(["expenses"], () => db.from("expenses").select("*, driver:drivers(full_name), trip:trips(number)").order("spent_at", { ascending: false }));
   const adv = useRows(["advances"], () => db.from("advances").select("*, driver:drivers(full_name), trip:trips(number)").order("issued_at", { ascending: false }));
   const [dlg, setDlg] = useState<"fuel" | "exp" | "adv" | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const isAcc = can("accountant");
   const inv = () => void qc.invalidateQueries();
 
@@ -65,22 +66,23 @@ function ExpensesPage() {
   }
 
   const f = fuel.data ?? [], e = exp.data ?? [], a = adv.data ?? [];
+  const selected = e.find((r) => r.id === selectedId) ?? e[0] ?? null;
   const liters = f.filter((x) => x.status === "approved").reduce((s, x) => s + Number(x.liters), 0);
   return (
     <>
       <PageHeader title="الوقود والمصروفات والسلف" subtitle="السلفة ليست تكلفة عند الصرف؛ المصروف المعتمد هو التكلفة، والتسوية لا تكرره." icon={<Coins />} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label="لترات معتمدة" value={`${fmtNum(liters)} L`} />
-        <Kpi label="قيمة الوقود المعتمد" value={fmtSAR(f.filter((x) => x.status === "approved").reduce((s, x) => s + Number(x.amount), 0))} />
-        <Kpi label="مصروفات بانتظار الاعتماد" value={e.filter((x) => x.status === "pending").length} tone="warning" />
-        <Kpi label="مصروفات معتمدة" value={fmtSAR(e.filter((x) => x.status === "approved").reduce((s, x) => s + Number(x.amount), 0))} tone="success" />
-        <Kpi label="سلف مفتوحة" value={fmtSAR(a.filter((x) => x.status === "open").reduce((s, x) => s + Number(x.amount), 0))} tone="info" />
+        <Kpi label="لترات معتمدة" value={`${fmtNum(liters)} L`} icon={<Fuel />} />
+        <Kpi label="قيمة الوقود المعتمد" value={fmtSAR(f.filter((x) => x.status === "approved").reduce((s, x) => s + Number(x.amount), 0))} icon={<Coins />} />
+        <Kpi label="مصروفات بانتظار الاعتماد" value={e.filter((x) => x.status === "pending").length} tone="warning" icon={<Clock />} />
+        <Kpi label="مصروفات معتمدة" value={fmtSAR(e.filter((x) => x.status === "approved").reduce((s, x) => s + Number(x.amount), 0))} tone="success" icon={<CircleCheck />} />
+        <Kpi label="سلف مفتوحة" value={fmtSAR(a.filter((x) => x.status === "open").reduce((s, x) => s + Number(x.amount), 0))} tone="info" icon={<HandCoins />} />
       </div>
       <Tabs defaultValue="exp" dir="rtl">
         <TabsList><TabsTrigger value="exp">المصروفات</TabsTrigger><TabsTrigger value="fuel">الديزل</TabsTrigger><TabsTrigger value="adv">السلف</TabsTrigger></TabsList>
         <TabsContent value="exp">
           <Panel title="المصروفات" icon={<Coins />} actions={can("ops_manager", "accountant") && <Button size="sm" variant="gold" onClick={() => setDlg("exp")}><Plus /> مصروف</Button>}>
-            <DataTable rows={e} loading={exp.isLoading} error={exp.error} searchKeys={["category", "driver.full_name", "trip.number", "description"]} cols={[
+            <DataTable rows={e} loading={exp.isLoading} error={exp.error} selectedId={selected?.id} onRowClick={(r) => setSelectedId(r.id)} searchKeys={["category", "driver.full_name", "trip.number", "description"]} cols={[
               { key: "at", label: "التاريخ", render: (r) => <span className="num">{fmtDateTime(r.spent_at)}</span> },
               { key: "driver", label: "السائق", render: (r) => r.driver?.full_name ?? "—" },
               { key: "trip", label: "الرحلة", render: (r) => <span className="num">{r.trip?.number ?? "—"}</span> },
@@ -92,6 +94,27 @@ function ExpensesPage() {
               { key: "act", label: "", render: (r) => isAcc && r.status === "pending" && <div className="flex gap-1"><Button size="icon" className="size-7" onClick={() => void review(r.id, true)}><Check /></Button><Button size="icon" variant="outline" className="size-7" onClick={() => void review(r.id, false)}><X /></Button></div> },
             ]} />
           </Panel>
+          <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <Panel title="تفاصيل المصروف" icon={<FileText />} actions={selected && <Status kind="review" value={selected.status} />}>
+              {selected ? <KV items={[
+                ["الرحلة", <span className="num">{selected.trip?.number ?? "—"}</span>],
+                ["السائق", selected.driver?.full_name ?? "—"],
+                ["التاريخ", <span className="num">{fmtDateTime(selected.spent_at)}</span>],
+                ["الفئة", selected.category ?? "—"],
+                ["المبلغ", <span className="num font-semibold">{fmtSAR(selected.amount)}</span>],
+                ["طريقة الدفع", ({ advance: "من السلفة", company_card: "بطاقة الشركة", driver_cash: "نقدًا من السائق" })[selected.payment_method as "advance"] ?? selected.payment_method ?? "—"],
+                ["الوصف", selected.description ?? "—"],
+                ...(selected.reject_reason ? [["سبب الرفض", selected.reject_reason] as [string, string]] : []),
+              ]} /> : <Empty text="لا توجد مصروفات" />}
+            </Panel>
+            <Panel title="إيصال المصروف" icon={<FileText />}>
+              <div className="rounded-xl border border-dashed p-6 text-center">
+                {selected?.receipt_path
+                  ? <Button variant="outline" onClick={() => void openFile(selected.receipt_path)}><FileText /> عرض الإيصال</Button>
+                  : <><FileText className="mx-auto mb-2 size-8 text-muted-foreground" /><p className="text-sm text-muted-foreground">لا يوجد إيصال مرفق</p></>}
+              </div>
+            </Panel>
+          </div>
         </TabsContent>
         <TabsContent value="fuel">
           <Panel title="تعبئة الديزل" icon={<Fuel />} actions={can("ops_manager", "fleet_supervisor", "accountant") && <Button size="sm" variant="gold" onClick={() => setDlg("fuel")}><Plus /> تعبئة</Button>}>

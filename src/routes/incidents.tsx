@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, ShieldAlert } from "lucide-react";
+import { Clock, Coins, FolderOpen, Plus, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
-import { DataTable, Kpi, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
+import { DataTable, Empty, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
 import { EntityDialog, type Field } from "@/components/darb/EntityDialog";
 import { Button } from "@/components/ui/button";
 import { db, useRows, type Row } from "@/lib/db";
@@ -50,19 +50,23 @@ function IncidentsPage() {
   const [rec, setRec] = useState<Row | null | undefined>(undefined);
   const [status, setStatus] = useState("");
   const all = inc.data ?? [];
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const visible = all.filter((i) => !status || i.status === status);
+  const selected = visible.find((i) => i.id === selectedId) ?? visible[0] ?? null;
   const canEdit = can("ops_manager", "fleet_supervisor");
   return (
     <>
       <PageHeader title="الحوادث والبلاغات ومركز المعالجة" icon={<ShieldAlert />} actions={canEdit && <Button variant="gold" onClick={() => setRec(null)}><Plus /> بلاغ جديد</Button>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label="الإجمالي" value={all.length} />
-        <Kpi label="مفتوحة" value={all.filter((i) => !["resolved", "closed"].includes(i.status)).length} tone="warning" />
-        <Kpi label="عالية/حرجة" value={all.filter((i) => ["high", "critical"].includes(i.severity)).length} tone="danger" />
-        <Kpi label="مطالبات تأمين" value={all.filter((i) => i.status === "claim").length} tone="gold" />
-        <Kpi label="التكلفة التقديرية" value={fmtSAR(all.reduce((s, i) => s + Number(i.est_cost ?? 0), 0))} />
+        <Kpi label="الإجمالي" value={all.length} icon={<FolderOpen />} />
+        <Kpi label="مفتوحة" value={all.filter((i) => !["resolved", "closed"].includes(i.status)).length} tone="warning" icon={<Clock />} />
+        <Kpi label="عالية/حرجة" value={all.filter((i) => ["high", "critical"].includes(i.severity)).length} tone="danger" icon={<TriangleAlert />} />
+        <Kpi label="مطالبات تأمين" value={all.filter((i) => i.status === "claim").length} tone="gold" icon={<ShieldCheck />} />
+        <Kpi label="التكلفة التقديرية" value={fmtSAR(all.reduce((s, i) => s + Number(i.est_cost ?? 0), 0))} icon={<Coins />} />
       </div>
-      <Panel title="البلاغات" icon={<ShieldAlert />}>
-        <DataTable rows={all.filter((i) => !status || i.status === status)} loading={inc.isLoading} error={inc.error} searchKeys={["number", "description", "asset.code", "driver.full_name"]} onEdit={canEdit ? setRec : undefined} onRowClick={canEdit ? setRec : undefined}
+      <div className="split-layout min-w-0">
+      <Panel className="min-w-0" title="البلاغات" icon={<ShieldAlert />}>
+        <DataTable rows={visible} selectedId={selected?.id} loading={inc.isLoading} error={inc.error} searchKeys={["number", "description", "asset.code", "driver.full_name"]} onEdit={canEdit ? setRec : undefined} onRowClick={(r) => setSelectedId(r.id)}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["incident"]!).map(([k, v]) => [k, v[0]])} />}
           cols={[
             { key: "number", label: "الرقم", render: (r) => <span className="num font-semibold">{r.number}</span> },
@@ -77,6 +81,27 @@ function IncidentsPage() {
             { key: "status", label: "الحالة", render: (r) => <Status kind="incident" value={r.status} /> },
           ]} />
       </Panel>
+      <Panel className="record-preview side-detail" title={selected ? `البلاغ ${selected.number}` : "تفاصيل البلاغ"} icon={<ShieldAlert />} actions={selected && <Status kind="incident" value={selected.status} />}>
+        {selected ? (
+          <div className="space-y-4">
+            <KV items={[
+              ["النوع", FIELDS[0]!.options!.find((o) => o[0] === selected.kind)?.[1] ?? selected.kind],
+              ["الخطورة", <Status kind="severity" value={selected.severity} />],
+              ["وقت الحادث", <span className="num">{fmtDateTime(selected.occurred_at)}</span>],
+              ["المركبة", <span className="num">{selected.asset?.code ?? "—"}</span>],
+              ["السائق", selected.driver?.full_name ?? "—"],
+              ["الرحلة", <span className="num">{selected.trip?.number ?? "—"}</span>],
+              ["الموقع", selected.location_text ?? "—"],
+              ["الوصف", selected.description ?? "—"],
+              ["التكلفة التقديرية", <span className="num">{fmtSAR(selected.est_cost)}</span>],
+              ["مرجع المرور / نجم", <span className="num">{selected.police_ref ?? "—"}</span>],
+              ["مطالبة التأمين", <span className="num">{selected.insurance_claim_ref ?? "—"}</span>],
+            ]} />
+            {canEdit && <Button variant="gold" className="w-full" onClick={() => setRec(selected)}>تحديث البلاغ</Button>}
+          </div>
+        ) : <Empty text="لا توجد بلاغات" />}
+      </Panel>
+      </div>
       <EntityDialog open={rec !== undefined} onOpenChange={(o) => !o && setRec(undefined)} title={rec ? `بلاغ ${rec.number}` : "بلاغ جديد"} table="incidents" fields={FIELDS} record={rec} invalidate={["incidents", "notifications"]} />
     </>
   );

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, CalendarRange, Cog, Plus, RefreshCw, Truck, Users } from "lucide-react";
+import { CheckCircle2, Play, Container, AlertTriangle, CalendarRange, Cog, Plus, RefreshCw, Truck, Users } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
 import { AssignForm } from "@/components/darb/AssignForm";
@@ -92,18 +92,18 @@ function Ops() {
       <PageHeader title="غرفة العمليات وجدول تخصيص الموارد" subtitle="متابعة العمليات لحظيًا وتخطيط الرحلات وتخصيص الشاحنات والمقطورات والسائقين" icon={<Cog />}
         actions={<>
           <Button variant="outline" onClick={() => void qc.invalidateQueries()}><RefreshCw /> تحديث</Button>
-          <Button variant="gold" asChild><Link to="/orders/new"><Plus /> إنشاء رحلة جديدة</Link></Button>
+          <Button asChild><Link to="/orders/new"><Plus /> إنشاء رحلة جديدة</Link></Button>
         </>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-6">
-        <Kpi label="رحلات مجدولة" value={t.filter((x) => x.status === "planned").length} tone="info" />
-        <Kpi label="قيد التنفيذ" value={t.filter((x) => x.status === "in_progress").length} tone="success" />
-        <Kpi label="مكتملة" value={t.filter((x) => ["delivered", "closed"].includes(x.status)).length} tone="gold" />
-        <Kpi label="متأخرة" value={late.length} tone={late.length ? "danger" : undefined} />
-        <Kpi label="رؤوس متاحة" value={tractors.filter((x) => x.status === "available").length} />
-        <Kpi label="مقطورات متاحة" value={trailers.filter((x) => x.status === "available").length} />
+        <Kpi icon={<CalendarRange />} label="رحلات مجدولة" value={t.filter((x) => x.status === "planned").length} tone="info" />
+        <Kpi icon={<Play />} label="قيد التنفيذ" value={t.filter((x) => x.status === "in_progress").length} tone="success" />
+        <Kpi icon={<CheckCircle2 />} label="مكتملة" value={t.filter((x) => ["delivered", "closed"].includes(x.status)).length} tone="gold" />
+        <Kpi icon={<AlertTriangle />} label="متأخرة" value={late.length} tone={late.length ? "danger" : undefined} />
+        <Kpi icon={<Truck />} label="رؤوس متاحة" value={tractors.filter((x) => x.status === "available").length} />
+        <Kpi icon={<Container />} label="مقطورات متاحة" value={trailers.filter((x) => x.status === "available").length} />
       </div>
 
-      <div className="operations-layout grid items-start gap-5">
+      <div className="split-layout">
       <div className="min-w-0 space-y-5">
       <Panel title="جدول تخصيص الموارد" icon={<CalendarRange />} actions={<Input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="w-40" />} bodyClass="resource-timeline">
         <div className="overflow-x-auto">
@@ -112,7 +112,9 @@ function Ops() {
               <span />
               <div className="grid grid-cols-12">{Array.from({ length: 12 }, (_, i) => <span key={i} className="num border-r pr-1">{String(i * 2).padStart(2, "0")}:00</span>)}</div>
             </div>
-            {rows.map((r) => (
+            {rows.map((r, index) => (
+              <div key={r.type + r.key}>
+              {(index === 0 || rows[index - 1]?.type !== r.type) && <div className="border-y bg-muted px-3 py-2 text-sm font-semibold text-primary">{r.type === "driver" ? "سائقون" : r.type === "tractor" ? "رؤوس" : "مقطورات"} ({rows.filter((item) => item.type === r.type).length})</div>}
               <div key={r.type + r.key} className="grid grid-cols-[160px_1fr] items-center border-t py-1 text-xs">
                 <span className="flex items-center gap-1 truncate">
                   {r.type === "driver" ? <Users className="size-3 text-gold" /> : <Truck className="size-3 text-gold" />}
@@ -130,6 +132,7 @@ function Ops() {
                   })}
                 </div>
               </div>
+              </div>
             ))}
           </div>
         </div>
@@ -145,6 +148,12 @@ function Ops() {
             { key: "why", label: "سبب عدم الجاهزية", render: (r) => { const n = notReady(r); return n.length ? n.map((x) => <Badge key={x} tone="warning">{x}</Badge>) : <Badge tone="success">جاهزة</Badge>; } },
           ]} />
         </Panel>
+
+        </div>
+      <aside className="side-detail min-w-0 space-y-3">
+      <Panel title="تخصيص موارد لرحلة" icon={<Truck />} className="allocation-panel">
+        <AssignForm trips={t} />
+      </Panel>
         <Panel title="توافر الموارد الحالي" icon={<Truck />}>
           <table className="w-full text-sm">
             <thead className="text-xs text-muted-foreground"><tr><th className="py-1 text-right">النوع</th><th>الإجمالي</th><th>محجوز</th><th>متاح</th></tr></thead>
@@ -156,10 +165,7 @@ function Ops() {
             </tbody>
           </table>
         </Panel>
-        </div>
-      <Panel title="تخصيص موارد لرحلة" icon={<Truck />} className="allocation-panel">
-        <AssignForm trips={t} />
-      </Panel>
+      </aside>
       </div>
     </>
   );

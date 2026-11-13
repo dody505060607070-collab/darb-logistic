@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CircleDot, Package, Plus, ShieldCheck, Wrench } from "lucide-react";
+import { Boxes, CalendarClock, CircleDot, ClipboardList, Package, Plus, ShieldCheck, TriangleAlert, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
-import { Badge, DataTable, Kpi, PageHeader, Panel, Status } from "@/components/darb/ui";
+import { Badge, DataTable, Empty, Kpi, KV, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -43,6 +43,7 @@ function MaintPage() {
   const crit = useRows(["inspections", "critical"], () => db.from("inspections").select("*, asset:assets(code)").eq("has_critical", true).eq("resolved", false));
   const [dlg, setDlg] = useState<"wo" | "plan" | "part" | "move" | "tire" | "mount" | null>(null);
   const [rec, setRec] = useState<Row | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const canEdit = can("maintenance", "ops_manager");
   const inv = () => void qc.invalidateQueries();
 
@@ -65,6 +66,7 @@ function MaintPage() {
   }
 
   const all = wos.data ?? [];
+  const selected = all.find((w) => w.id === selectedId) ?? all[0] ?? null;
   const openW = all.filter((w) => !["completed", "closed"].includes(w.status));
   const dueOf = (p: Row) => {
     const km = p.interval_km && p.last_done_km != null ? Number(p.last_done_km) + Number(p.interval_km) - Number(p.asset?.odometer_km ?? 0) : null;
@@ -77,11 +79,11 @@ function MaintPage() {
       <PageHeader title="الصيانة والإطارات والمخزون" subtitle="عيب/بلاغ ← أمر عمل ← تشخيص ← انتظار قطع ← جارٍ ← مكتمل ← مغلق" icon={<Wrench />}
         actions={<Button asChild><Link to="/repair-center"><Wrench/> مركز الصيانة والموافقات</Link></Button>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label="أوامر مفتوحة" value={openW.length} tone="warning" />
-        <Kpi label="انتظار قطع" value={all.filter((w) => w.status === "waiting_parts").length} />
-        <Kpi label="عيوب حرجة مفتوحة" value={crit.data?.length ?? 0} tone={crit.data?.length ? "danger" : undefined} />
-        <Kpi label="صيانة دورية مستحقة" value={(plans.data ?? []).filter((p) => dueOf(p).due).length} tone="info" />
-        <Kpi label="أصناف تحت حد الطلب" value={(parts.data ?? []).filter((p) => Number(p.qty_on_hand) <= Number(p.reorder_level)).length} />
+        <Kpi label="أوامر مفتوحة" value={openW.length} tone="warning" icon={<ClipboardList />} />
+        <Kpi label="انتظار قطع" value={all.filter((w) => w.status === "waiting_parts").length} icon={<Boxes />} />
+        <Kpi label="عيوب حرجة مفتوحة" value={crit.data?.length ?? 0} tone={crit.data?.length ? "danger" : undefined} icon={<TriangleAlert />} />
+        <Kpi label="صيانة دورية مستحقة" value={(plans.data ?? []).filter((p) => dueOf(p).due).length} tone="info" icon={<CalendarClock />} />
+        <Kpi label="أصناف تحت حد الطلب" value={(parts.data ?? []).filter((p) => Number(p.qty_on_hand) <= Number(p.reorder_level)).length} icon={<Package />} />
       </div>
 
       {(crit.data ?? []).length > 0 && (
@@ -105,8 +107,9 @@ function MaintPage() {
           <TabsTrigger value="stock">المخزون</TabsTrigger>
         </TabsList>
         <TabsContent value="wo">
-          <Panel title="أوامر العمل" icon={<Wrench />}>
-            <DataTable rows={all} loading={wos.isLoading} error={wos.error} searchKeys={["number", "asset.code", "description", "workshop"]} cols={[
+          <div className="split-layout min-w-0">
+          <Panel className="min-w-0" title="أوامر العمل" icon={<Wrench />}>
+            <DataTable rows={all} loading={wos.isLoading} error={wos.error} selectedId={selected?.id} onRowClick={(r) => setSelectedId(r.id)} searchKeys={["number", "asset.code", "description", "workshop"]} cols={[
               { key: "number", label: "الأمر", render: (r) => <span className="num font-semibold text-primary">{r.number}</span> },
               { key: "asset", label: "الأصل", render: (r) => <span className="num">{r.asset?.code}</span> },
               { key: "kind", label: "النوع", render: (r) => (r.kind === "preventive" ? "دورية" : "تصحيحية") },
@@ -122,6 +125,24 @@ function MaintPage() {
               ) },
             ]} />
           </Panel>
+          <Panel className="record-preview side-detail" title={selected ? `أمر العمل ${selected.number}` : "أمر العمل المحدد"} icon={<ClipboardList />} actions={selected && <Status kind="wo" value={selected.status} />}>
+            {selected ? (
+              <div className="space-y-4">
+                <KV items={[
+                  ["الأصل", <span className="num">{selected.asset?.code ?? "—"}</span>],
+                  ["النوع", selected.kind === "preventive" ? "دورية" : "تصحيحية"],
+                  ["الوصف", selected.description ?? "—"],
+                  ["الورشة/الفني", [selected.workshop, selected.technician].filter(Boolean).join(" • ") || "—"],
+                  ["تاريخ الفتح", <span className="num">{fmtDate(selected.opened_at)}</span>],
+                  ["قطع الغيار", <span className="num">{fmtSAR(selected.parts_cost)}</span>],
+                  ["الأجور", <span className="num">{fmtSAR(selected.labor_cost)}</span>],
+                  ["الإجمالي", <span className="num font-semibold">{fmtSAR(Number(selected.parts_cost) + Number(selected.labor_cost))}</span>],
+                ]} />
+                {canEdit && selected.status !== "closed" && <Button asChild variant="gold" className="w-full"><Link to="/repair-center">متابعة دورة الاعتماد</Link></Button>}
+              </div>
+            ) : <Empty text="لا توجد أوامر عمل" />}
+          </Panel>
+          </div>
         </TabsContent>
         <TabsContent value="plans">
           <Panel title="خطط الصيانة الدورية" icon={<Wrench />} actions={canEdit && <Button size="sm" variant="gold" onClick={() => { setRec(null); setDlg("plan"); }}><Plus /> خطة</Button>}>

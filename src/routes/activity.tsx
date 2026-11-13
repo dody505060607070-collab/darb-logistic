@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Activity, Bot, Loader2, LogIn, LogOut, PenLine } from "lucide-react";
+import { Activity, Bot, Loader2, LogIn, LogOut, PenLine, Users } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, Empty, Kpi, PageHeader, Panel } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
@@ -64,22 +64,22 @@ function ActivityPage() {
       <PageHeader title="متابعة النشاط" subtitle="من دخل ومتى خرج، وماذا عمل كل شخص في اليوم." icon={<Activity />}
         actions={<input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="h-10 rounded-xl border border-border bg-background px-3 text-sm" />} />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="أشخاص نشطون" value={perUser.length} tone="info" />
-        <Kpi label="مرات الدخول" value={(ev.data ?? []).filter((e) => e.kind === "sign_in").length} tone="success" />
-        <Kpi label="عمليات مسجلة" value={(audit.data ?? []).length} tone="gold" />
-        <Kpi label="مرات الخروج" value={(ev.data ?? []).filter((e) => e.kind === "sign_out").length} tone="neutral" />
+        <Kpi label="أشخاص نشطون" value={perUser.length} tone="info" icon={<Users />} />
+        <Kpi label="مرات الدخول" value={(ev.data ?? []).filter((e) => e.kind === "sign_in").length} tone="success" icon={<LogIn />} />
+        <Kpi label="عمليات مسجلة" value={(audit.data ?? []).length} tone="gold" icon={<PenLine />} />
+        <Kpi label="مرات الخروج" value={(ev.data ?? []).filter((e) => e.kind === "sign_out").length} tone="neutral" icon={<LogOut />} />
       </div>
       <div className="activity-layout grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="grid gap-4">
-        <Panel title="ملخص كل شخص">
+      <div className="flex min-w-0 flex-col gap-4">
+        <div className="order-2 overflow-x-auto"><Panel title="ملخص كل شخص">
           {perUser.length === 0 ? <Empty text="لا يوجد نشاط في هذا اليوم" /> : (
             <table className="w-full text-sm"><thead><tr className="text-muted-foreground"><th className="text-right">الشخص</th><th>أول دخول</th><th>آخر خروج</th><th>عمليات</th></tr></thead>
               <tbody>{perUser.map(([id, u]) => (
                 <tr key={id}><td className="py-2 font-medium">{name(id)}</td><td className="num text-center">{u.first ? fmtTime(u.first) : "—"}</td><td className="num text-center">{u.out ? fmtTime(u.out) : "—"}</td><td className="num text-center">{u.actions}</td></tr>
               ))}</tbody></table>
           )}
-        </Panel>
-        <Panel title="سجل اليوم">
+        </Panel></div>
+        <div className="order-1"><Panel title="سجل اليوم">
           <div className="max-h-[480px] divide-y divide-border overflow-y-auto text-sm">
             {[...(ev.data ?? []).map((e) => ({ k: "e" + e.id, at: e.at, who: e.user_id, icon: e.kind === "sign_in" ? LogIn : LogOut, text: e.kind === "sign_in" ? "دخل النظام" : "خرج من النظام" })),
               ...(audit.data ?? []).map((a) => ({ k: "a" + a.id, at: a.at, who: a.actor, icon: PenLine, text: `${ACT_AR[a.action] ?? a.action} في ${TABLE_AR[a.table_name] ?? a.table_name}` }))]
@@ -88,9 +88,9 @@ function ActivityPage() {
               ))}
             {!(ev.data ?? []).length && !(audit.data ?? []).length && <Empty text="لا يوجد نشاط" />}
           </div>
-        </Panel>
+        </Panel></div>
       </div>
-      <div className="space-y-5"><WhatsAppGatewayPanel /><AiReports /></div>
+      <div className="min-w-0 space-y-5"><WhatsAppGatewayPanel /><AiReports /></div>
       </div>
     </div>
   );

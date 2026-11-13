@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ClipboardCheck, Plus, RotateCcw, ShieldCheck, Wrench } from "lucide-react";
+import { ClipboardCheck, Layers, Plus, RotateCcw, ShieldCheck, TriangleAlert, User, Wrench } from "lucide-react";
+import truck from "@/assets/fleet-truck.png";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
@@ -53,6 +54,13 @@ function CustodyPage() {
   const [inspDriver, setInspDriver] = useState("");
   const [inspKind, setInspKind] = useState("handover");
   const [answers, setAnswers] = useState<CheckAnswer[]>(freshChecklist());
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedCustody = (custody.data ?? []).find((c) => c.id === selectedId) ?? custody.data?.[0];
+  const selectedAsset = (assets.data ?? []).find((a) => a.id === selectedCustody?.asset_id);
+  const latestInspection = selectedCustody ? (insp.data ?? []).find((i) =>
+    i.asset_id === selectedCustody.asset_id && i.driver_id === selectedCustody.driver_id &&
+    new Date(i.created_at).getTime() >= new Date(selectedCustody.opened_at).getTime() &&
+    (!selectedCustody.closed_at || new Date(i.created_at).getTime() <= new Date(selectedCustody.closed_at).getTime())) : undefined;
   const canEdit = can("ops_manager", "fleet_supervisor");
 
   const open = (custody.data ?? []).filter((c) => !c.closed_at);
@@ -95,16 +103,16 @@ function CustodyPage() {
           <Button variant="gold" onClick={() => setOpenC(true)}><Plus /> محضر استلام عهدة</Button>
         </>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="عهد مفتوحة" value={open.length} tone="info" />
-        <Kpi label="بانتظار إقرار السائق" value={open.filter((c) => !c.acknowledged).length} tone="warning" />
-        <Kpi label="فحوصات (آخر 200)" value={insp.data?.length ?? 0} />
-        <Kpi label="عيوب حرجة مفتوحة" value={critical.length} tone={critical.length ? "danger" : undefined} />
+        <Kpi label="عهد مفتوحة" value={open.length} tone="info" icon={<Layers />} />
+        <Kpi label="بانتظار إقرار السائق" value={open.filter((c) => !c.acknowledged).length} tone="warning" icon={<User />} />
+        <Kpi label="فحوصات (آخر 200)" value={insp.data?.length ?? 0} icon={<ClipboardCheck />} />
+        <Kpi label="عيوب حرجة مفتوحة" value={critical.length} tone={critical.length ? "danger" : undefined} icon={<TriangleAlert />} />
       </div>
       <Tabs defaultValue="custody" dir="rtl">
         <TabsList><TabsTrigger value="custody">العهد</TabsTrigger><TabsTrigger value="insp">الفحوصات</TabsTrigger></TabsList>
         <TabsContent value="custody">
           <Panel title="سجل العهد" icon={<ClipboardCheck />}>
-            <DataTable rows={custody.data} loading={custody.isLoading} error={custody.error} searchKeys={["asset.code", "driver.full_name"]} cols={[
+            <DataTable rows={custody.data} loading={custody.isLoading} error={custody.error} selectedId={selectedCustody?.id} onRowClick={(r) => setSelectedId(r.id)} searchKeys={["asset.code", "driver.full_name"]} cols={[
               { key: "asset", label: "الأصل", render: (r) => <span className="num font-semibold text-primary">{r.asset?.code}</span> },
               { key: "driver", label: "السائق", render: (r) => r.driver?.full_name },
               { key: "opened_at", label: "الاستلام", render: (r) => <span className="num">{fmtDateTime(r.opened_at)}</span> },
@@ -115,6 +123,37 @@ function CustodyPage() {
               { key: "act", label: "", render: (r) => canEdit && !r.closed_at && <Button size="sm" variant="outline" onClick={() => { setRet(r); setRetOdo(""); setRetFuel(""); }}><RotateCcw /> إرجاع/نقل</Button> },
             ]} />
           </Panel>
+          <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-2">
+            <Panel title="ملخص الفحص" icon={<ClipboardCheck />}>
+              {selectedCustody ? (
+                <div className="grid items-center gap-4 sm:grid-cols-2">
+                  <div className="space-y-3">
+                    <div className="rounded-xl border bg-muted p-3"><p className="text-sm text-muted-foreground">الأصل</p><p className="num mt-1 font-semibold text-primary">{selectedAsset?.code ?? selectedCustody.asset?.code ?? "—"}</p></div>
+                    <div className="rounded-xl border bg-muted p-3"><p className="text-sm text-muted-foreground">العداد عند الاستلام</p><p className="num mt-1 font-semibold text-primary">{selectedCustody.odometer_out != null ? `${fmtNum(selectedCustody.odometer_out)} كم` : "—"}</p></div>
+                    {latestInspection && <p className="num text-xs text-muted-foreground">آخر فحص: {fmtDateTime(latestInspection.created_at)}</p>}
+                  </div>
+                  <img src={truck} alt="" loading="lazy" width={720} height={450} className="h-auto w-full object-contain" />
+                </div>
+              ) : <p className="text-sm text-muted-foreground">لا توجد عهد مسجلة</p>}
+            </Panel>
+            <Panel title="تفاصيل آخر فحص للعهدة" icon={<ShieldCheck />}>
+              {insp.isLoading ? <p className="text-sm text-muted-foreground">جارٍ تحميل الفحوصات…</p>
+                : insp.error ? <p className="text-sm text-danger">تعذر تحميل تفاصيل الفحص</p>
+                : latestInspection ? (
+                  <div className="space-y-2">
+                    {((latestInspection.items ?? []) as CheckAnswer[]).map((item) => (
+                      <div key={item.key} className="rounded-lg border bg-muted p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm">{item.label}</span>
+                          <Badge tone={item.result === "ok" ? "success" : item.result === "fail" ? (item.severity === "critical" ? "danger" : "warning") : "neutral"}>{item.result === "ok" ? "سليم" : item.result === "fail" ? "بها ملاحظة" : "لا ينطبق"}</Badge>
+                        </div>
+                        {item.reason && <p className="mt-2 text-xs text-muted-foreground">{item.reason}</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="text-sm text-muted-foreground">لا يوجد فحص مرتبط بهذه العهدة ضمن آخر 200 فحص</p>}
+            </Panel>
+          </div>
         </TabsContent>
         <TabsContent value="insp">
           <Panel title="الفحوصات" icon={<ShieldCheck />}>

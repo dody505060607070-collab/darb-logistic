@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, Download } from "lucide-react";
+import { BarChart3, Calculator, CalendarCheck, Clock, Coins, Download, Fuel, Percent, Truck } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/darb/AppShell";
 import { DataTable, Empty, Kpi, PageHeader, Panel } from "@/components/darb/ui";
@@ -103,17 +103,17 @@ function Reports() {
     <>
       <PageHeader title="التقارير" subtitle="كل مؤشر بتعريفه ووحدته؛ «غير متاح» عند نقص البيانات أو القسمة على صفر. الفعلي منفصل عن التقديري." icon={<BarChart3 />} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="كم محملة (مخطط معتمد)" value={`${fmtNum(r.loadedKm)} كم`} />
-        <Kpi label="كم فارغة" value={`${fmtNum(r.emptyKm)} كم`} />
-        <Kpi label="نسبة الفارغ = فارغ ÷ إجمالي" value={r.emptyPct === null ? na : `${r.emptyPct.toFixed(1)}%`} tone="warning" />
-        <Kpi label="الالتزام بالموعد المتفق" value={r.onTimePct === null ? na : `${r.onTimePct.toFixed(0)}%`} hint={`من ${r.done} رحلة مسلّمة`} tone="success" />
-        <Kpi label="متوسط الانتظار عند التسليم" value={r.waitAvg === null ? na : `${r.waitAvg.toFixed(1)} ساعة`} hint="من الوصول حتى بداية التفريغ" />
-        <Kpi label="استهلاك الوقود" value={r.lPer100 === null ? na : `${r.lPer100.toFixed(1)} L/100كم`} hint="بين تعبئتين كاملتين فقط" />
-        <Kpi label="تكلفة الكيلومتر" value={r.costPerKm === null ? na : `${r.costPerKm.toFixed(2)} ر.س`} hint="مباشرة + صيانة ÷ كم" />
-        <Kpi label="الهامش المباشر" value={fmtSAR(r.margin)} hint={`إيراد ${fmtSAR(r.rev)} − تكلفة مباشرة ${fmtSAR(r.direct)}`} tone="gold" />
+        <Kpi label="كم محملة (مخطط معتمد)" value={`${fmtNum(r.loadedKm)} كم`} icon={<Truck />} />
+        <Kpi label="كم فارغة" value={`${fmtNum(r.emptyKm)} كم`} icon={<Truck />} />
+        <Kpi label="نسبة الفارغ = فارغ ÷ إجمالي" value={r.emptyPct === null ? na : `${r.emptyPct.toFixed(1)}%`} tone="warning" icon={<Percent />} />
+        <Kpi label="الالتزام بالموعد المتفق" value={r.onTimePct === null ? na : `${r.onTimePct.toFixed(0)}%`} hint={`من ${r.done} رحلة مسلّمة`} tone="success" icon={<CalendarCheck />} />
+        <Kpi label="متوسط الانتظار عند التسليم" value={r.waitAvg === null ? na : `${r.waitAvg.toFixed(1)} ساعة`} hint="من الوصول حتى بداية التفريغ" icon={<Clock />} />
+        <Kpi label="استهلاك الوقود" value={r.lPer100 === null ? na : `${r.lPer100.toFixed(1)} L/100كم`} hint="بين تعبئتين كاملتين فقط" icon={<Fuel />} />
+        <Kpi label="تكلفة الكيلومتر" value={r.costPerKm === null ? na : `${r.costPerKm.toFixed(2)} ر.س`} hint="مباشرة + صيانة ÷ كم" icon={<Calculator />} />
+        <Kpi label="الهامش المباشر" value={fmtSAR(r.margin)} hint={`إيراد ${fmtSAR(r.rev)} − تكلفة مباشرة ${fmtSAR(r.direct)}`} tone="gold" icon={<Coins />} />
       </div>
-      <div className="report-layout grid gap-5">
-        <Panel title="الكيلومترات حسب الرأس" icon={<BarChart3 />} className="report-chart">
+      <div className="report-layout grid min-w-0 gap-5 xl:grid-cols-2">
+        <Panel title="الكيلومترات حسب الرأس" icon={<BarChart3 />} className="report-chart min-w-0 xl:col-span-2">
           {r.perAsset.length === 0 ? <Empty text="لا توجد بيانات" /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={r.perAsset}>
@@ -126,7 +126,7 @@ function Reports() {
             </ResponsiveContainer>
           )}
         </Panel>
-        <Panel title="مديونية العملاء" icon={<BarChart3 />} actions={<Button size="sm" variant="outline" onClick={() => csv(r.debt, "debt")}><Download /> CSV</Button>}>
+        <Panel className="min-w-0 xl:col-start-2 xl:row-start-2" title="مديونية العملاء" icon={<BarChart3 />} actions={<Button size="sm" variant="outline" onClick={() => csv(r.debt, "debt")}><Download /> CSV</Button>}>
           <DataTable rows={r.debt} cols={[
             { key: "number", label: "الفاتورة", render: (x) => <span className="num">{x.number}</span> },
             { key: "customer", label: "العميل" },
@@ -135,7 +135,7 @@ function Reports() {
             { key: "outstanding", label: "المتبقي", render: (x) => <b className="num">{fmtSAR(x.outstanding)}</b> },
           ]} empty={<p className="py-6 text-center text-sm text-muted-foreground">لا توجد فواتير معتمدة.</p>} />
         </Panel>
-      <Panel title="تشغيل الأصول" icon={<BarChart3 />} className="mt-5" actions={<Button size="sm" variant="outline" onClick={() => csv(r.perAsset, "assets")}><Download /> CSV</Button>}>
+      <Panel title="تشغيل الأصول" icon={<BarChart3 />} className="min-w-0 xl:col-start-1 xl:row-start-2" actions={<Button size="sm" variant="outline" onClick={() => csv(r.perAsset, "assets")}><Download /> CSV</Button>}>
         <DataTable rows={r.perAsset} cols={[
           { key: "code", label: "الرأس", render: (x) => <span className="num">{x.code}</span> },
           { key: "trips", label: "الرحلات", render: (x) => <span className="num">{x.trips}</span> },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, User } from "lucide-react";
+import { CalendarDays, CircleCheck, Plus, TriangleAlert, Truck, User, Users } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
 import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useRows } from "@/lib/db";
 import { fetchDrivers } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
-import { STATUS } from "@/lib/format";
+import { daysUntil, STATUS } from "@/lib/format";
 
 export const Route = createFileRoute("/drivers/")({
   head: () => ({
@@ -40,20 +40,21 @@ function DriversPage() {
   const all = drivers.data ?? [];
   const list = all.filter(d => !status || d.status === status);
   const selected = list.find(d => d.id === selectedId) ?? list[0];
+  const licenseDays = daysUntil(selected?.license_expiry);
   const c = (s: string) => all.filter((d) => d.status === s).length;
   return (
     <>
       <PageHeader title="السائقون" subtitle="بيانات السائقين والرخص والعهد والرحلات" icon={<User />}
         actions={can("ops_manager", "fleet_supervisor") && <Button variant="gold" onClick={() => setOpen(true)}><Plus /> سائق جديد</Button>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label="إجمالي السائقين" value={all.length} />
-        <Kpi label="في رحلة" value={c("on_trip")} tone="success" />
-        <Kpi label="متاح" value={c("available")} tone="info" />
-        <Kpi label="إجازة" value={c("off")} />
-        <Kpi label="رخص منتهية" value={all.filter((d) => d.license_expiry && new Date(d.license_expiry) < new Date()).length} tone="danger" />
+        <Kpi label="إجمالي السائقين" value={all.length} icon={<Users />} />
+        <Kpi label="متاح" value={c("available")} tone="info" icon={<CircleCheck />} />
+        <Kpi label="في رحلة" value={c("on_trip")} tone="success" icon={<Truck />} />
+        <Kpi label="إجازة" value={c("off")} icon={<CalendarDays />} />
+        <Kpi label="رخص منتهية" value={all.filter((d) => d.license_expiry && new Date(d.license_expiry) < new Date()).length} tone="danger" icon={<TriangleAlert />} />
       </div>
-      <div className="record-layout grid items-start gap-5">
-      <Panel title="قائمة السائقين" icon={<User />}>
+      <div className="split-layout min-w-0">
+      <Panel className="min-w-0" title="قائمة السائقين" icon={<User />}>
         <DataTable rows={list} loading={drivers.isLoading} error={drivers.error} selectedId={selected?.id}
           searchKeys={["code", "full_name", "phone", "license_no"]}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["driver"]!).map(([k, v]) => [k, v[0]])} />}
@@ -67,9 +68,13 @@ function DriversPage() {
             { key: "app", label: "حساب التطبيق", render: (r) => (r.user_id ? "مرتبط" : "غير مرتبط") },
           ]} />
       </Panel>
-      {selected && <Panel className="record-preview" title={selected.full_name} icon={<User />} actions={<Status kind="driver" value={selected.status} />}>
+      {selected && <Panel className="record-preview side-detail" title={selected.full_name} icon={<User />} actions={<Status kind="driver" value={selected.status} />}>
         <div className="mb-4 grid size-14 place-items-center rounded-full bg-accent text-primary"><User className="size-7" /></div>
         <KV items={[["رقم السائق", <span className="num">{selected.code}</span>], ["الجوال", <span className="num">{selected.phone ?? "—"}</span>], ["انتهاء الرخصة", <DocExpiry d={selected.license_expiry} />], ["حساب التطبيق", selected.user_id ? "مرتبط" : "غير مرتبط"]]} />
+        <div className={licenseDays == null ? "mt-4 rounded-xl border bg-muted p-3" : licenseDays < 0 ? "mt-4 rounded-xl border bg-danger-soft p-3 text-danger" : licenseDays <= 30 ? "mt-4 rounded-xl border bg-gold-soft p-3 text-gold" : "mt-4 rounded-xl border bg-success-soft p-3 text-primary"}>
+          <div className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" /> صلاحية الرخصة</div>
+          <div className="mt-1 font-semibold">{licenseDays == null ? "لا يوجد تاريخ انتهاء مسجل" : licenseDays < 0 ? `منتهية منذ ${Math.abs(licenseDays)} يومًا` : `المتبقي ${licenseDays} يومًا`}</div>
+        </div>
         <Button variant="outline" className="mt-4 w-full" onClick={() => void nav({ to: "/drivers/$id", params: { id: selected.id } })}>ملف السائق</Button>
       </Panel>}
       </div>

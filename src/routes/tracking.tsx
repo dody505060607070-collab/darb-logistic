@@ -1,13 +1,13 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { ClientOnly, createFileRoute } from "@tanstack/react-router";
-import { MapPin, Radio, Truck, WifiOff } from "lucide-react";
+import { Clock, PauseCircle, MapPin, Radio, Truck, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { integrationHealth } from "@/lib/integration-health.functions";
 import { AppShell } from "@/components/darb/AppShell";
-import { Badge, DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
+import { Badge, DataTable, KV, Kpi, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { db, useRows, type Row } from "@/lib/db";
@@ -51,6 +51,7 @@ function Tracking() {
   const assets = useRows(["assets"], fetchAssets);
   const trips = useRows(["trips"], fetchTrips);
   const [sel, setSel] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const history = useRows(["gps", sel], () => db.from("gps_readings").select("*").eq("asset_id", sel).order("event_time", { ascending: false }).limit(50), !!sel);
@@ -87,32 +88,55 @@ function Tracking() {
 
   return (
     <>
-      <PageHeader title="التتبع المباشر" subtitle="آخر موقع معروف لكل رأس ومصدره ووقت تحديثه" icon={<MapPin />} />
+      <PageHeader title="التتبع" subtitle="آخر موقع معروف لكل رأس ومصدره ووقت تحديثه" icon={<MapPin />} />
+      <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="إجمالي المركبات" value={tractors.length} icon={<Truck />} />
+        <Kpi label="متوقفة" value={tractors.filter((a) => a.status === "stopped").length} icon={<PauseCircle />} tone="gold" />
+        <Kpi label="بدون تحديث حديث" value={tractors.filter((a) => freshness(a.last_position_at)[0] !== "success").length} icon={<Clock />} tone="warning" />
+        <Kpi label="بدون قراءة محفوظة" value={tractors.filter((a) => !a.last_position_at).length} icon={<WifiOff />} tone="neutral" />
+      </div>
       <div className="mb-5 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm">
         <WifiOff className="mt-0.5 size-5 text-warning" />
         <div>
-          <b>ضمان المهندس — Eco5 Lite: لم يتم الربط</b>
+          <b>GPS غير مربوط — آخر مواقع محفوظة، ليست بيانات حية</b>
           <p className="mt-1">المواقع المعروضة آخر قراءات محفوظة مع مصدرها ووقتها، وليست تتبعًا حيًا من ضمان المهندس.</p>
         </div>
       </div>
-      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
-        <Panel title="خريطة المملكة" icon={<Radio />}>
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.85fr)]">
+        <Panel title={`قائمة المركبات (${tractors.length})`} icon={<Truck />} className="min-w-0" bodyClass="space-y-3">
+          <Input aria-label="البحث في المركبات" placeholder="البحث برقم المركبة أو الموقع…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="max-h-[520px] overflow-auto">
+            <DataTable rows={tractors.filter((a) => `${a.code} ${a.location_text ?? ''}`.toLowerCase().includes(search.toLowerCase()))} loading={assets.isLoading} error={assets.error} selectedId={sel} onRowClick={(r) => setSel(r.id)} cols={[
+              { key: "code", label: "المركبة", render: (r) => <span className="num font-semibold text-primary">{r.code}</span> },
+              { key: "status", label: "الحالة", render: (r) => <Status kind="asset" value={r.status} /> },
+              { key: "updated", label: "آخر تحديث", render: (r) => <span className="num text-xs">{fmtDateTime(r.last_position_at)}</span> },
+              { key: "connection", label: "الاتصال", render: () => <span className="inline-flex items-center gap-1 text-warning"><WifiOff className="size-4" /> غير مربوط</span> },
+            ]} />
+          </div>
+        </Panel>
+        <Panel title="خريطة المملكة" icon={<Radio />} className="min-w-0 overflow-hidden" bodyClass="p-0">
           <ClientOnly fallback={<Loading />}>
             <Suspense fallback={<Loading />}>
               <MapView markers={markers} lines={lines} height={520} onMarkerClick={setSel} />
             </Suspense>
           </ClientOnly>
         </Panel>
+      </div>
+      <div className="mt-4">
         <Panel title={s ? `الرأس ${s.code}` : "اختر رأسًا"} icon={<Truck />} actions={s && <Status kind="asset" value={s.status} />}>
           {!s ? <p className="text-sm text-muted-foreground">اضغط على رأس في الخريطة أو الجدول.</p> : (
             <>
               <KV items={[
+                ["الرأس", s.code],
+                ["المقطورة", st?.trailer?.code ?? "—"],
+                ["آخر قراءة", s.location_text ?? "—"],
                 ["الرحلة الحالية", st?.number ?? "—"],
                 ["المسار", st ? `${st.origin_city} ← ${st.dest_city}` : "—"],
                 ["السائق", st?.driver?.full_name ?? "—"],
                 ["آخر تحديث", <span className="num">{fmtDateTime(s.last_position_at)}</span>],
                 ["المصدر", s.last_position_source ?? "—"],
-                ["حالة الاتصال", <Badge tone={freshness(s.last_position_at)[0]}>{freshness(s.last_position_at)[1]}</Badge>],
+                ["حالة الربط", <Badge tone="warning">GPS غير مربوط</Badge>],
+                ["حداثة القراءة", <Badge tone={freshness(s.last_position_at)[0]}>{freshness(s.last_position_at)[1]}</Badge>],
                 ["الوصول المتوقع", st ? <span className="num">{fmtDateTime(st.planned_end)} (تقديري)</span> : "—"],
               ]} />
               {can("ops_manager", "dispatcher") && (

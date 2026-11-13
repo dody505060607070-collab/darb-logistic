@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Container, Pencil, Plus, Truck } from "lucide-react";
+import { CircleCheck, CirclePause, Container, Pencil, Plus, Truck, Wrench } from "lucide-react";
+import truck from "@/assets/fleet-truck.png";
 import { AppShell } from "@/components/darb/AppShell";
 import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
@@ -46,7 +47,7 @@ function FleetPage() {
   const tractors = all.filter((a) => a.kind !== "trailer");
   const activeTrip = (id: string) => (trips.data ?? []).find((t) => ["planned", "ready", "in_progress"].includes(t.status) && (t.tractor_id === id || t.trailer_id === id));
   const cnt = (s: string) => tractors.filter((a) => a.status === s).length;
-  const selected = sel ?? list[0] ?? null;
+  const selected = list.find((a) => a.id === sel?.id) ?? list[0] ?? null;
   const selTrip = selected ? activeTrip(selected.id) : null;
   const canEdit = can("ops_manager", "fleet_supervisor");
 
@@ -59,21 +60,21 @@ function FleetPage() {
         actions={canEdit && <Button variant="gold" onClick={() => setEdit(null)}><Plus /> إضافة أصل جديد</Button>}
       />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-6">
-        <Kpi label="رأس مسجل" value={tractors.length} />
-        <Kpi label="تعمل" value={cnt("active")} tone="success" />
-        <Kpi label="متاحة" value={cnt("available")} tone="info" />
-        <Kpi label="تحت الصيانة" value={cnt("maintenance")} tone="warning" />
-        <Kpi label="متوقفة" value={cnt("stopped")} tone="danger" />
-        <Kpi label="مقطورات مسجلة" value={all.length - tractors.length} />
+        <Kpi label="رأس مسجل" value={tractors.length} icon={<Truck />} />
+        <Kpi label="تعمل" value={cnt("active")} tone="success" icon={<CircleCheck />} />
+        <Kpi label="متاحة" value={cnt("available")} tone="info" icon={<CircleCheck />} />
+        <Kpi label="تحت الصيانة" value={cnt("maintenance")} tone="warning" icon={<Wrench />} />
+        <Kpi label="متوقفة" value={cnt("stopped")} tone="danger" icon={<CirclePause />} />
+        <Kpi label="مقطورات مسجلة" value={all.length - tractors.length} icon={<Container />} />
       </div>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex gap-1 rounded-xl border bg-muted p-1">
         {(["tractor", "trailer"] as const).map((k) => (
           <Button variant={tab === k ? "default" : "outline"}
             key={k}
             onClick={() => { setTab(k); setSel(null); }}
             aria-pressed={tab === k}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold"
+            className="min-w-0 flex-1 gap-2 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             {k === "tractor" ? <Truck className="size-4" /> : <Container className="size-4" />}
             {k === "tractor" ? "الرؤوس" : "المقطورات"} ({all.filter((a) => (k === "tractor" ? a.kind !== "trailer" : a.kind === "trailer")).length})
@@ -81,8 +82,8 @@ function FleetPage() {
         ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
-        <Panel title={tab === "tractor" ? "الرؤوس (شاحنات السحب)" : "المقطورات"} icon={tab === "tractor" ? <Truck /> : <Container />}>
+      <div className="split-layout min-w-0">
+        <Panel className="min-w-0" title={tab === "tractor" ? "الرؤوس (شاحنات السحب)" : "المقطورات"} icon={tab === "tractor" ? <Truck /> : <Container />}>
           <DataTable
             rows={list}
             loading={assets.isLoading}
@@ -114,15 +115,22 @@ function FleetPage() {
         </Panel>
 
         {selected && (
-          <Panel title={`تفاصيل ${ASSET_KIND[selected.kind]} ${selected.code}`} icon={<Truck />} actions={<Status kind="asset" value={selected.status} />}>
+          <Panel className="record-preview side-detail" title={`تفاصيل ${ASSET_KIND[selected.kind]} ${selected.code}`} icon={<Truck />} actions={<Status kind="asset" value={selected.status} />}>
+            <div className="asset-hero mb-4">
+              <div className="relative z-10 max-w-[55%]">
+                <div className="num text-xl font-bold">{selected.code}</div>
+                <p className="mt-1 text-sm">{ASSET_KIND[selected.kind]}</p>
+              </div>
+              <img src={truck} alt="" loading="lazy" width={720} height={450} />
+            </div>
             <KV
               items={[
                 ["رقم الأصل", <span className="num">{selected.code}</span>],
                 ["النوع", selected.make_model ?? selected.trailer_type],
                 ["سنة الصنع", selected.year],
                 ["اللوحة", selected.plate],
-                ["رقم الهيكل (VIN)", <span className="num">{selected.vin ?? "—"}</span>],
-                ["العداد", selected.odometer_km ? `${fmtNum(selected.odometer_km)} كم` : "—"],
+                ["رقم الهيكل (VIN)", <span className="num">{selected.vin ? `••••••••${String(selected.vin).slice(-4)}` : "—"}</span>],
+                ["العداد", selected.odometer_km != null ? `${fmtNum(selected.odometer_km)} كم` : "—"],
                 ["السائق الحالي", selTrip?.driver?.full_name ?? "—"],
                 ["الرحلة الحالية", selTrip?.number ?? "—"],
                 ["المسار", selTrip ? `${selTrip.origin_city} ← ${selTrip.dest_city}` : "—"],

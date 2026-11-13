@@ -86,10 +86,10 @@ function ChatPage() {
   return (
     <>
     <PageHeader title="المحادثات" icon={<MessageSquare />} />
-    <div className="chat-workspace grid md:grid-cols-[290px_minmax(0,1fr)]">
-      <aside className="chat-list flex min-h-0 flex-col">
+    <div className="chat-workspace grid min-w-0 gap-3 md:grid-cols-[minmax(240px,31%)_minmax(0,1fr)]">
+      <aside className="chat-list flex min-h-0 min-w-0 flex-col rounded-2xl border bg-card">
         <div className="border-b p-3">
-          <h2 className="mb-2 text-lg font-semibold">المحادثات</h2>
+          
           <div className="relative">
             <Search className="absolute right-3 top-2.5 size-4 text-muted-foreground" />
             <Input aria-label="البحث عن شخص" value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن شخص" className="pr-9" />
@@ -104,7 +104,7 @@ function ChatPage() {
           {list.length === 0 && <p className="px-4 py-6 text-center text-sm text-muted-foreground">لا يوجد أشخاص آخرون بعد</p>}
         </div>
       </aside>
-      <section className="chat-thread flex min-h-0 flex-col">
+      <section className="chat-thread flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border bg-card">
         <header className="flex items-center gap-3 border-b p-3">
           <div className="grid size-10 place-items-center rounded-full bg-primary text-primary-foreground">{activePerson ? activePerson.full_name.slice(0, 1) : <Users className="size-5" />}</div>
           <div>
@@ -112,7 +112,7 @@ function ChatPage() {
             <p className="text-xs text-muted-foreground">{activePerson ? "محادثة خاصة" : `${people.length + 1} عضو`}</p>
           </div>
         </header>
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-muted/20 p-4">
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
           {thread.length === 0 && <div className="chat-empty"><MessageSquare aria-hidden /><p>لا توجد رسائل بعد — ابدأ المحادثة</p></div>}
           {thread.map((m) => {
             const mine = m.sender_id === me;
@@ -128,7 +128,7 @@ function ChatPage() {
           })}
           <div ref={endRef} />
         </div>
-        <form className="flex gap-2 border-t p-3" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+        <form className="m-3 flex gap-2 rounded-2xl border bg-background p-3" onSubmit={(e) => { e.preventDefault(); void send(); }}>
           <Input aria-label="نص الرسالة" value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" maxLength={4000} />
           <Button type="submit" disabled={!text.trim()} aria-label="إرسال"><Send /></Button>
         </form>
