@@ -19,11 +19,13 @@ export default function MapView({
   lines = [],
   height = 420,
   onMarkerClick,
+  onMapClick,
 }: {
   markers: MapMarker[];
   lines?: MapLine[];
   height?: number;
   onMarkerClick?: (id: string) => void;
+  onMapClick?: (lat: number, lng: number) => void;
 }) {
   const el = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,6 +45,8 @@ export default function MapView({
         }).addTo(mapRef.current);
         layerRef.current = L.layerGroup().addTo(mapRef.current);
       }
+      mapRef.current.off("click");
+      if (onMapClick) mapRef.current.on("click", (e: { latlng: { lat: number; lng: number } }) => onMapClick(e.latlng.lat, e.latlng.lng));
       const layer = layerRef.current;
       layer.clearLayers();
       const bounds: [number, number][] = [];
@@ -70,7 +74,7 @@ export default function MapView({
     return () => {
       cancelled = true;
     };
-  }, [markers, lines, onMarkerClick]);
+  }, [markers, lines, onMarkerClick, onMapClick]);
 
   useEffect(
     () => () => {

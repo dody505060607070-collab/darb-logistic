@@ -130,3 +130,28 @@ export const notifyTask = createServerFn({ method: "POST" })
     const { processTaskNotifications } = await import('@/lib/task-notifications.server');
     return processTaskNotifications(task.id, data.event);
   });
+
+/** Tell the assigned driver about a trip on WhatsApp. Caller must be dispatch staff and able to read the trip. */
+export const notifyTripDriver = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => {
+    const id = (input as { tripId?: string })?.tripId ?? "";
+    if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("رحلة غير صحيحة");
+    return { tripId: id };
+  })
+  .handler(async ({ context, data }) => {
+    const ctx = context as unknown as Ctx;
+    const { data: roles } = await ctx.supabase.from("user_roles").select("role").eq("user_id", ctx.userId);
+    if (!((roles ?? []) as { role: string }[]).some((r) => ["owner", "ops_manager", "dispatcher"].includes(r.role))) throw new Error("غير مصرح");
+    const c = cfg();
+    if (!c.ready) return { sent: false, reason: "واتساب: لم يتم الربط" };
+    const { data: trip, error } = await ctx.supabase.from("trips").select("number, origin_city, dest_city, planned_start, driver:drivers!trips_driver_id_fkey(full_name, phone)").eq("id", data.tripId).single();
+    if (error || !trip) throw new Error("تعذر قراءة الرحلة");
+    const phone = String(trip.driver?.phone ?? "").replace(/\D/g, "").replace(/^0/, "966");
+    if (phone.length < 9) return { sent: false, reason: "لا يوجد رقم جوال للسائق — لم يُرسل واتساب" };
+    const when = trip.planned_start ? new Date(trip.planned_start).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" }) : "—";
+    const text = `مرحبًا ${trip.driver?.full_name ?? ""}\nتم تكليفك برحلة ${trip.number}\nمن: ${trip.origin_city} إلى: ${trip.dest_city}\nموعد التحميل: ${when}\nافتح تطبيق Shata لتفاصيل الرحلة.`;
+    const r = await call(`/message/sendText/${encodeURIComponent(c.instance)}`, { method: "POST", body: JSON.stringify({ number: phone, text }) });
+    if (!r.ok) throw new Error(`فشل الإرسال [${r.status}]`);
+    return { sent: true, reason: "" };
+  });

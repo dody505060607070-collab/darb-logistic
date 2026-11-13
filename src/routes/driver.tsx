@@ -358,6 +358,7 @@ function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; onl
   const [price, setPrice] = useState("1.66");
   const [odo, setOdo] = useState("");
   const [issue, setIssue] = useState("");
+  const [issueKind, setIssueKind] = useState("breakdown");
   const [busy, setBusy] = useState(false);
 
   async function quickEvent(type: string, notes?: string) {
@@ -404,7 +405,7 @@ function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; onl
   async function report() {
     if (issue.length < 5) return void toast.error("صف المشكلة");
     if (demo) return void demoToast();
-    const { error } = await db.from("incidents").insert({ trip_id: t.id, driver_id: driverId, asset_id: t.tractor_id, kind: "breakdown", severity: "medium", description: issue, client_event_id: crypto.randomUUID() });
+    const { error } = await db.from("incidents").insert({ trip_id: t.id, driver_id: driverId, asset_id: t.tractor_id, kind: issueKind, severity: issueKind === "accident" ? "high" : "medium", description: issue, client_event_id: crypto.randomUUID() });
     if (error) return void toast.error(errMsg(error));
     toast.success("أُرسل البلاغ لغرفة العمليات");
     setIssue("");
@@ -443,6 +444,7 @@ function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; onl
       </div>
       <div className="panel space-y-2 p-4">
         <h2 className="flex items-center gap-1 font-bold text-primary"><AlertTriangle className="size-4" /> إبلاغ عن مشكلة</h2>
+        <select aria-label="نوع البلاغ" className="h-9 w-full rounded-md border bg-card px-2 text-sm" value={issueKind} onChange={(e) => setIssueKind(e.target.value)}><option value="accident">حادث</option><option value="breakdown">عطل بالمركبة</option><option value="cargo">مشكلة بالحمولة</option><option value="other">مشكلة أخرى</option></select>
         <Textarea placeholder="صف المشكلة…" value={issue} onChange={(e) => setIssue(e.target.value)} />
         <Button variant="destructive" className="w-full" onClick={() => void report()}>إرسال البلاغ</Button>
       </div>

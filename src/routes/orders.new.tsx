@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
+import { LocationPicker } from "@/components/darb/LocationPicker";
+import { notifyTripDriver } from "@/lib/whatsapp.functions";
 import { CITY_COORDS, errMsg, fmtSAR, fromLocalInput } from "@/lib/format";
 
 export const Route = createFileRoute("/orders/new")({
@@ -118,6 +120,9 @@ function Wizard() {
             p_start: fromLocalInput(v.pickup_at), p_end: fromLocalInput(v.delivery_due_at), p_override_reason: null,
           });
           if (e3) toast.warning(`أُنشئت الرحلة لكن التخصيص لم يتم: ${errMsg(e3)}`);
+          else notifyTripDriver({ data: { tripId: trip.id } })
+            .then((r) => r.sent ? toast.success("أُرسل إشعار الرحلة للسائق على واتساب") : toast.info(r.reason))
+            .catch((e) => toast.warning(`لم يُرسل إشعار واتساب: ${errMsg(e)}`));
         }
         toast.success(`تم إنشاء الأمر ${order.number} والرحلة ${trip.number}`);
         void qc.invalidateQueries();
@@ -162,16 +167,10 @@ function Wizard() {
           <Panel title="2. تفاصيل الرحلة" icon={<MapPin />}>
             <div className="grid gap-3 sm:grid-cols-2">
               <F label="موقع التحميل" req>
-                <select className={sel} value={v.pickup_location_id ?? ""} onChange={(e) => set("pickup_location_id", e.target.value)}>
-                  <option value="">— اختر —</option>
-                  {custLocs.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
+                <LocationPicker label="موقع التحميل" value={v.pickup_location_id ?? ""} options={custLocs} customerId={v.customer_id} onChange={(id) => set("pickup_location_id", id)} onCreated={() => void locations.refetch()} />
               </F>
               <F label="موقع التسليم" req>
-                <select className={sel} value={v.delivery_location_id ?? ""} onChange={(e) => set("delivery_location_id", e.target.value)}>
-                  <option value="">— اختر —</option>
-                  {custLocs.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
+                <LocationPicker label="موقع التسليم" value={v.delivery_location_id ?? ""} options={custLocs} customerId={v.customer_id} onChange={(id) => set("delivery_location_id", id)} onCreated={() => void locations.refetch()} />
               </F>
               <F label="تاريخ ووقت التحميل" req><Input type="datetime-local" value={v.pickup_at ?? ""} onChange={(e) => set("pickup_at", e.target.value)} /></F>
               <F label="موعد التسليم المتفق عليه" req><Input type="datetime-local" value={v.delivery_due_at ?? ""} onChange={(e) => set("delivery_due_at", e.target.value)} /></F>
