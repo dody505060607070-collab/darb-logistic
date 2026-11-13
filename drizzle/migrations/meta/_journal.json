@@ -239,6 +239,27 @@
       "when": 1794596813353,
       "tag": "0033_workshop_job_report",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794597612905,
+      "tag": "0034_workshop_intake_department_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794597775177,
+      "tag": "0035_allow_scoped_workshop_intake_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794597821730,
+      "tag": "0036_task_review_to_assigner_only",
+      "breakpoints": true
     }
   ]
 }

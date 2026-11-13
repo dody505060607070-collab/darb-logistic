@@ -2684,6 +2684,7 @@ export type Database = {
           expected_at: string | null
           id: string
           inspection_id: string | null
+          intake_ref: string | null
           kind: string
           labor_cost: number
           number: string
@@ -2717,6 +2718,7 @@ export type Database = {
           expected_at?: string | null
           id?: string
           inspection_id?: string | null
+          intake_ref?: string | null
           kind?: string
           labor_cost?: number
           number?: string
@@ -2750,6 +2752,7 @@ export type Database = {
           expected_at?: string | null
           id?: string
           inspection_id?: string | null
+          intake_ref?: string | null
           kind?: string
           labor_cost?: number
           number?: string
@@ -3204,6 +3207,15 @@ export type Database = {
         Args: { p_body: string; p_entity: string; p_event: string }
         Returns: undefined
       }
+      wa_department: {
+        Args: {
+          p_body: string
+          p_critical?: boolean
+          p_entity: string
+          p_event: string
+        }
+        Returns: undefined
+      }
       wa_enqueue: {
         Args: {
           p_body: string
@@ -3212,6 +3224,10 @@ export type Database = {
           p_phone: string
         }
         Returns: undefined
+      }
+      wa_event_roles: {
+        Args: { p_critical?: boolean; p_event: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
       }
       wa_norm: { Args: { p: string }; Returns: string }
       wallet_balances: {
@@ -3242,6 +3258,31 @@ export type Database = {
       wallet_review: {
         Args: { p_approve: boolean; p_id: string; p_note?: string }
         Returns: undefined
+      }
+      workshop_find_vehicle: {
+        Args: { p_query: string }
+        Returns: {
+          code: string
+          id: string
+          make_model: string
+          odometer_km: number
+          plate: string
+        }[]
+      }
+      workshop_intake: {
+        Args: {
+          p_asset_id: string
+          p_description: string
+          p_diagnosis: string
+          p_labor: number
+          p_odometer?: number
+          p_parts: number
+          p_photos?: string[]
+          p_ref: string
+          p_severity: string
+          p_workshop_id: string
+        }
+        Returns: string
       }
       workshop_job_report: {
         Args: {
