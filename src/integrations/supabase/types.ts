@@ -1799,11 +1799,17 @@ export type Database = {
       }
       return_requests: {
         Row: {
+          cargo_description: string | null
+          cargo_size: string | null
           created_at: string
           depart_at: string
           driver_id: string
+          has_cargo: boolean
           id: string
+          load_level: string | null
           notes: string | null
+          pickup_place: string | null
+          reject_reason: string | null
           return_trip_id: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -1811,11 +1817,17 @@ export type Database = {
           trip_id: string
         }
         Insert: {
+          cargo_description?: string | null
+          cargo_size?: string | null
           created_at?: string
           depart_at: string
           driver_id: string
+          has_cargo?: boolean
           id?: string
+          load_level?: string | null
           notes?: string | null
+          pickup_place?: string | null
+          reject_reason?: string | null
           return_trip_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -1823,11 +1835,17 @@ export type Database = {
           trip_id: string
         }
         Update: {
+          cargo_description?: string | null
+          cargo_size?: string | null
           created_at?: string
           depart_at?: string
           driver_id?: string
+          has_cargo?: boolean
           id?: string
+          load_level?: string | null
           notes?: string | null
+          pickup_place?: string | null
+          reject_reason?: string | null
           return_trip_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -2759,6 +2777,10 @@ export type Database = {
         Args: { p_user_id: string; p_verified_phone: string }
         Returns: undefined
       }
+      approve_return_request: {
+        Args: { p_request_id: string }
+        Returns: string
+      }
       assign_trip_resources: {
         Args: {
           p_driver_id: string
@@ -2909,6 +2931,19 @@ export type Database = {
       }
       driver_request_return: {
         Args: { p_depart_at: string; p_notes: string; p_trip_id: string }
+        Returns: string
+      }
+      driver_request_return_v2: {
+        Args: {
+          p_cargo_description: string
+          p_cargo_size: string
+          p_depart_at: string
+          p_has_cargo: boolean
+          p_load_level: string
+          p_notes: string
+          p_pickup_place: string
+          p_trip_id: string
+        }
         Returns: string
       }
       driver_trips_for: {

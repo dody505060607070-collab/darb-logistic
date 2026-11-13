@@ -211,6 +211,13 @@
       "when": 1794594800718,
       "tag": "0029_return_trip_existing_check",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794595506034,
+      "tag": "0030_return_request_cargo_details",
+      "breakpoints": true
     }
   ]
 }

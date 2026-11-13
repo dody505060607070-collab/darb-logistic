@@ -12,6 +12,7 @@ import { LocationPicker } from "./LocationPicker";
 import { db, useRows, type Row } from "@/lib/db";
 import { CITY_COORDS, errMsg, fmtDateTime, fromLocalInput, toLocalInput } from "@/lib/format";
 import { flushWa } from "@/lib/wa-flush";
+import { CARGO_SIZE, LOAD_LEVEL, ReturnRequestActions, ReturnRequestDetails } from "./ReturnRequestsInbox";
 
 const MapView = lazy(() => import("./MapView"));
 
@@ -63,22 +64,14 @@ export function ReturnTripPanel({ trip }: { trip: Row }) {
     toast.success("أُنشئت رحلة الرجوع وأُرسل للسائق على واتساب"); flushWa();
     setOpen(false); void qc.invalidateQueries();
   }
-  async function reject(r: Row) {
-    const reason = window.prompt("سبب الرفض (اختياري)") ?? "";
-    const { error } = await db.rpc("reject_return_request", { p_request_id: r.id, p_reason: reason });
-    if (error) return void toast.error(errMsg(error));
-    toast.success("رُفض الطلب وأُبلغ السائق"); flushWa(); void qc.invalidateQueries();
-  }
-
   return (
     <div className="space-y-3 text-sm">
       {existing ? <p>رحلة الرجوع: <b className="num">{existing.number}</b> — {fmtDateTime(existing.planned_start)}</p> : (
         <>
           {pending && <div className="space-y-2 rounded-md bg-gold-soft p-3">
             <b>طلب رجوع من السائق</b>
-            <div>الموعد المطلوب: <span className="num">{fmtDateTime(pending.depart_at)}</span></div>
-            {pending.notes && <div className="text-muted-foreground">{pending.notes}</div>}
-            <div className="flex gap-2"><Button size="sm" onClick={() => openDialog(pending)}><CornerDownLeft /> موافقة وإنشاء</Button><Button size="sm" variant="outline" onClick={() => void reject(pending)}><X /> رفض</Button></div>
+            <ReturnRequestDetails r={pending} trip={trip} />
+            <ReturnRequestActions r={pending} />
           </div>}
           <Button variant="gold" className="w-full" onClick={() => openDialog()}><CornerDownLeft /> إنشاء رحلة رجوع</Button>
         </>
@@ -109,13 +102,19 @@ export function DriverReturnRequest({ trip, demo }: { trip: Row; demo?: boolean 
   const reqs = useRows(["return_requests", trip.id], () => db.from("return_requests").select("*").eq("trip_id", trip.id).order("created_at", { ascending: false }), !demo);
   const [at, setAt] = useState("");
   const [notes, setNotes] = useState("");
+  const [hasCargo, setHasCargo] = useState(false);
+  const [cargo, setCargo] = useState("");
+  const [size, setSize] = useState("medium");
+  const [level, setLevel] = useState("full");
+  const [place, setPlace] = useState("");
   const [busy, setBusy] = useState(false);
   const last = (reqs.data ?? [])[0];
   async function send() {
     if (demo) return void toast.info("معاينة فقط");
     if (!at) return void toast.error("حدد موعد الرجوع");
+    if (hasCargo && !cargo.trim()) return void toast.error("اكتب ما الذي ترجع به");
     setBusy(true);
-    const { error } = await db.rpc("driver_request_return", { p_trip_id: trip.id, p_depart_at: fromLocalInput(at), p_notes: notes });
+    const { error } = await db.rpc("driver_request_return_v2", { p_trip_id: trip.id, p_depart_at: fromLocalInput(at)!, p_notes: notes, p_has_cargo: hasCargo, p_cargo_description: cargo, p_cargo_size: hasCargo ? size : null, p_load_level: hasCargo ? level : "empty", p_pickup_place: place } as never);
     setBusy(false);
     if (error) return void toast.error(errMsg(error));
     toast.success("أُرسل طلب الرجوع للإدارة"); flushWa(); setNotes(""); void qc.invalidateQueries();
@@ -123,10 +122,25 @@ export function DriverReturnRequest({ trip, demo }: { trip: Row; demo?: boolean 
   return (
     <div className="panel space-y-2 p-4">
       <h2 className="flex items-center gap-1 font-bold text-primary"><CornerDownLeft className="size-4" /> رحلة الرجوع — {trip.number}</h2>
-      {last && <p className="text-xs">آخر طلب: {last.status === "pending" ? "بانتظار الموافقة" : last.status === "approved" ? "تمت الموافقة ✅" : "مرفوض"} • <span className="num">{fmtDateTime(last.depart_at)}</span></p>}
+      {last && <p className="text-xs">آخر طلب: {last.status === "pending" ? "بانتظار الموافقة" : last.status === "approved" ? "تمت الموافقة ✅" : "مرفوض ❌"} • <span className="num">{fmtDateTime(last.depart_at)}</span></p>}
+      {last?.status === "rejected" && last.reject_reason && <p className="rounded-md bg-danger-soft p-2 text-xs text-danger">سبب الرفض: {last.reject_reason}</p>}
       {last?.status !== "pending" && last?.status !== "approved" && <>
         <Label className="text-xs">متى تريد الرجوع؟</Label>
         <Input type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} />
+        <Label className="text-xs">من أين سترجع؟</Label>
+        <Input placeholder={trip.dest_city ?? "المدينة أو الموقع"} value={place} onChange={(e) => setPlace(e.target.value)} maxLength={120} />
+        <Label className="text-xs">هل سترجع بحمولة؟</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <Button type="button" variant={!hasCargo ? "default" : "outline"} onClick={() => setHasCargo(false)}>راجع فارغ</Button>
+          <Button type="button" variant={hasCargo ? "default" : "outline"} onClick={() => setHasCargo(true)}>راجع بحمولة</Button>
+        </div>
+        {hasCargo && <>
+          <Input placeholder="ما الذي سترجع به؟ (مثال: طبالي فارغة، أسمنت)" value={cargo} onChange={(e) => setCargo(e.target.value)} maxLength={200} />
+          <Label className="text-xs">حجم الحمولة</Label>
+          <div className="grid grid-cols-3 gap-2">{Object.entries(CARGO_SIZE).map(([k, v]) => <Button key={k} type="button" size="sm" variant={size === k ? "default" : "outline"} onClick={() => setSize(k)}>{v}</Button>)}</div>
+          <Label className="text-xs">الشاحنة</Label>
+          <div className="grid grid-cols-2 gap-2">{(["partial", "full"] as const).map((k) => <Button key={k} type="button" size="sm" variant={level === k ? "default" : "outline"} onClick={() => setLevel(k)}>{LOAD_LEVEL[k]}</Button>)}</div>
+        </>}
         <Textarea placeholder="ملاحظات (اختياري)" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} />
         <Button className="w-full" disabled={busy} onClick={() => void send()}>إرسال طلب الرجوع</Button>
       </>}

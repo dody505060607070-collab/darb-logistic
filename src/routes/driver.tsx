@@ -2,7 +2,8 @@ import { LanguageToggle } from "@/components/darb/LanguageLayer";
 import { DriverReturnRequest } from "@/components/darb/ReturnTrip";
 import { flushWa } from "@/lib/wa-flush";
 import { useCallback, useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { MessageCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle, Bell, Camera, Check, ClipboardCheck, CloudOff, Coins, Fuel, Home, Loader2, LogOut, MapPin, PackageCheck, RefreshCw, Route as RouteIcon, Truck, User,
@@ -177,6 +178,7 @@ function DriverApp() {
             {online ? "متصل" : "غير متصل"}
           </span>
           <LanguageToggle className="h-7 px-2" />
+          <Link to="/chat" aria-label="المحادثة مع الإدارة" className="flex items-center gap-1 rounded-full border px-2 py-1 font-semibold"><MessageCircle className="size-4" /> المحادثة</Link>
           <Bell className="size-5" />
           <Button variant="ghost" size="icon" onClick={() => (demo ? demoToast() : void auth.signOut())} aria-label="خروج"><LogOut className="size-5" /></Button>
         </div>
