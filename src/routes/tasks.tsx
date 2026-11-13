@@ -121,19 +121,12 @@ function TasksPage() {
         <Kpi label="عاجلة مفتوحة" value={all.filter((t) => t.priority === "urgent" && t.status === "assigned").length} tone="danger" />
         <Kpi label="مكتملة" value={all.filter((t) => t.status === "completed").length} tone="success" />
       </div>
-      <details className="rounded-lg border border-warning/40 bg-warning-soft p-4 text-sm">
-        <summary className="cursor-pointer font-semibold text-primary">إشعارات واتساب والتذكير</summary>
-        <p className="mt-3 leading-7">
-        <MessageSquare className="ml-1 inline size-4" /> واتساب: عند التكليف تصل للموظف رسالة بكل التفاصيل (الصورة والموقع)، وعند الإنجاز تصلك رسالة، وعند الإرجاع تصله رسالة. يلزم ربط الرقم من صفحة «متابعة النشاط» وتسجيل رقم جوال لكل موظف.
-        التذكير: العاجلة كل {REMINDER_HOURS.urgent} ساعة، والعادية كل {REMINDER_HOURS.normal} ساعة حتى الإنجاز.
-        </p>
-      </details>
       <div className="status-tabs">
         {tabs.map(([k, l]) => (
           <Button key={k} variant={tab === k ? "default" : "ghost"} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</Button>
         ))}
       </div>
-      <Panel title="القائمة">
+      <Panel title="القائمة" bodyClass="task-list-body">
         {list.length === 0 ? <Empty text="لا توجد مهام هنا" action={manager && <Button onClick={() => setCreating(true)}><Plus /> مهمة جديدة</Button>} /> : (
           <div className="divide-y divide-border">
             {list.map((t) => (
@@ -156,9 +149,9 @@ function TasksPage() {
                       </a>
                     )}
                     {t.photo_path && (
-                      <button className="text-gold" onClick={async () => { try { window.open(await signedUrl(t.photo_path), "_blank"); } catch (e) { toast.error(errMsg(e)); } }}>
+                      <Button variant="link" size="sm" className="h-auto p-0 text-gold" onClick={async () => { try { window.open(await signedUrl(t.photo_path), "_blank"); } catch (e) { toast.error(errMsg(e)); } }}>
                         <ImageIcon className="inline size-3" /> الصورة
-                      </button>
+                      </Button>
                     )}
                   </div>
                   {t.done_note && <p className="text-xs">ملاحظة الإنجاز: {t.done_note}</p>}
@@ -178,6 +171,13 @@ function TasksPage() {
           </div>
         )}
       </Panel>
+      <details className="reminder-details rounded-lg border p-4 text-sm">
+        <summary className="cursor-pointer font-semibold text-primary"><MessageSquare className="ml-2 inline size-5 text-gold" />إشعارات واتساب والتذكير</summary>
+        <p className="mt-3 leading-7">
+        واتساب: عند التكليف تصل للموظف رسالة بكل التفاصيل (الصورة والموقع)، وعند الإنجاز تصلك رسالة، وعند الإرجاع تصله رسالة. يلزم ربط الرقم من صفحة «متابعة النشاط» وتسجيل رقم جوال لكل موظف.
+        التذكير: العاجلة كل {REMINDER_HOURS.urgent} ساعة، والعادية كل {REMINDER_HOURS.normal} ساعة حتى الإنجاز.
+        </p>
+      </details>
       {creating && <NewTask people={people.data ?? []} onClose={() => setCreating(false)} onDone={(id) => void wa(id, "assigned")} />}
     </div>
   );

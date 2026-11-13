@@ -36,6 +36,7 @@ function OrdersPage() {
   const all = orders.data ?? [];
   const c = (s: string) => all.filter((o) => o.status === s).length;
   const showPrice = can("ops_manager", "accountant", "dispatcher");
+  const preview = selected && (!status || selected.status === status) ? selected : all.find(o => !status || o.status === status);
   return (
     <>
       <PageHeader title="أوامر النقل" subtitle="أمر واحد قد يتضمن عدة رحلات" icon={<FileText />}
@@ -47,8 +48,9 @@ function OrdersPage() {
         <Kpi label="قيد التنفيذ" value={c("in_progress")} tone="success" />
         <Kpi label="مكتمل" value={c("completed")} tone="gold" />
       </div>
+      <div className="record-layout grid items-start gap-5">
       <Panel title="الأوامر" icon={<FileText />}>
-        <DataTable rows={all.filter((o) => !status || o.status === status)} loading={orders.isLoading} error={orders.error} selectedId={selected?.id} onRowClick={setSelected}
+        <DataTable rows={all.filter((o) => !status || o.status === status)} loading={orders.isLoading} error={orders.error} selectedId={preview?.id} onRowClick={setSelected}
           searchKeys={["number", "customer.name", "cargo_type", "consignee"]}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["order"]!).map(([k, v]) => [k, v[0]])} />}
           cols={[
@@ -62,12 +64,13 @@ function OrdersPage() {
             { key: "status", label: "الحالة", render: (r) => <Status kind="order" value={r.status} /> },
           ]} />
       </Panel>
-      {selected && <Panel className="mt-5" title={`الأمر ${selected.number}`} icon={<FileText />} actions={<Status kind="order" value={selected.status} />}>
-        <div className="grid gap-5 md:grid-cols-2">
-          <KV items={[["العميل", selected.customer?.name], ["المسار", `${selected.pickup?.city ?? '—'} ← ${selected.delivery?.city ?? '—'}`], ["البضاعة", `${selected.cargo_type} • ${fmtNum(selected.quantity)} ${selected.unit}`]]} />
-          <div><KV items={[["موعد التسليم", fmtDateTime(selected.delivery_due_at)], ["الرحلات", (selected.trips ?? []).map((t: { id: string; number: string }) => <Link key={t.id} to="/trips/$id" params={{ id: t.id }} className="num ml-3 text-primary underline">{t.number}</Link>)]]} />{showPrice && <KV items={[["السعر", fmtSAR(selected.price)]]} />}</div>
+      {preview && <Panel className="record-preview" title={`الأمر ${preview.number}`} icon={<FileText />} actions={<Status kind="order" value={preview.status} />}>
+        <div className="space-y-3">
+          <KV items={[["العميل", preview.customer?.name], ["المسار", `${preview.pickup?.city ?? '—'} ← ${preview.delivery?.city ?? '—'}`], ["البضاعة", `${preview.cargo_type} • ${fmtNum(preview.quantity)} ${preview.unit}`]]} />
+          <div><KV items={[["موعد التسليم", fmtDateTime(preview.delivery_due_at)], ["الرحلات", (preview.trips ?? []).map((t: { id: string; number: string }) => <Link key={t.id} to="/trips/$id" params={{ id: t.id }} className="num ml-3 text-primary underline">{t.number}</Link>)]]} />{showPrice && <KV items={[["السعر", fmtSAR(preview.price)]]} />}</div>
         </div>
       </Panel>}
+      </div>
     </>
   );
 }

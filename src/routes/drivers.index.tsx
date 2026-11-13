@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, User } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
-import { DataTable, Kpi, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
+import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { DocExpiry, DRIVER_FIELDS } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,10 @@ function DriversPage() {
   const drivers = useRows(["drivers"], fetchDrivers);
   const [status, setStatus] = useState("");
   const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const all = drivers.data ?? [];
+  const list = all.filter(d => !status || d.status === status);
+  const selected = list.find(d => d.id === selectedId) ?? list[0];
   const c = (s: string) => all.filter((d) => d.status === s).length;
   return (
     <>
@@ -49,13 +52,14 @@ function DriversPage() {
         <Kpi label="إجازة" value={c("off")} />
         <Kpi label="رخص منتهية" value={all.filter((d) => d.license_expiry && new Date(d.license_expiry) < new Date()).length} tone="danger" />
       </div>
+      <div className="record-layout grid items-start gap-5">
       <Panel title="قائمة السائقين" icon={<User />}>
-        <DataTable rows={all.filter((d) => !status || d.status === status)} loading={drivers.isLoading} error={drivers.error}
+        <DataTable rows={list} loading={drivers.isLoading} error={drivers.error} selectedId={selected?.id}
           searchKeys={["code", "full_name", "phone", "license_no"]}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["driver"]!).map(([k, v]) => [k, v[0]])} />}
-          onRowClick={(r) => void nav({ to: "/drivers/$id", params: { id: r.id } })}
+          onRowClick={(r) => setSelectedId(r.id)}
           cols={[
-            { key: "code", label: "الرقم", render: (r) => <span className="num font-semibold text-primary">{r.code}</span> },
+            { key: "code", label: "الرقم", render: (r) => <Button variant="link" size="sm" className="num px-0" onClick={e => { e.stopPropagation(); void nav({ to: "/drivers/$id", params: { id: r.id } }); }}>{r.code}</Button> },
             { key: "full_name", label: "الاسم" },
             { key: "phone", label: "الجوال", render: (r) => <span className="num">{r.phone ?? "—"}</span> },
             { key: "license_expiry", label: "انتهاء الرخصة", render: (r) => <DocExpiry d={r.license_expiry} /> },
@@ -63,6 +67,12 @@ function DriversPage() {
             { key: "app", label: "حساب التطبيق", render: (r) => (r.user_id ? "مرتبط" : "غير مرتبط") },
           ]} />
       </Panel>
+      {selected && <Panel className="record-preview" title={selected.full_name} icon={<User />} actions={<Status kind="driver" value={selected.status} />}>
+        <div className="mb-4 grid size-14 place-items-center rounded-full bg-accent text-primary"><User className="size-7" /></div>
+        <KV items={[["رقم السائق", <span className="num">{selected.code}</span>], ["الجوال", <span className="num">{selected.phone ?? "—"}</span>], ["انتهاء الرخصة", <DocExpiry d={selected.license_expiry} />], ["حساب التطبيق", selected.user_id ? "مرتبط" : "غير مرتبط"]]} />
+        <Button variant="outline" className="mt-4 w-full" onClick={() => void nav({ to: "/drivers/$id", params: { id: selected.id } })}>ملف السائق</Button>
+      </Panel>}
+      </div>
       <EntityDialog open={open} onOpenChange={setOpen} title="سائق جديد" table="drivers" fields={DRIVER_FIELDS} invalidate={["drivers"]} />
     </>
   );

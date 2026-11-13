@@ -92,7 +92,7 @@ function ChatPage() {
           <h2 className="mb-2 text-lg font-semibold">المحادثات</h2>
           <div className="relative">
             <Search className="absolute right-3 top-2.5 size-4 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن شخص" className="pr-9" />
+            <Input aria-label="البحث عن شخص" value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن شخص" className="pr-9" />
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -129,7 +129,7 @@ function ChatPage() {
           <div ref={endRef} />
         </div>
         <form className="flex gap-2 border-t p-3" onSubmit={(e) => { e.preventDefault(); void send(); }}>
-          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" maxLength={4000} />
+          <Input aria-label="نص الرسالة" value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" maxLength={4000} />
           <Button type="submit" disabled={!text.trim()} aria-label="إرسال"><Send /></Button>
         </form>
       </section>

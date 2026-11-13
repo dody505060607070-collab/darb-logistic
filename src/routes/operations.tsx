@@ -103,7 +103,9 @@ function Ops() {
         <Kpi label="مقطورات متاحة" value={trailers.filter((x) => x.status === "available").length} />
       </div>
 
-      <Panel title="جدول تخصيص الموارد" icon={<CalendarRange />} actions={<Input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="w-40" />}>
+      <div className="operations-layout grid items-start gap-5">
+      <div className="min-w-0 space-y-5">
+      <Panel title="جدول تخصيص الموارد" icon={<CalendarRange />} actions={<Input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="w-40" />} bodyClass="resource-timeline">
         <div className="overflow-x-auto">
           <div className="min-w-[900px]">
             <div className="mb-1 grid grid-cols-[160px_1fr] text-[10px] text-muted-foreground">
@@ -122,7 +124,7 @@ function Ops() {
                     const w = (Math.min(dayEnd, i.to) - Math.max(dayStart, i.from)) / 864e5 * 100;
                     return (
                       <div key={k} title={`${i.num} ${fmtTime(new Date(i.from).toISOString())}–${fmtTime(new Date(i.to).toISOString())}`}
-                        className={cn("num absolute top-0.5 bottom-0.5 truncate rounded px-1.5 text-[10px] leading-5 font-semibold", i.status === "in_progress" ? "bg-success text-primary-foreground" : "bg-info text-primary-foreground")}
+                        className={cn("num absolute top-0.5 bottom-0.5 truncate rounded px-1.5 text-[10px] leading-5 font-semibold", i.status === "in_progress" ? "bg-success text-primary-foreground" : "bg-gold text-gold-foreground")}
                         style={{ right: `${l}%`, width: `${Math.max(w, 2)}%` }}>{i.num}</div>
                     );
                   })}
@@ -133,8 +135,6 @@ function Ops() {
         </div>
       </Panel>
 
-      <div className="operations-layout mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <div className="min-w-0 space-y-5">
         <Panel title="رحلات تحتاج تخطيطًا" icon={<AlertTriangle />}>
           <DataTable rows={pending} loading={trips.isLoading} onRowClick={(r) => void nav({ to: "/trips/$id", params: { id: r.id } })} cols={[
             { key: "number", label: "الرحلة", render: (r) => <span className="num font-semibold text-primary">{r.number}</span> },
