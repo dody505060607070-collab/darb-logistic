@@ -225,16 +225,23 @@ html:not(.light) .company-logo { background: var(--logo-surface); border-radius:
 }
 
 /* Exact-reference KPI tiles: label and value on the start side, soft icon tile on the end side. */
-.internal-ui .kpi-tile:has(.kpi-icon) { padding-inline-end: 84px; }
-.internal-ui .kpi-tile .kpi-icon { position: absolute; inset-inline-end: 18px; top: 50%; translate: 0 -50%; width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; background: var(--internal-icon); color: var(--primary); }
-.internal-ui .kpi-tile .kpi-icon svg { width: 26px; height: 26px; }
+.internal-ui .kpi-tile { container-type: inline-size; }
+.internal-ui .kpi-tile .kpi-icon { position: absolute; inset-inline-end: 18px; top: 50%; translate: 0 -50%; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--internal-icon); color: var(--primary); }
+.internal-ui .kpi-tile .kpi-icon svg { width: 22px; height: 22px; }
 .internal-ui .kpi-tile.bento-pink { background: color-mix(in srgb, var(--danger-soft) 70%, var(--internal-fill)); }
 .internal-ui .kpi-tile.bento-pink .kpi-icon { background: var(--danger-soft); color: var(--danger); }
 .internal-ui .kpi-tile.bento-copper .kpi-icon, .internal-ui .kpi-tile.bento-solid .kpi-icon { background: var(--gold-soft); color: var(--gold); }
 .internal-ui .kpi-tile.bento-blue .kpi-icon { background: var(--info-soft); color: var(--info); }
 .internal-ui .asset-hero { position: relative; overflow: hidden; border-radius: 10px 10px 0 0; background: var(--brand-green); color: var(--brand-on-green); padding: 18px; min-height: 140px; }
-.internal-ui .asset-hero img { position: absolute; inset-inline-end: -6px; bottom: 0; height: 122px; width: auto; object-fit: contain; pointer-events: none; }
+.internal-ui .asset-hero > div { max-width: 48%; overflow-wrap: anywhere; }
+.internal-ui .asset-hero img { position: absolute; inset-inline-end: -6px; bottom: 4px; height: 104px; width: auto; object-fit: contain; pointer-events: none; }
 .internal-ui .side-detail { position: sticky; top: 92px; }
-@media (min-width: 1280px) { .internal-ui .split-layout { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 20px; align-items: start; } }
+@media (min-width: 1280px) { .internal-ui .split-layout { display: grid; grid-template-columns: minmax(0,1fr) clamp(280px, 26vw, 360px); gap: 20px; align-items: start; } }
 @media (max-width: 1279px) { .internal-ui .split-layout { display: grid; gap: 16px; } .internal-ui .side-detail { position: static; } }
 @media (prefers-reduced-motion: reduce) { .internal-ui * { transition-duration: 1ms !important; animation-duration: 1ms !important; } }
+
+@container (max-width: 210px) {
+  .internal-ui .kpi-tile .kpi-icon { position: static; translate: none; width: 32px; height: 32px; border-radius: 9px; }
+  .internal-ui .kpi-tile .kpi-icon svg { width: 17px; height: 17px; }
+}
+@container (min-width: 211px) { .internal-ui .kpi-tile > *:not(.kpi-icon) { padding-inline-end: 56px; } }
