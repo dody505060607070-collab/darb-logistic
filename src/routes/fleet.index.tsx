@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/fleet/")({
   head: () => ({
     meta: [
-      { title: "الأسطول — الرؤوس والمقطورات | شركة شتاء" },
+      { title: "الأسطول — الرؤوس والمقطورات | Shata" },
       { name: "description", content: "إدارة رؤوس الشاحنات والمقطورات وحالتها وربطها بالرحلات." },
-      { property: "og:title", content: "الأسطول — شركة شتاء" },
+      { property: "og:title", content: "الأسطول — Shata" },
       { property: "og:description", content: "إدارة رؤوس الشاحنات والمقطورات وحالتها." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

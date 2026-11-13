@@ -10,10 +10,10 @@ import { PhoneLogin } from '@/components/darb/PhoneLogin';
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — شركة شتاء" },
-      { name: "description", content: "تسجيل الدخول إلى شركة شتاء لإدارة الأسطول والصيانة." },
-      { property: "og:title", content: "تسجيل الدخول — شركة شتاء" },
-      { property: "og:description", content: "الدخول الآمن بالجوال إلى نظام شركة شتاء." },
+      { title: "تسجيل الدخول — Shata" },
+      { name: "description", content: "تسجيل الدخول إلى Shata لإدارة الأسطول والصيانة." },
+      { property: "og:title", content: "تسجيل الدخول — Shata" },
+      { property: "og:description", content: "الدخول الآمن بالجوال إلى نظام Shata." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -39,20 +39,10 @@ function LoginPage() {
             <h1 className="text-center text-2xl font-bold text-primary">
               تسجيل الدخول
             </h1>
-            <p className="mt-1 mb-8 text-center text-sm text-muted-foreground">شركة شتاء — نظام إدارة الأسطول والصيانة</p>
+            <p className="mt-1 mb-8 text-center text-sm text-muted-foreground">Shata — نظام إدارة الأسطول والصيانة</p>
 
             <PhoneLogin />
             <p className="mt-3 text-center text-xs text-muted-foreground">صلاحيات الشركة تُمنح من المدير فقط.</p>
-            <p className="mt-6 text-center">
-              <a
-                href="https://abdelrahmanstudio.store/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-muted-foreground/40 transition-colors hover:text-muted-foreground/70"
-              >
-                صُنع بواسطة Abdelrahman Studio
-              </a>
-            </p>
           </div>
       </ClientOnly>
     </div>

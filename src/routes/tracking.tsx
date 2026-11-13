@@ -20,9 +20,9 @@ const MapView = lazy(() => import("@/components/darb/MapView"));
 export const Route = createFileRoute("/tracking")({
   head: () => ({
     meta: [
-      { title: "التتبع المباشر — شركة شتاء" },
+      { title: "التتبع المباشر — Shata" },
       { name: "description", content: "مواقع الرؤوس على خريطة المملكة وحالة الاتصال وآخر تحديث." },
-      { property: "og:title", content: "التتبع المباشر — شركة شتاء" },
+      { property: "og:title", content: "التتبع المباشر — Shata" },
       { property: "og:description", content: "مواقع الرؤوس وحالة الاتصال وآخر تحديث." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

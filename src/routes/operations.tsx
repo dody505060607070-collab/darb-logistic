@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/operations")({
   head: () => ({
     meta: [
-      { title: "غرفة العمليات وجدول تخصيص الموارد — شركة شتاء" },
+      { title: "غرفة العمليات وجدول تخصيص الموارد — Shata" },
       { name: "description", content: "متابعة العمليات لحظيًا وتخصيص السائقين والرؤوس والمقطورات للرحلات." },
-      { property: "og:title", content: "غرفة العمليات — شركة شتاء" },
+      { property: "og:title", content: "غرفة العمليات — Shata" },
       { property: "og:description", content: "متابعة العمليات وتخصيص الموارد." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

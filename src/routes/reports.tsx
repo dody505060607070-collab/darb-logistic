@@ -12,9 +12,9 @@ import { fmtNum, fmtSAR } from "@/lib/format";
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: "التقارير — شركة شتاء" },
+      { title: "التقارير — Shata" },
       { name: "description", content: "تقارير الكيلومترات المحملة والفارغة والانتظار والالتزام والهامش والتحصيل." },
-      { property: "og:title", content: "التقارير — شركة شتاء" },
+      { property: "og:title", content: "التقارير — Shata" },
       { property: "og:description", content: "تقارير التشغيل والمالية." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

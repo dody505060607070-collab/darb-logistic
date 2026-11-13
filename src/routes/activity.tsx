@@ -16,9 +16,9 @@ import { runDailyReportNow } from "@/lib/ai-report.functions";
 export const Route = createFileRoute("/activity")({
   head: () => ({
     meta: [
-      { title: "متابعة النشاط — شركة شتاء" },
+      { title: "متابعة النشاط — Shata" },
       { name: "description", content: "من دخل ومتى، وماذا عمل كل موظف اليوم، مع تقرير الذكاء الاصطناعي الصباحي." },
-      { property: "og:title", content: "متابعة النشاط — شركة شتاء" },
+      { property: "og:title", content: "متابعة النشاط — Shata" },
       { property: "og:description", content: "نشاط الفريق اليومي والتقرير الصباحي." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

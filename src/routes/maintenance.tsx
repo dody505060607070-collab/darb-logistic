@@ -15,9 +15,9 @@ import { daysUntil, errMsg, fmtDate, fmtDateTime, fmtNum, fmtSAR, STATUS } from 
 export const Route = createFileRoute("/maintenance")({
   head: () => ({
     meta: [
-      { title: "الصيانة والإطارات والمخزون — شركة شتاء" },
+      { title: "الصيانة والإطارات والمخزون — Shata" },
       { name: "description", content: "أوامر العمل والصيانة الدورية والإطارات والمخزون." },
-      { property: "og:title", content: "الصيانة والمخزون — شركة شتاء" },
+      { property: "og:title", content: "الصيانة والمخزون — Shata" },
       { property: "og:description", content: "أوامر العمل والصيانة الدورية والإطارات والمخزون." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

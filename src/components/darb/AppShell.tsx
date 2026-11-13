@@ -315,16 +315,6 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
           </div>
         )}
         <main key={path} data-page={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6"><CardArrangement account={auth.session.user.id} path={path}>{children}</CardArrangement></main>
-        <footer className="hidden pb-4 text-center lg:block">
-          <a
-            href="https://abdelrahmanstudio.store/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-muted-foreground/40 transition-colors hover:text-muted-foreground/70"
-          >
-            صُنع بواسطة Abdelrahman Studio
-          </a>
-        </footer>
         <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {[
             { to: "/", label: "الرئيسية", icon: Home , group: NAV_GROUPS[0]! },

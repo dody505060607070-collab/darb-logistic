@@ -18,9 +18,9 @@ import { errMsg, fmtDateTime } from '@/lib/format';
 
 export const Route = createFileRoute('/settings_/employees/$id')({
   head: () => ({ meta: [
-    { title: 'ملف الموظف وصلاحياته — شركة شتاء' },
-    { name: 'description', content: 'بيانات الموظف ورقم جواله وفرعه وصلاحياته ومهامه ونشاطه في شركة شتاء.' },
-    { property: 'og:title', content: 'ملف الموظف — شركة شتاء' },
+    { title: 'ملف الموظف وصلاحياته — Shata' },
+    { name: 'description', content: 'بيانات الموظف ورقم جواله وفرعه وصلاحياته ومهامه ونشاطه في Shata.' },
+    { property: 'og:title', content: 'ملف الموظف — Shata' },
     { property: 'og:description', content: 'إدارة بيانات الموظف وصلاحياته ومهامه ونشاطه.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' },
   ] }),

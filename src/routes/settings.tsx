@@ -24,9 +24,9 @@ export const Route = createFileRoute("/settings")({
   validateSearch: (s: Record<string, unknown>) => ({ tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined }),
   head: () => ({
     meta: [
-      { title: "الإعدادات والموظفون — شركة شتاء" },
+      { title: "الإعدادات والموظفون — Shata" },
       { name: "description", content: "إعداد الشركة والفروع والموظفين والصلاحيات وحالة التكاملات وسجل التدقيق." },
-      { property: "og:title", content: "الإعدادات — شركة شتاء" },
+      { property: "og:title", content: "الإعدادات — Shata" },
       { property: "og:description", content: "الشركة والموظفون والتكاملات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

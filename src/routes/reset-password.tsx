@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "تعيين كلمة مرور جديدة — شركة شتاء" },
-      { name: "description", content: "تعيين كلمة مرور جديدة لحسابك في شركة شتاء." },
-      { property: "og:title", content: "تعيين كلمة مرور جديدة — شركة شتاء" },
-      { property: "og:description", content: "تعيين كلمة مرور جديدة لحسابك في شركة شتاء." },
+      { title: "تعيين كلمة مرور جديدة — Shata" },
+      { name: "description", content: "تعيين كلمة مرور جديدة لحسابك في Shata." },
+      { property: "og:title", content: "تعيين كلمة مرور جديدة — Shata" },
+      { property: "og:description", content: "تعيين كلمة مرور جديدة لحسابك في Shata." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

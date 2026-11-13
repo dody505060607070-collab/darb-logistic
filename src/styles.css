@@ -67,9 +67,9 @@ input:focus, textarea:focus, select:focus { box-shadow: 0 0 0 3px color-mix(in s
 .app-shell { background: transparent; }
 .app-sidebar { margin: 14px 0 14px 14px; height: calc(100vh - 28px); border: 1px solid var(--glass-edge); border-radius: 8px; overflow: hidden; background: var(--glass-gradient); backdrop-filter: blur(28px); box-shadow: var(--glass-shadow); }
 .app-toolbar { margin: 14px 24px 0; border: 1px solid var(--glass-edge); border-radius: 8px; background: var(--glass-gradient); backdrop-filter: blur(24px); box-shadow: var(--glass-shadow); }
-.company-logo { width: 196px; height: 68px; object-fit: contain; }
+.company-logo { width: 196px; height: 143px; object-fit: contain; }
 .driver-toolbar { background: var(--glass-gradient); backdrop-filter: blur(24px); box-shadow: var(--glass-shadow); color: var(--foreground); border-bottom: 1px solid var(--glass-edge); }
-.driver-toolbar .company-logo { width: 170px; height: 58px; }
+.driver-toolbar .company-logo { width: 108px; height: 79px; }
 html:not(.light) .company-logo { background: var(--logo-surface); border-radius: 8px; padding: 6px; }
 .card-grip { touch-action: none; cursor: grab; opacity: .55; }
 .card-grip:hover, .card-grip:focus-visible { opacity: 1; }

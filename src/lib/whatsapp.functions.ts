@@ -103,7 +103,7 @@ export const whatsappSendTest = createServerFn({ method: "POST" })
     if (!c.ready) throw new Error("بيانات خادم واتساب غير مضافة بعد");
     const r = await call(`/message/sendText/${encodeURIComponent(c.instance)}`, {
       method: "POST",
-      body: JSON.stringify({ number: data.number, text: "رسالة اختبار من نظام شركة شتاء ✅" }),
+      body: JSON.stringify({ number: data.number, text: "رسالة اختبار من نظام Shata ✅" }),
     });
     if (!r.ok) throw new Error(`فشل الإرسال [${r.status}]: ${r.text}`);
     return { ok: true };
@@ -114,7 +114,7 @@ const digits = (p?: string | null) => {
   if (n.startsWith("05") && n.length === 10) n = "966" + n.slice(1);
   return n.length >= 9 && n.length <= 15 ? n : null;
 };
-const SUPPORT = "\n\n📞 هذا رقم شركة شتاء الرسمي — يمكنك مراسلتنا عليه في أي وقت للدعم والاستفسار.";
+const SUPPORT = "\n\n📞 هذا رقم Shata الرسمي — يمكنك مراسلتنا عليه في أي وقت للدعم والاستفسار.";
 
 /**
  * Sends the WhatsApp message for a task event. The caller must be able to read the task (RLS),
@@ -166,12 +166,12 @@ export const notifyTask = createServerFn({ method: "POST" })
       task.location_text ? `📍 الموقع: ${task.location_text}\n${task.lat ? `https://maps.google.com/?q=${task.lat},${task.lng}` : `https://maps.google.com/?q=${encodeURIComponent(task.location_text)}`}` : "",
     ].filter(Boolean).join("\n");
     const head = {
-      assigned: `مرحباً ${name} 👋\nتم تكليفك بمهمة جديدة في نظام شركة شتاء:`,
+      assigned: `مرحباً ${name} 👋\nتم تكليفك بمهمة جديدة في نظام Shata:`,
       returned: `⚠️ ${name}، أُعيدت إليك المهمة لأنها لم تكتمل بعد.${task.review_note ? `\nالسبب: ${task.review_note}` : ""}`,
       submitted: `✅ ${name} أبلغ أنه أنهى المهمة — ادخل إلى صفحة المهام للمراجعة والاعتماد أو الإرجاع.${task.done_note ? `\nملاحظته: ${task.done_note}` : ""}`,
       approved: `🎉 ${name}، تم اعتماد مهمتك كمكتملة. شكراً لك!`,
     }[data.event];
-    const text = `${head}\n\n${details}${data.event === "submitted" ? "" : "\n\nبعد الإنجاز ادخل إلى نظام شركة شتاء واضغط «أنهيت المهمة»."}${SUPPORT}`;
+    const text = `${head}\n\n${details}${data.event === "submitted" ? "" : "\n\nبعد الإنجاز ادخل إلى نظام Shata واضغط «أنهيت المهمة»."}${SUPPORT}`;
 
     let photo: string | null = null;
     if (task.photo_path && (data.event === "assigned" || data.event === "returned")) {

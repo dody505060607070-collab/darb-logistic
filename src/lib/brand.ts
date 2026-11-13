@@ -1,7 +1,7 @@
-/** Replace the provisional English name and mark when the official identity arrives. */
+/** Display identity stays independent of stored records and legacy URLs. */
 export const BRAND = {
-  name: 'شركة شتاء',
-  shortName: 'شتاء',
-  englishName: '',
+  name: 'Shata',
+  shortName: 'Shata',
+  englishName: 'Shata',
   tagline: 'نظام إدارة الأسطول والصيانة',
 };

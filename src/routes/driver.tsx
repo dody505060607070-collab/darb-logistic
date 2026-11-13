@@ -23,9 +23,9 @@ import { deliveryDrafts,saveDeliveryDraft,syncDeliveryDrafts,retryDeliveryDraft,
 export const Route = createFileRoute("/driver")({
   head: () => ({
     meta: [
-      { title: "تطبيق السائق — شركة شتاء" },
+      { title: "تطبيق السائق — Shata" },
       { name: "description", content: "رحلة السائق الحالية والفحص وتحديث المحطات والمصروفات وإثبات التسليم." },
-      { property: "og:title", content: "تطبيق السائق — شركة شتاء" },
+      { property: "og:title", content: "تطبيق السائق — Shata" },
       { property: "og:description", content: "الرحلة الحالية والفحص وإثبات التسليم." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

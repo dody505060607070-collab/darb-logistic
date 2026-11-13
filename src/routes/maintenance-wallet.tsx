@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/lib/auth';
 import { db,useRows,uploadFile } from '@/lib/db';
 import { errMsg,fmtSAR,fmtDateTime } from '@/lib/format';
-export const Route=createFileRoute('/maintenance-wallet')({head:()=>({meta:[{title:'دفتر عهدة الصيانة — شركة شتاء'},{name:'description',content:'حركات العهدة المالية لموظفي الصيانة والمصروفات المعتمدة والتسويات والأرصدة.'},{property:'og:title',content:'عهدة الصيانة — شركة شتاء'},{property:'og:description',content:'كشف حركات العهدة والمصروفات والاعتمادات والتصحيحات.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:()=> <AppShell><WalletPage/></AppShell>});
+export const Route=createFileRoute('/maintenance-wallet')({head:()=>({meta:[{title:'دفتر عهدة الصيانة — Shata'},{name:'description',content:'حركات العهدة المالية لموظفي الصيانة والمصروفات المعتمدة والتسويات والأرصدة.'},{property:'og:title',content:'عهدة الصيانة — Shata'},{property:'og:description',content:'كشف حركات العهدة والمصروفات والاعتمادات والتصحيحات.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:()=> <AppShell><WalletPage/></AppShell>});
 const kinds:Record<string,string>={opening:'رصيد افتتاحي',issue:'صرف عهدة',expense:'مصروف',return:'رد متبقٍ',correction:'تصحيح عكسي'};
 function WalletPage(){
  const auth=useAuth();const fin=auth.can('accountant');const qc=useQueryClient();
