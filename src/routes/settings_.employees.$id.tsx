@@ -82,7 +82,7 @@ function EmployeePage() {
   return <>
     <Button asChild variant="ghost" className="mb-4"><Link to="/settings" search={{ tab: 'users' }}><ArrowRight /> الموظفون</Link></Button>
     <PageHeader title={profile.data.full_name || 'ملف الموظف'} icon={<UserRound />} actions={id !== auth.session?.user.id && <Button variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 /> حذف الحساب</Button>} />
-    <DeleteConfirmation open={deleteOpen} onOpenChange={setDeleteOpen} title="حذف حساب الموظف؟" description="سيُحذف الحساب وصلاحياته نهائيًا، وتبقى السجلات التاريخية. يمكن لصاحب الرقم التسجيل من جديد لاحقًا بصلاحيات التسجيل الحالية." busy={busy} onConfirm={() => void confirmDelete()} />
+    <DeleteConfirmation open={deleteOpen} onOpenChange={setDeleteOpen} title="حذف حساب الموظف؟" description="سيُحذف الحساب وتُلغى صلاحية رقمه للدخول. لا يمكنه العودة إلا بعد أن تضيفه الإدارة مجددًا. تبقى السجلات التاريخية." busy={busy} onConfirm={() => void confirmDelete()} />
     <div className="grid gap-8 xl:grid-cols-2">
       <section className="space-y-4"><h2 className="text-lg font-bold">بيانات الموظف</h2>
         <div><Label htmlFor="employee-name">الاسم</Label><Input id="employee-name" value={name} onChange={e => setName(e.target.value)} /></div>

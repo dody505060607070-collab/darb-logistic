@@ -16,6 +16,12 @@ export function canRemoveEmployeeRole(actorId: string, employeeId: string, role:
   return !(actorId === employeeId && role === 'owner');
 }
 
+export const newEmployeeSchema = employeeSchema.omit({ id: true }).extend({
+  phone: z.string().trim().min(1).transform(value => normalizePhone('+966', value)),
+  role: z.enum(['owner', 'ops_manager', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'driver', 'field_maintenance', 'workshop', 'representative']),
+  workshopId: z.string().uuid().nullable().default(null),
+}).refine(value => value.role !== 'workshop' || !!value.workshopId, { message: 'اختر ورشة الموظف', path: ['workshopId'] });
+
 export function assertEmployeeDeletion(actorId: string, employeeId: string, confirmed: boolean) {
   if (!confirmed) throw new Error('يجب تأكيد حذف الحساب');
   if (actorId === employeeId) throw new Error('لا يمكنك حذف حسابك أثناء استخدامه');

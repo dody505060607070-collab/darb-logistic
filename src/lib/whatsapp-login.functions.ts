@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { canRestoreProfilePhone, matchesVerifiedPhone, phoneIdentityVariants } from './phone-account';
 import { BRAND } from './brand';
+import { assertApprovedPhone } from './employee-access';
 
 /**
  * WhatsApp login codes sent from the company's own WhatsApp gateway.
@@ -35,8 +36,13 @@ async function hmac(key: string, msg: string) {
 export const requestLoginCode = createServerFn({ method: "POST" })
   .inputValidator((d: { phone: string }) => ({ phone: validPhone(d?.phone) }))
   .handler(async ({ data }) => {
-    const g = gateway();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: allowed, error: accessError } = await supabaseAdmin.from('profiles').select('id').in('phone', phoneIdentityVariants(data.phone));
+    const { data: reservation, error: reservationError } = await supabaseAdmin.from('admin_phone_reservations').select('phone').eq('phone', data.phone).maybeSingle();
+    const { count, error: rolesError } = allowed?.[0] ? await supabaseAdmin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', allowed[0].id) : { count: 0, error: null };
+    if (accessError || reservationError || rolesError) throw new Error('تعذر التحقق من صلاحية الدخول');
+    assertApprovedPhone(allowed?.length ?? 0, count ?? 0, !!reservation);
+    const g = gateway();
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recent, error } = await supabaseAdmin.from("login_codes").select("created_at").eq("phone", data.phone).gte("created_at", since).order("created_at", { ascending: false });
     if (error) throw new Error("تعذر إرسال الرمز، حاول مجددًا");
@@ -85,6 +91,10 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
     if (lookupError) throw new Error('تعذر البحث عن حساب الموظف، حاول مجددًا');
     if (prof && prof.length > 1) throw new Error("هذا الرقم مرتبط بأكثر من حساب. تواصل مع المدير.");
     userId = prof?.[0]?.id ?? null;
+    const { data: reservation, error: reservationError } = await supabaseAdmin.from('admin_phone_reservations').select('phone').eq('phone', data.phone).maybeSingle();
+    const { count, error: rolesError } = userId ? await supabaseAdmin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', userId) : { count: 0, error: null };
+    if (reservationError || rolesError) throw new Error('تعذر التحقق من صلاحيات الموظف');
+    assertApprovedPhone(prof?.length ?? 0, count ?? 0, !!reservation);
     const digits = data.phone.replace(/^\+/, "");
     // Older phone accounts can have no profile phone. Require BOTH the immutable
     // Auth phone and our synthetic address, not user-editable metadata or email alone.

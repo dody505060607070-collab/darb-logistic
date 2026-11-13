@@ -24,7 +24,7 @@
 
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
 - WhatsApp number management matches the unique configured instance, verifies disconnection server-side, and requires explicit in-app confirmation — why: prevents selecting another company's number or interrupting messaging accidentally.
-- Login is phone-only: `src/lib/whatsapp-login.functions.ts` sends HMAC-hashed, 5-minute, attempt- and rate-limited codes via the company WhatsApp gateway, then exchanges a verified code for a real Cloud Auth session (admin magic-link token hash); accounts match only on `profiles.phone`, role assignment is left to the signup trigger — why: owner chose WhatsApp delivery while permissions stay in `user_roles`.
+- Phone login checks approved profile + assigned roles or service-only admin reservation before sending and exchanging OTP; owner-only employee creation provisions identity, role and driver/workshop link with rollback — why: unlisted numbers cannot register or acquire company access.
 - React auth context lives in its own HMR-stable module, apart from the provider — why: split routes may hold mixed module versions.
 - CRM lives in a focused home-page component and role-restricted opportunity/activity tables; pipeline values use integer-cent calculations and remain forecasts, not revenue — why: preserves existing dashboards and finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
