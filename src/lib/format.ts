@@ -1,8 +1,14 @@
+/** Date locale follows the chosen site language (Arabic default). */
+function loc(cal: string) {
+  let en = false;
+  try { en = typeof localStorage !== "undefined" && localStorage.getItem("shata-lang") === "en"; } catch { /* ssr */ }
+  return `${en ? "en-GB" : "ar-SA"}-u${cal ? `-ca-${cal}` : ""}-nu-latn`;
+}
 const TZ = "Asia/Riyadh";
 
 export function fmtDateTime(v?: string | null) {
   if (!v) return "—";
-  return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
+  return new Intl.DateTimeFormat(loc("gregory"), {
     timeZone: TZ,
     day: "numeric",
     month: "short",
@@ -13,7 +19,7 @@ export function fmtDateTime(v?: string | null) {
 }
 export function fmtDate(v?: string | null) {
   if (!v) return "—";
-  return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
+  return new Intl.DateTimeFormat(loc("gregory"), {
     timeZone: TZ,
     day: "numeric",
     month: "short",
@@ -22,12 +28,12 @@ export function fmtDate(v?: string | null) {
 }
 export function fmtTime(v?: string | null) {
   if (!v) return "—";
-  return new Intl.DateTimeFormat("ar-SA-u-nu-latn", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(
+  return new Intl.DateTimeFormat(loc(""), { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(
     new Date(v),
   );
 }
 export function fmtHijri(d = new Date()) {
-  return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", {
+  return new Intl.DateTimeFormat(loc("islamic-umalqura"), {
     timeZone: TZ,
     day: "numeric",
     month: "long",

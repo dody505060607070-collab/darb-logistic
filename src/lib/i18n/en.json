@@ -1785,7 +1785,7 @@
 "يصل تلقائياً كل يوم الساعة 8:00 صباحاً بتوقيت الرياض. يعمل بالذكاء الاصطناعي المدمج في المنصة بدون مفتاح خارجي.": "Delivered automatically every day at 8:00 AM Riyadh time. Powered by platform-embedded AI without an external key.",
 "يعاد": "Returned",
 "يلزم التحقق من الإرسال": "Dispatch verification required",
-"يوم": "Day",
+"يوم": "days",
 "يوم · تنبيه": "Day · Alert",
 "يوم · تنبيه $": "Day · Alert $",
 "يومًا": "Days",
@@ -1796,5 +1796,6 @@
 "− تكلفة مباشرة": "− Direct Cost",
 "− تكلفة مباشرة $": "− Direct Cost $",
 "📍 يتم إرسال موقعك أثناء الرحلة": "📍 Your location is shared during the trip",
-"🔐 رمز الدخول إلى": "🔐 Login code for"
+"🔐 رمز الدخول إلى": "🔐 Login code for",
+"ينتهي خلال": "Expires in"
 }

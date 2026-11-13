@@ -33,6 +33,7 @@ export function LanguageLayer() {
           }
         } else if (n.nodeType === 1) {
           const el = n as Element;
+          if (el.getAttribute("dir") === "rtl") el.setAttribute("dir", "ltr");
           for (const a of ATTRS) {
             const v = el.getAttribute(a);
             if (v && AR.test(v)) { const m = origAttr.get(el) ?? {}; m[a] ??= v; origAttr.set(el, m); el.setAttribute(a, tr(v)); }
@@ -65,9 +66,9 @@ export function LanguageLayer() {
           else if (m.type === "attributes") walk(m.target);
           else m.addedNodes.forEach(walk);
         }
-        obs?.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+        obs?.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS, "dir"] });
       });
-      obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+      obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS, "dir"] });
     };
     void apply(getLang());
     const on = (e: Event) => void apply((e as CustomEvent<Lang>).detail);
