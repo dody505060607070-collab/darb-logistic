@@ -677,6 +677,60 @@ export type Database = {
         }
         Relationships: []
       }
+      delay_notices: {
+        Row: {
+          created_at: string
+          driver_id: string
+          expected_at: string
+          id: string
+          reason: string
+          reply: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          expected_at: string
+          id?: string
+          reason: string
+          reply?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          expected_at?: string
+          id?: string
+          reason?: string
+          reply?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delay_notices_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delay_notices_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -2769,6 +2823,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acknowledge_delay: {
+        Args: { p_id: string; p_reply: string }
+        Returns: undefined
+      }
       allocate_payment: {
         Args: { p_amount: number; p_invoice_id: string; p_payment_id: string }
         Returns: undefined
@@ -2917,6 +2975,10 @@ export type Database = {
           unit: string
           weight_kg: number
         }[]
+      }
+      driver_report_delay: {
+        Args: { p_expected_at: string; p_reason: string; p_trip_id: string }
+        Returns: string
       }
       driver_report_location: {
         Args: {

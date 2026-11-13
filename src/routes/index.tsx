@@ -12,7 +12,7 @@ import { db } from "@/lib/db";
 import { ClientOnly } from "@tanstack/react-router";
 import { dashboardFor, RoleDashboard } from "@/components/darb/RoleDashboards";
 import { CrmDashboard } from '@/components/darb/CrmDashboard';
-import { ReturnRequestsInbox } from '@/components/darb/ReturnRequestsInbox';
+import { ApprovalCenter } from '@/components/darb/ApprovalCenter';
 
 const MapView = lazy(() => import("@/components/darb/MapView"));
 
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { roles, fullName, can } = useAuth();
   const kind = dashboardFor(roles);
-  return <>{can('dispatcher') && <div className="mb-4"><ReturnRequestsInbox /></div>}{kind ? <RoleDashboard kind={kind} name={fullName} /> : <Dashboard />}{can('ops_manager','accountant') && <CrmDashboard />}</>;
+  return <><div className="mb-4"><ApprovalCenter /></div>{kind ? <RoleDashboard kind={kind} name={fullName} /> : <Dashboard />}{can('ops_manager','accountant') && <CrmDashboard />}</>;
 }
 
 function Dashboard() {

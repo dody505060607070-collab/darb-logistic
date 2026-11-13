@@ -43,3 +43,4 @@
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
 - Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush — why: no lost events.
 - English mode = client DOM translation layer over src/lib/i18n/en.json; user text translates on demand server-side — why: covers all pages without rewrites.
+- Role approval inbox lives in ApprovalCenter; decisions notify the sender via DB triggers on status changes — why: every reviewer sees details once and rejection reasons always reach the sender.

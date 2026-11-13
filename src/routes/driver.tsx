@@ -1,5 +1,6 @@
 import { LanguageToggle } from "@/components/darb/LanguageLayer";
 import { DriverReturnRequest } from "@/components/darb/ReturnTrip";
+import { DriverRequests } from "@/components/darb/ApprovalCenter";
 import { flushWa } from "@/lib/wa-flush";
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -220,6 +221,7 @@ function DriverApp() {
         ) : (
           <PodView t={current} uid={auth.session.user.id} done={() => setTab("home")} demo={demo} />
         )}
+        {tab === "home" && <DriverRequests trip={current} driverId={driverId} demo={demo} />}
         {tab === "home" && list.filter((t) => ["in_progress", "delivered", "closed"].includes(t.status)).slice(0, 2).map((t) => <DriverReturnRequest key={`ret-${t.id}`} trip={t} demo={demo} />)}
         {tab === "home" && list.filter((t) => t.id !== current?.id).length > 0 && (
           <div className="panel p-4">
