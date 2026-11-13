@@ -110,7 +110,7 @@ export function Kpi({
     <div ref={arrangement.ref} style={arrangement.style} className={cn("bento kpi-tile flex min-h-[132px] flex-col justify-between px-5 py-4", cls, arrangement.className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="cap">{label}</span>
-        <div className="flex shrink-0 items-center gap-1">{icon && <span className="grid size-8 place-items-center rounded-full bg-gold-soft text-gold [&_svg]:size-4">{icon}</span>}{arrangement.handle}</div>
+        <div className="flex shrink-0 items-center gap-1">{icon && <span className="kpi-icon grid size-8 place-items-center rounded-full bg-gold-soft text-gold [&_svg]:size-4">{icon}</span>}{arrangement.handle}</div>
       </div>
       <div className="big num mt-3 break-words text-right text-[32px]"><CountUp value={value} /></div>
       {hint && <div className="hint mt-1 text-xs opacity-75">{hint}</div>}

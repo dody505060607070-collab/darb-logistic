@@ -136,3 +136,7 @@
 
 - [ ] Remove email sign-in from login (blocked: WhatsApp/phone login code must be working first, otherwise everyone is locked out)
 - [ ] Verify OpenRouteService + Traccar connections after keys are saved
+
+## مطابقة الصور حرفيًا — 13 نوفمبر 2026
+- [ ] إعادة بناء تخطيط الصفحات الداخلية الـ21 ليطابق الصور (أعمدة جانبية دائمة، عدّادات مختصرة، جداول، معاينات) مع حفظ الوظائف والبيانات والصلاحيات والرئيسية كما هي.
+- [ ] مراجعة عرض الورشة بحساب ورشة.
