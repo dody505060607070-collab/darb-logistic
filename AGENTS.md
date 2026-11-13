@@ -17,7 +17,6 @@
 - Shared form field configs and helpers live in `src/components/darb/*`, never exported from route files — why: route files must only export `Route`.
 - Leaflet is loaded only inside `MapView` via dynamic import and rendered behind `ClientOnly` + `lazy` — why: SSR runs on workerd without `window`.
 - tsconfig disables `noPropertyAccessFromIndexSignature` and `exactOptionalPropertyTypes` — why: screens work with loosely typed dynamic selects.
-- Times are stored UTC and shown in Asia/Riyadh via `src/lib/format.ts` — why: single conversion point.
 - Business-rule DB checks are described in `tests/sql/business_rules.sql` (the final RAISE rolls everything back; the exact DO block is in the migration history).
 - The AI morning report is generated server-side in `src/lib/ai-report.server.ts`, run by a managed 05:00 UTC schedule on `/api/public/jobs/daily-report` and a role-checked server function — why: AI key and cross-role data stay on the server.
 - Task submit/review go through `task_submit`/`task_review` RPCs; reminder cadence lives in `src/lib/tasks.ts` — why: assignees cannot self-approve.
@@ -26,7 +25,6 @@
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
 - WhatsApp number management matches the unique configured instance, verifies disconnection server-side, and requires explicit in-app confirmation — why: prevents selecting another company's number or interrupting messaging accidentally.
 - Phone login checks approved profile + assigned roles or service-only admin reservation before sending and exchanging OTP; owner-only employee creation provisions identity, role and driver/workshop link with rollback — why: unlisted numbers cannot register or acquire company access.
-- React auth context lives in its own HMR-stable module, apart from the provider — why: split routes may hold mixed module versions.
 - CRM lives in a focused home-page component and role-restricted opportunity/activity tables; pipeline values use integer-cent calculations and remain forecasts, not revenue — why: preserves existing dashboards and finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.
@@ -37,7 +35,6 @@
 - Delivery and custody return/transfer are atomic RPCs; busy-resource and critical-defect checks are triggers — why: no partial writes.
 - Display identity lives in a browser-safe brand module; legacy directories stay — why: rebrand without touching data/URLs.
 - Panel/Kpi drag uses a page-scoped context, account-scoped layout storage and CSS order; never changes workflow status — why: arrangement only.
-- Offline delivery drafts are account-scoped in IndexedDB, reuse one RPC reference and keep uploaded paths — why: no duplicate or misreported deliveries.
 - Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
