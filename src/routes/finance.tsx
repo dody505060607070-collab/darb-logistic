@@ -17,9 +17,9 @@ import { daysUntil, errMsg, fmtDate, fmtSAR } from "@/lib/format";
 export const Route = createFileRoute("/finance")({
   head: () => ({
     meta: [
-      { title: "المالية والفوترة والتحصيل — Shata" },
+      { title: "المالية والفوترة والتحصيل | Shata" },
       { name: "description", content: "مسودات الفواتير من الرحلات المسلّمة والدفعات والتحصيل والمتأخرات." },
-      { property: "og:title", content: "المالية والفوترة — Shata" },
+      { property: "og:title", content: "المالية والفوترة | Shata" },
       { property: "og:description", content: "الفواتير والدفعات والتحصيل." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

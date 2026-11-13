@@ -315,25 +315,35 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
           </div>
         )}
         <main key={path} data-page={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6"><CardArrangement account={auth.session.user.id} path={path}>{children}</CardArrangement></main>
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          {[
-            { to: "/", label: "الرئيسية", icon: Home , group: NAV_GROUPS[0]! },
-            { to: "/trips", label: "الرحلات", icon: RouteIcon , group: NAV_GROUPS[1]! },
-          ].map((n) => (
-            <Link key={n.to} to={n.to} className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", (n.to === "/" ? path === "/" : path.startsWith(n.to)) ? "text-gold" : "text-muted-foreground")}>
-              <n.icon className="size-5" />{n.label}
-            </Link>
-          ))}
-          <Link to={auth.can("ops_manager", "dispatcher") ? "/orders/new" : "/expenses"} className="-mt-4 mx-1 flex flex-col items-center justify-center rounded-xl bg-gold py-2 text-[11px] font-semibold text-gold-foreground shadow-lg">
-            <Plus className="size-5" />إجراء سريع
-          </Link>
-          <Link to="/tracking" className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", path.startsWith("/tracking") ? "text-gold" : "text-muted-foreground")}>
-            <MapPin className="size-5" />التتبع
-          </Link>
-          <button onClick={() => setOpen(true)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground">
-            <Menu className="size-5" />المزيد
-          </button>
-        </nav>
+        {(() => {
+          // Mobile bar shows only screens this account may open (server rules still enforce access).
+          const allowed = (to: string) => { const it = NAV.find((n) => n.to === to); return !!it && (!it.roles || auth.can(...it.roles)); };
+          const slots = ["/trips", "/tracking", "/repair-center", "/maintenance", "/tasks", "/chat", "/expenses", "/fleet"].filter(allowed).slice(0, 2).map((to) => NAV.find((n) => n.to === to)!);
+          const quick = auth.can("ops_manager", "dispatcher") ? "/orders/new" : allowed("/expenses") ? "/expenses" : null;
+          const items = [{ to: "/", label: "الرئيسية", icon: Home }, ...slots];
+          return (
+            <nav className="fixed inset-x-0 bottom-0 z-40 grid border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" style={{ gridTemplateColumns: `repeat(${items.length + (quick ? 2 : 1)}, minmax(0, 1fr))` }}>
+              {items.slice(0, 2).map((n) => (
+                <Link key={n.to} to={n.to} className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", (n.to === "/" ? path === "/" : path.startsWith(n.to)) ? "text-gold" : "text-muted-foreground")}>
+                  <n.icon className="size-5" />{n.label}
+                </Link>
+              ))}
+              {quick && (
+                <Link to={quick} className="-mt-4 mx-1 flex flex-col items-center justify-center rounded-xl bg-gold py-2 text-[11px] font-semibold text-gold-foreground shadow-lg">
+                  <Plus className="size-5" />إجراء سريع
+                </Link>
+              )}
+              {items.slice(2).map((n) => (
+                <Link key={n.to} to={n.to} className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", path.startsWith(n.to) ? "text-gold" : "text-muted-foreground")}>
+                  <n.icon className="size-5" />{n.label}
+                </Link>
+              ))}
+              <button onClick={() => setOpen(true)} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground">
+                <Menu className="size-5" />المزيد
+              </button>
+            </nav>
+          );
+        })()}
       </div>
     </div>
   );

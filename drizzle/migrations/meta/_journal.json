@@ -155,6 +155,20 @@
       "when": 1794521961070,
       "tag": "0021_document_alert_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794567163261,
+      "tag": "0022_production_readiness_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794567260443,
+      "tag": "0023_trip_safety_guard_only_on_assignment_changes",
+      "breakpoints": true
     }
   ]
 }

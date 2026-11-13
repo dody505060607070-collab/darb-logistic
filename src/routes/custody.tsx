@@ -21,9 +21,9 @@ import { errMsg, fmtDateTime, fmtNum } from "@/lib/format";
 export const Route = createFileRoute("/custody")({
   head: () => ({
     meta: [
-      { title: "العهد والفحص — Shata" },
+      { title: "العهد والفحص | Shata" },
       { name: "description", content: "محاضر استلام العهد وقوائم الفحص والعيوب." },
-      { property: "og:title", content: "العهد والفحص — Shata" },
+      { property: "og:title", content: "العهد والفحص | Shata" },
       { property: "og:description", content: "محاضر استلام العهد وقوائم الفحص." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

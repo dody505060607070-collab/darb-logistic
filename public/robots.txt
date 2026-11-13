@@ -1,14 +1,7 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Only the sign-in page is public. Internal screens require an account and are also sent with noindex.
 User-agent: *
-Allow: /
+Allow: /login
+Allow: /favicon.png
+Disallow: /
+
+Sitemap: https://darb.website/sitemap.xml

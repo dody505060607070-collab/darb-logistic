@@ -11,9 +11,9 @@ import { fmtDateTime, fmtNum, fmtSAR, STATUS } from "@/lib/format";
 export const Route = createFileRoute("/orders/")({
   head: () => ({
     meta: [
-      { title: "أوامر النقل — Shata" },
+      { title: "أوامر النقل | Shata" },
       { name: "description", content: "قائمة أوامر النقل والعملاء والبضائع والمواعيد." },
-      { property: "og:title", content: "أوامر النقل — Shata" },
+      { property: "og:title", content: "أوامر النقل | Shata" },
       { property: "og:description", content: "قائمة أوامر النقل والبضائع والمواعيد." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

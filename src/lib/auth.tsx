@@ -1,4 +1,5 @@
-import { useContext, useEffect, useState, type ReactNode } from "react";
+import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from './auth-context';
@@ -79,8 +80,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }
 
+  const queryClient = useQueryClient();
+  const lastUser = useRef<string | null | undefined>(undefined);
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      // Never show one account's cached rows to the next account on this device.
+      const uid = s?.user.id ?? null;
+      if (lastUser.current !== undefined && lastUser.current !== uid) queryClient.clear();
+      lastUser.current = uid;
       if (_e === "SIGNED_IN" && s) {
         // one sign-in record per browser session
         try {

@@ -14,9 +14,9 @@ import { DocExpiry } from "@/components/darb/shared";
 export const Route = createFileRoute("/customers")({
   head: () => ({
     meta: [
-      { title: "العملاء والعقود والناقلون الخارجيون — Shata" },
+      { title: "العملاء والعقود والناقلون الخارجيون | Shata" },
       { name: "description", content: "العملاء ومواقع التحميل والتفريغ والعقود والأسعار والناقلون الخارجيون." },
-      { property: "og:title", content: "العملاء والعقود — Shata" },
+      { property: "og:title", content: "العملاء والعقود | Shata" },
       { property: "og:description", content: "العملاء والمواقع والعقود والناقلون." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

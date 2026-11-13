@@ -10,9 +10,9 @@ import { PhoneLogin } from '@/components/darb/PhoneLogin';
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — Shata" },
+      { title: "تسجيل الدخول | Shata" },
       { name: "description", content: "تسجيل الدخول إلى Shata لإدارة الأسطول والصيانة." },
-      { property: "og:title", content: "تسجيل الدخول — Shata" },
+      { property: "og:title", content: "تسجيل الدخول | Shata" },
       { property: "og:description", content: "الدخول الآمن بالجوال إلى نظام Shata." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
