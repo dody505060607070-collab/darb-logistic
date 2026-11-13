@@ -2834,6 +2834,40 @@ export type Database = {
         }
         Returns: undefined
       }
+      driver_trips_for: {
+        Args: { p_driver_id: string }
+        Returns: {
+          actual_start: string
+          cargo_type: string
+          consignee: string
+          customer_name: string
+          delivery_instructions: string
+          delivery_name: string
+          dest_city: string
+          dest_lat: number
+          dest_lng: number
+          distance_km: number
+          exception: string
+          id: string
+          number: string
+          order_number: string
+          origin_city: string
+          origin_lat: number
+          origin_lng: number
+          pickup_name: string
+          planned_end: string
+          planned_start: string
+          quantity: number
+          stage: string
+          status: string
+          tractor_code: string
+          tractor_id: string
+          trailer_code: string
+          trailer_id: string
+          unit: string
+          weight_kg: number
+        }[]
+      }
       enqueue_due_task_reminders: { Args: never; Returns: number }
       enqueue_task_event: {
         Args: {

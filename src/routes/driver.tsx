@@ -129,7 +129,10 @@ function DriverApp() {
   }, [sync]);
   useEffect(()=>{const uid=auth.session?.user.id;if(!uid)return;const update=()=>{void deliveryDrafts(uid).then(setDrafts);};const send=()=>{void syncDeliveryDrafts().then(n=>{if(n){toast.success(`تم إرسال ${n} إثبات تسليم`);void qc.invalidateQueries();}update();});};update();send();window.addEventListener('online',send);window.addEventListener('shitaa-delivery-drafts',update);return()=>{window.removeEventListener('online',send);window.removeEventListener('shitaa-delivery-drafts',update);};},[auth.session?.user.id,qc]);
 
-  const trips = useRows(["driver_my_trips"], () => db.rpc("driver_my_trips"), !!auth.driverId);
+  const [previewDriver, setPreviewDriver] = useState("");
+  const previewing = !auth.driverId && auth.viewAs === "driver";
+  const allDrivers = useRows(["drivers", "preview-list"], () => db.from("drivers").select("id,full_name,code,phone").order("full_name"), previewing);
+  const trips = useRows(["driver_my_trips", auth.driverId ?? previewDriver], () => auth.driverId ? db.rpc("driver_my_trips") : db.rpc("driver_trips_for", { p_driver_id: previewDriver }), !!auth.driverId || (previewing && !!previewDriver));
   const me = useRows(["drivers", "me"], () => db.from("drivers").select("*").eq("id", auth.driverId), !!auth.driverId);
   const custody = useRows(["custody", "me"], () => db.from("custody").select("*, asset:assets(code)").eq("driver_id", auth.driverId).is("closed_at", null), !!auth.driverId);
 
@@ -148,15 +151,21 @@ function DriverApp() {
       </div>
     );
 
-  const list = demo ? [DEMO_TRIP, { ...DEMO_TRIP, id: "demo2", number: "TRP-DEMO-002", status: "planned", origin_city: "جدة", dest_city: "مكة" }] : trips.data ?? [];
+  const list = demo && previewDriver ? trips.data ?? [] : demo ? [DEMO_TRIP, { ...DEMO_TRIP, id: "demo2", number: "TRP-DEMO-002", status: "planned", origin_city: "جدة", dest_city: "مكة" }] : trips.data ?? [];
   const current = list.find((t) => t.status === "in_progress") ?? list.find((t) => ["planned", "ready"].includes(t.status));
-  const d = demo ? { full_name: "سائق تجريبي", code: "DRV-DEMO" } : me.data?.[0];
+  const pd = (allDrivers.data ?? []).find((x) => x.id === previewDriver);
+  const d = demo ? (pd ?? { full_name: "سائق تجريبي", code: "DRV-DEMO" }) : me.data?.[0];
   const driverId = auth.driverId ?? "demo";
 
   return (
     <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20 animate-in fade-in duration-500">
       {auth.viewAs && <div className="fixed top-2 left-2 z-50"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
-      {demo && <div className="bg-gold-soft px-4 py-1.5 text-center text-xs font-semibold text-primary">معاينة شكل تطبيق السائق ببيانات تجريبية — لا يتم حفظ أي شيء</div>}
+      {demo && <div className="space-y-1 bg-gold-soft px-4 py-2 text-center text-xs font-semibold text-primary">
+        <div>{previewDriver ? "معاينة رحلات السائق الحقيقية — للعرض فقط، لا يتم حفظ أي إجراء" : "معاينة ببيانات تجريبية — اختر سائقًا لرؤية رحلاته الحقيقية"}</div>
+        <select aria-label="اختيار سائق للمعاينة" className="h-8 w-full rounded-md border bg-card px-2" value={previewDriver} onChange={(e) => setPreviewDriver(e.target.value)}>
+          <option value="">بيانات تجريبية</option>
+          {(allDrivers.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.full_name} — {x.phone ?? x.code}</option>)}
+        </select></div>}
       {!demo && current?.status === "in_progress" && <LiveGps tripId={current.id} />}
       <header className="driver-toolbar grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3">
         <Logo light />
