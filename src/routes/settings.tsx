@@ -17,6 +17,7 @@ import { integrationHealth } from "@/lib/integration-health.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
 import { EmployeeDirectory } from "@/components/darb/EmployeeDirectory";
+import { WorkshopDirectory } from '@/components/darb/WorkshopDirectory';
 import { SystemChecklist } from "@/components/darb/SystemChecklist";
 import { errMsg, fmtDateTime } from "@/lib/format";
 
@@ -93,12 +94,14 @@ function SettingsPage() {
       <Tabs defaultValue={tab ?? (isOwner ? "users" : "alerts")} dir="rtl">
         <TabsList className="mb-5 flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 [&>button]:rounded-xl [&>button]:border [&>button]:bg-card [&>button]:px-4 [&>button]:py-3 [&>button]:text-sm [&>button[data-state=active]]:bg-primary [&>button[data-state=active]]:text-primary-foreground">
           {isOwner && <TabsTrigger value="users">الموظفون</TabsTrigger>}
+          {isOwner && <TabsTrigger value="workshops">الورش وحساباتها</TabsTrigger>}
           {isOwner && <TabsTrigger value="company">الشركة والفروع</TabsTrigger>}
           <TabsTrigger value="integrations">التكاملات</TabsTrigger>
           <TabsTrigger value="alerts">التنبيهات</TabsTrigger>
           {isOwner && <TabsTrigger value="checklist">قائمة التحقق</TabsTrigger>}
           {isOwner && <TabsTrigger value="audit">سجل التدقيق</TabsTrigger>}
         </TabsList>
+        {isOwner && <TabsContent value="workshops"><WorkshopDirectory/></TabsContent>}
         {isOwner && (
           <TabsContent value="company">
             <div className="grid gap-5 xl:grid-cols-2">

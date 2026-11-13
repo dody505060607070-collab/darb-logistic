@@ -27,7 +27,11 @@ function LoginPage() {
   const nav = useNavigate();
 
   useEffect(() => {
-    if (auth.ready && auth.session) void nav({ to: auth.isStaff || auth.roles.length === 0 ? "/" : "/driver" });
+    if (auth.ready && auth.session) {
+      const executive = auth.roles.includes('owner') || auth.roles.includes('ops_manager');
+      const workshop = !executive && (auth.roles.includes('workshop') || auth.roles.includes('field_maintenance'));
+      void nav({ to: workshop ? '/repair-center' : auth.isStaff || auth.roles.length === 0 ? '/' : '/driver' });
+    }
   }, [auth.ready, auth.session, auth.isStaff, auth.roles, nav]);
 
   return (

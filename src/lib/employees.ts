@@ -16,11 +16,16 @@ export function canRemoveEmployeeRole(actorId: string, employeeId: string, role:
   return !(actorId === employeeId && role === 'owner');
 }
 
-export const newEmployeeSchema = employeeSchema.omit({ id: true }).extend({
+const newEmployeeFields = employeeSchema.omit({ id: true }).extend({
   phone: z.string().trim().min(1).transform(value => normalizePhone('+966', value)),
   role: z.enum(['owner', 'ops_manager', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'driver', 'field_maintenance', 'workshop', 'representative']),
   workshopId: z.string().uuid().nullable().default(null),
-}).refine(value => value.role !== 'workshop' || !!value.workshopId, { message: 'اختر ورشة الموظف', path: ['workshopId'] });
+  workshopName: z.string().trim().min(2).max(160).optional(),
+});
+export const newEmployeeSchema = newEmployeeFields
+ .refine(value => value.role !== 'workshop' || !!value.workshopId || !!value.workshopName, { message: 'اختر الورشة أو أدخل اسمها', path: ['workshopId'] })
+ .refine(value => !(value.workshopId && value.workshopName), { message: 'اختر ورشة موجودة أو أنشئ ورشة جديدة فقط', path: ['workshopId'] })
+ .refine(value => !value.workshopName || value.role === 'workshop', { message: 'إنشاء الورشة يتطلب حساب ورشة', path: ['role'] });
 
 export function assertEmployeeDeletion(actorId: string, employeeId: string, confirmed: boolean) {
   if (!confirmed) throw new Error('يجب تأكيد حذف الحساب');
