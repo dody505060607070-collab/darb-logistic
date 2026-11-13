@@ -41,5 +41,5 @@
 - Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
-- Operational WhatsApp notices (trips, events, orders, incidents, fuel, expenses) are queued by DB triggers into `whatsapp_outbox` and sent by a per-minute schedule plus an immediate flush after actions — why: no event is lost if the browser closes.
-- English mode is a client-side DOM translation layer (LanguageLayer) over an extracted Arabic→English dictionary in src/lib/i18n/en.json; user-written text translates on demand via an authenticated server function — why: covers every existing page without rewriting each screen.
+- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush — why: no lost events.
+- English mode = client DOM translation layer over src/lib/i18n/en.json; user text translates on demand server-side — why: covers all pages without rewrites.
