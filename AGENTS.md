@@ -41,3 +41,4 @@
 - Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
+- Operational WhatsApp notices (trips, events, orders, incidents, fuel, expenses) are queued by DB triggers into `whatsapp_outbox` and sent by a per-minute schedule plus an immediate flush after actions — why: no event is lost if the browser closes.

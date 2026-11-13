@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
 import { LocationPicker } from "@/components/darb/LocationPicker";
-import { notifyTripDriver } from "@/lib/whatsapp.functions";
+import { flushWa } from "@/lib/wa-flush";
 import { CITY_COORDS, errMsg, fmtSAR, fromLocalInput } from "@/lib/format";
 
 export const Route = createFileRoute("/orders/new")({
@@ -114,20 +114,20 @@ function Wizard() {
         }).select().single();
         if (e2) throw e2;
         await db.from("trip_financials").insert({ trip_id: trip.id, revenue: price, est_cost: cost });
+        if (v.driver_id && !v.tractor_id) toast.warning("اخترت سائقًا بدون شاحنة — لن يُكلَّف السائق ولن تصله رسالة حتى تختار رأس القاطرة");
         if (v.driver_id && v.tractor_id) {
           const { error: e3 } = await db.rpc("assign_trip_resources", {
             p_trip_id: trip.id, p_driver_id: v.driver_id, p_tractor_id: v.tractor_id, p_trailer_id: v.trailer_id || null,
             p_start: fromLocalInput(v.pickup_at), p_end: fromLocalInput(v.delivery_due_at), p_override_reason: null,
           });
           if (e3) toast.warning(`أُنشئت الرحلة لكن التخصيص لم يتم: ${errMsg(e3)}`);
-          else notifyTripDriver({ data: { tripId: trip.id } })
-            .then((r) => r.sent ? toast.success("أُرسل إشعار الرحلة للسائق على واتساب") : toast.info(r.reason))
-            .catch((e) => toast.warning(`لم يُرسل إشعار واتساب: ${errMsg(e)}`));
         }
+        flushWa();
         toast.success(`تم إنشاء الأمر ${order.number} والرحلة ${trip.number}`);
         void qc.invalidateQueries();
         void nav({ to: "/trips/$id", params: { id: trip.id } });
       } else {
+        flushWa();
         toast.success(`تم حفظ الأمر ${order.number} كمسودة`);
         void qc.invalidateQueries();
         void nav({ to: "/orders" });

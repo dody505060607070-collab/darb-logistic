@@ -1,3 +1,4 @@
+import { flushWa } from "@/lib/wa-flush";
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -368,7 +369,7 @@ function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; onl
     if (!online) { enqueue({ id: payload.p_client_event_id, kind: "event", payload }); return void toast.info("حُفظ وسيُرسل عند الاتصال"); }
     const { error } = await db.rpc("record_trip_event", payload);
     if (error) return void toast.error(errMsg(error));
-    toast.success(EVENT_LABELS[type]);
+    toast.success(EVENT_LABELS[type]); flushWa();
     void qc.invalidateQueries();
   }
   async function addExpense() {
@@ -383,7 +384,7 @@ function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; onl
         if (receipt) payload["receipt_path"] = await uploadFile(receipt, "receipts");
         const { error } = await db.from("expenses").insert(payload);
         if (error) throw error;
-        toast.success("أُرسل المصروف للمراجعة");
+        toast.success("أُرسل المصروف للمراجعة"); flushWa();
       }
       setAmt(""); setDesc(""); setReceipt(null);
       void qc.invalidateQueries();
@@ -398,7 +399,7 @@ function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; onl
     if (!online) { enqueue({ id, kind: "fuel", payload }); return void toast.info("حُفظت التعبئة وسترسل عند الاتصال"); }
     const { error } = await db.from("fuel_entries").insert(payload);
     if (error) return void toast.error(errMsg(error));
-    toast.success("سُجلت التعبئة للمراجعة");
+    toast.success("سُجلت التعبئة للمراجعة"); flushWa();
     setLiters(""); setOdo("");
     void quickEvent("fuel_stop");
   }
@@ -407,7 +408,7 @@ function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; onl
     if (demo) return void demoToast();
     const { error } = await db.from("incidents").insert({ trip_id: t.id, driver_id: driverId, asset_id: t.tractor_id, kind: issueKind, severity: issueKind === "accident" ? "high" : "medium", description: issue, client_event_id: crypto.randomUUID() });
     if (error) return void toast.error(errMsg(error));
-    toast.success("أُرسل البلاغ لغرفة العمليات");
+    toast.success("أُرسل البلاغ لغرفة العمليات"); flushWa();
     setIssue("");
   }
 

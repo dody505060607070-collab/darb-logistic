@@ -1,3 +1,4 @@
+import { flushWa } from "@/lib/wa-flush";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Ban, CheckCircle2, ClipboardList, Coins, FileCheck2, Lock, MapPin, Package, Truck } from "lucide-react";
@@ -76,20 +77,20 @@ function TripDetails() {
   async function addEvent() {
     const { error } = await db.rpc("record_trip_event", { p_trip_id: id, p_event_type: ev, p_location: evLoc || null, p_client_event_id: crypto.randomUUID() });
     if (error) return void toast.error(errMsg(error));
-    toast.success("تم تسجيل الحدث");
+    toast.success("تم تسجيل الحدث"); flushWa();
     setEvLoc("");
     refresh();
   }
   async function closeTrip() {
     const { error } = await db.rpc("close_trip", { p_trip_id: id });
     if (error) return void toast.error(errMsg(error));
-    toast.success("أُغلقت الرحلة تشغيليًا (مستقل عن الإغلاق المالي)");
+    toast.success("أُغلقت الرحلة تشغيليًا (مستقل عن الإغلاق المالي)"); flushWa();
     refresh();
   }
   async function cancelTrip() {
     const { error } = await db.rpc("cancel_trip", { p_trip_id: id, p_reason: cancelReason });
     if (error) return void toast.error(errMsg(error));
-    toast.success("أُلغيت الرحلة وحُررت الحجوزات");
+    toast.success("أُلغيت الرحلة وحُررت الحجوزات"); flushWa();
     refresh();
   }
   const late = t.status === "in_progress" && t.planned_end && new Date(t.planned_end) < new Date();

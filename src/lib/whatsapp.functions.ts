@@ -155,3 +155,11 @@ export const notifyTripDriver = createServerFn({ method: "POST" })
     if (!r.ok) throw new Error(`فشل الإرسال [${r.status}]`);
     return { sent: true, reason: "" };
   });
+
+/** Any signed-in user may flush already-queued messages right after an action; it sends only what DB triggers queued. */
+export const flushWhatsApp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { processWhatsAppOutbox } = await import('./whatsapp-outbox.server');
+    return processWhatsAppOutbox(10);
+  });

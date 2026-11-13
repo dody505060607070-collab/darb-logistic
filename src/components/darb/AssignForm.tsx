@@ -1,3 +1,4 @@
+import { flushWa } from "@/lib/wa-flush";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2 } from "lucide-react";
@@ -54,7 +55,7 @@ export function AssignForm({ trip, trips, onDone }: { trip?: Row | null; trips?:
     });
     setBusy(false);
     if (error) return void toast.error(errMsg(error));
-    toast.success("تم التخصيص وحجز الموارد");
+    toast.success("تم التخصيص وحجز الموارد"); flushWa();
     void qc.invalidateQueries({ queryKey: ["trips"] });
     void qc.invalidateQueries({ queryKey: ["bookings"] });
     onDone?.();

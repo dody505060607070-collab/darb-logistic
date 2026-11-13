@@ -2450,6 +2450,51 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_outbox: {
+        Row: {
+          accepted_at: string | null
+          attempts: number
+          body: string
+          claimed_at: string | null
+          created_at: string
+          entity_id: string | null
+          error: string | null
+          event: string
+          id: string
+          phone: string
+          provider_id: string | null
+          state: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          attempts?: number
+          body: string
+          claimed_at?: string | null
+          created_at?: string
+          entity_id?: string | null
+          error?: string | null
+          event: string
+          id?: string
+          phone: string
+          provider_id?: string | null
+          state?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          attempts?: number
+          body?: string
+          claimed_at?: string | null
+          created_at?: string
+          entity_id?: string | null
+          error?: string | null
+          event?: string
+          id?: string
+          phone?: string
+          provider_id?: string | null
+          state?: string
+        }
+        Relationships: []
+      }
       work_orders: {
         Row: {
           approval_note: string | null
@@ -2702,6 +2747,29 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_whatsapp_message: {
+        Args: { p_id: string }
+        Returns: {
+          accepted_at: string | null
+          attempts: number
+          body: string
+          claimed_at: string | null
+          created_at: string
+          entity_id: string | null
+          error: string | null
+          event: string
+          id: string
+          phone: string
+          provider_id: string | null
+          state: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "whatsapp_outbox"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       close_trip: { Args: { p_trip_id: string }; Returns: undefined }
       create_invoice_from_trips: {
         Args: {
@@ -2869,6 +2937,20 @@ export type Database = {
         Args: { p_id: string; p_note: string }
         Returns: undefined
       }
+      wa_admins: {
+        Args: { p_body: string; p_entity: string; p_event: string }
+        Returns: undefined
+      }
+      wa_enqueue: {
+        Args: {
+          p_body: string
+          p_entity: string
+          p_event: string
+          p_phone: string
+        }
+        Returns: undefined
+      }
+      wa_norm: { Args: { p: string }; Returns: string }
       wallet_balances: {
         Args: never
         Returns: {

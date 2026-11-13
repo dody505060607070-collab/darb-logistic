@@ -40,6 +40,7 @@ import { Route as TripsIdRouteImport } from './routes/trips.$id'
 import { Route as SettingsEmployeesIdRouteImport } from './routes/settings_.employees.$id'
 import { Route as ApiPublicJobsDailyReportRouteImport } from './routes/api/public/jobs/daily-report'
 import { Route as ApiPublicJobsTaskRemindersRouteImport } from './routes/api/public/jobs/task-reminders'
+import { Route as ApiPublicJobsWhatsappOutboxRouteImport } from './routes/api/public/jobs/whatsapp-outbox'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -198,6 +199,12 @@ const ApiPublicJobsTaskRemindersRoute =
     path: '/api/public/jobs/task-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicJobsWhatsappOutboxRoute =
+  ApiPublicJobsWhatsappOutboxRouteImport.update({
+    id: '/api/public/jobs/whatsapp-outbox',
+    path: '/api/public/jobs/whatsapp-outbox',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/settings/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
   '/api/public/jobs/task-reminders': typeof ApiPublicJobsTaskRemindersRoute
+  '/api/public/jobs/whatsapp-outbox': typeof ApiPublicJobsWhatsappOutboxRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/settings/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
   '/api/public/jobs/task-reminders': typeof ApiPublicJobsTaskRemindersRoute
+  '/api/public/jobs/whatsapp-outbox': typeof ApiPublicJobsWhatsappOutboxRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -298,6 +307,7 @@ export interface FileRoutesById {
   '/settings_/employees/$id': typeof SettingsEmployeesIdRoute
   '/api/public/jobs/daily-report': typeof ApiPublicJobsDailyReportRoute
   '/api/public/jobs/task-reminders': typeof ApiPublicJobsTaskRemindersRoute
+  '/api/public/jobs/whatsapp-outbox': typeof ApiPublicJobsWhatsappOutboxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/settings/employees/$id'
     | '/api/public/jobs/daily-report'
     | '/api/public/jobs/task-reminders'
+    | '/api/public/jobs/whatsapp-outbox'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/settings/employees/$id'
     | '/api/public/jobs/daily-report'
     | '/api/public/jobs/task-reminders'
+    | '/api/public/jobs/whatsapp-outbox'
   id:
     | '__root__'
     | '/'
@@ -399,6 +411,7 @@ export interface FileRouteTypes {
     | '/settings_/employees/$id'
     | '/api/public/jobs/daily-report'
     | '/api/public/jobs/task-reminders'
+    | '/api/public/jobs/whatsapp-outbox'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -433,6 +446,7 @@ export interface RootRouteChildren {
   SettingsEmployeesIdRoute: typeof SettingsEmployeesIdRoute
   ApiPublicJobsDailyReportRoute: typeof ApiPublicJobsDailyReportRoute
   ApiPublicJobsTaskRemindersRoute: typeof ApiPublicJobsTaskRemindersRoute
+  ApiPublicJobsWhatsappOutboxRoute: typeof ApiPublicJobsWhatsappOutboxRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -654,6 +668,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsTaskRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/whatsapp-outbox': {
+      id: '/api/public/jobs/whatsapp-outbox'
+      path: '/api/public/jobs/whatsapp-outbox'
+      fullPath: '/api/public/jobs/whatsapp-outbox'
+      preLoaderRoute: typeof ApiPublicJobsWhatsappOutboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -689,6 +710,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsEmployeesIdRoute: SettingsEmployeesIdRoute,
   ApiPublicJobsDailyReportRoute: ApiPublicJobsDailyReportRoute,
   ApiPublicJobsTaskRemindersRoute: ApiPublicJobsTaskRemindersRoute,
+  ApiPublicJobsWhatsappOutboxRoute: ApiPublicJobsWhatsappOutboxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
