@@ -119,7 +119,7 @@ function SettingsPage() {
                 <Button variant="gold" className="mt-4" onClick={() => void saveCompany()}>حفظ</Button>
               </Panel>
               <Panel title="الفروع" icon={<Building />} actions={<Button size="sm" variant="gold" onClick={() => { setBranchRecord(null); setBranchOpen(true); }}><Plus /> فرع</Button>}>
-                <DataTable rows={branches.data} loading={branches.isLoading} onEdit={r => { setBranchRecord(r); setBranchOpen(true); }} cols={[{ key: "name", label: "الفرع" }, { key: "city", label: "المدينة" }]} />
+                <DataTable entityTable="branches" rows={branches.data} loading={branches.isLoading} onEdit={r => { setBranchRecord(r); setBranchOpen(true); }} cols={[{ key: "name", label: "الفرع" }, { key: "city", label: "المدينة" }]} />
               </Panel>
             </div>
           </TabsContent>

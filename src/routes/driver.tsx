@@ -24,14 +24,15 @@ import { enqueue, flushOutbox, readOutbox, removeOp, type OutboxOp } from "@/lib
 import { errMsg, EVENT_LABELS, fmtDateTime, fmtNum, fmtTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { deliveryDrafts,saveDeliveryDraft,syncDeliveryDrafts,retryDeliveryDraft,type DeliveryDraft } from '@/lib/delivery-drafts';
+import { driverScreenMode } from '@/lib/driver-preview';
 
 export const Route = createFileRoute("/driver")({
   head: () => ({
     meta: [
-      { title: "تطبيق السائق | Shata" },
-      { name: "description", content: "رحلة السائق الحالية والفحص وتحديث المحطات والمصروفات وإثبات التسليم." },
-      { property: "og:title", content: "تطبيق السائق | Shata" },
-      { property: "og:description", content: "الرحلة الحالية والفحص وإثبات التسليم." },
+      { title: "السائق والمندوب | Shata" },
+      { name: "description", content: "تكليفات السائق والمندوب ومواعيد التحميل والتسليم والطلبات وإثبات الاستلام." },
+      { property: "og:title", content: "السائق والمندوب | Shata" },
+      { property: "og:description", content: "التكليفات الحالية والطلبات والفحص وإثبات التسليم." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -134,16 +135,18 @@ function DriverApp() {
   useEffect(()=>{const uid=auth.session?.user.id;if(!uid)return;const update=()=>{void deliveryDrafts(uid).then(setDrafts);};const send=()=>{void syncDeliveryDrafts().then(n=>{if(n){toast.success(`تم إرسال ${n} إثبات تسليم`);void qc.invalidateQueries();}update();});};update();send();window.addEventListener('online',send);window.addEventListener('shitaa-delivery-drafts',update);return()=>{window.removeEventListener('online',send);window.removeEventListener('shitaa-delivery-drafts',update);};},[auth.session?.user.id,qc]);
 
   const [previewDriver, setPreviewDriver] = useState("");
-  const previewing = !auth.driverId && auth.viewAs === "driver";
+  const screenMode = driverScreenMode(auth.isSuperAdmin, auth.driverId, auth.viewAs);
+  const previewing = screenMode.preview;
+  const representative = screenMode.representative || auth.roles.includes('representative');
   const allDrivers = useRows(["drivers", "preview-list"], () => db.from("drivers").select("id,full_name,code,phone").order("full_name"), previewing);
-  const trips = useRows(["driver_my_trips", auth.driverId ?? previewDriver], () => auth.driverId ? db.rpc("driver_my_trips") : db.rpc("driver_trips_for", { p_driver_id: previewDriver }), !!auth.driverId || (previewing && !!previewDriver));
+  const trips = useRows(["driver_my_trips", previewing ? previewDriver : auth.driverId], () => previewing ? db.rpc("driver_trips_for", { p_driver_id: previewDriver }) : db.rpc("driver_my_trips"), previewing ? !!previewDriver && previewDriver !== 'sample' : !!auth.driverId);
   const me = useRows(["drivers", "me"], () => db.from("drivers").select("*").eq("id", auth.driverId), !!auth.driverId);
   const custody = useRows(["custody", "me"], () => db.from("custody").select("*, asset:assets(code)").eq("driver_id", auth.driverId).is("closed_at", null), !!auth.driverId);
 
   if (!auth.ready || !auth.session) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
-  const demo = !auth.driverId && auth.viewAs === "driver";
-  if (!auth.driverId && !demo)
+  const demo = previewing;
+  if (screenMode.blocked)
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center p-6">
         <div className="panel max-w-sm p-8 text-center">
@@ -155,23 +158,24 @@ function DriverApp() {
       </div>
     );
 
-  const list = demo && previewDriver ? trips.data ?? [] : demo ? [DEMO_TRIP, { ...DEMO_TRIP, id: "demo2", number: "TRP-DEMO-002", status: "planned", origin_city: "جدة", dest_city: "مكة" }] : trips.data ?? [];
+  const list = demo && previewDriver === 'sample' ? [DEMO_TRIP, { ...DEMO_TRIP, id: "demo2", number: "TRP-DEMO-002", status: "planned", origin_city: "جدة", dest_city: "مكة" }] : trips.data ?? [];
   const current = list.find((t) => t.status === "in_progress") ?? list.find((t) => ["planned", "ready"].includes(t.status));
   const pd = (allDrivers.data ?? []).find((x) => x.id === previewDriver);
-  const d = demo ? (pd ?? { full_name: "سائق تجريبي", code: "DRV-DEMO" }) : me.data?.[0];
+  const d = demo ? (pd ?? { full_name: previewDriver === 'sample' ? 'مثال توضيحي' : auth.fullName, code: '—' }) : me.data?.[0];
   const driverId = auth.driverId ?? "demo";
 
   return (
     <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20 animate-in fade-in duration-500">
-      {auth.viewAs && <div className="fixed top-2 left-2 z-50"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
+      {(auth.viewAs || demo) && <div className="flex justify-end border-b px-4 py-2"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
       {demo && <div className="space-y-1 bg-gold-soft px-4 py-2 text-center text-xs font-semibold text-primary">
-        <div>{previewDriver ? "معاينة رحلات السائق الحقيقية — للعرض فقط، لا يتم حفظ أي إجراء" : "معاينة ببيانات تجريبية — اختر سائقًا لرؤية رحلاته الحقيقية"}</div>
+        <div>{previewDriver === 'sample' ? 'مثال توضيحي — ليس بيانات تشغيل' : 'معاينة الإدارة — قراءة فقط'}</div>
         <select aria-label="اختيار سائق للمعاينة" className="h-8 w-full rounded-md border bg-card px-2" value={previewDriver} onChange={(e) => setPreviewDriver(e.target.value)}>
-          <option value="">بيانات تجريبية</option>
+          <option value="">اختر ملف السائق أو المندوب</option>
+          <option value="sample">مثال توضيحي للشاشة</option>
           {(allDrivers.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.full_name} — {x.phone ?? x.code}</option>)}
         </select></div>}
       {!demo && current?.status === "in_progress" && <LiveGps tripId={current.id} />}
-      <header className="driver-toolbar grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3">
+      <header className="driver-toolbar flex flex-wrap items-center justify-between gap-2 px-4 py-3">
         <Logo light />
         <div className="flex shrink-0 items-center gap-2 text-xs">
           <span className={cn("flex items-center gap-1", online ? "text-success" : "text-warning")}>
@@ -189,7 +193,7 @@ function DriverApp() {
         <div className="flex size-11 items-center justify-center rounded-full border-2 border-gold"><User className="size-5 text-primary" /></div>
         <div>
           <div className="font-bold text-primary">مرحبًا، {d?.full_name ?? auth.fullName}</div>
-          <div className="num text-xs text-muted-foreground">سائق • {d?.code}</div>
+          <div className="num text-xs text-muted-foreground">{representative ? 'مندوب' : 'سائق'} • {d?.code}</div>
         </div>
       </div>
 
@@ -210,8 +214,15 @@ function DriverApp() {
       {drafts.length>0&&<div className="mx-4 mt-3 border border-warning bg-warning-soft p-3 text-xs"><b>مسودات إثبات التسليم — غير معتمدة</b>{drafts.map(d=><div key={d.id} className="mt-2"><p>{d.status==='pending'?'بانتظار الاتصال والإرسال':`تعذر الإرسال: ${d.error}`}</p><Button size="sm" variant="outline" onClick={()=>void retryDeliveryDraft(d.id,d.userId).then(()=>qc.invalidateQueries())}><RefreshCw/> إعادة الإرسال</Button></div>)}</div>}
 
       <main className="flex-1 space-y-4 p-4">
-        {!demo && trips.isLoading ? <Loading /> : !current ? (
-          <div className="panel"><Empty text="لا توجد رحلة مكلّف بها حاليًا." /></div>
+        <h1 className="text-xl font-bold text-primary">{representative ? 'تكليفات المندوب' : 'تكليفات السائق'}</h1>
+        {tab === 'home' && <div className="grid grid-cols-2 gap-2">
+          <div className="border-b p-3"><p className="text-xs text-muted-foreground">تكليفات جارية</p><b className="num text-xl">{list.filter(t => ['planned', 'ready', 'in_progress'].includes(t.status)).length}</b></div>
+          <div className="border-b p-3"><p className="text-xs text-muted-foreground">تم التسليم</p><b className="num text-xl">{list.filter(t => ['delivered', 'closed'].includes(t.status)).length}</b></div>
+          <Button variant="outline" onClick={() => setTab('trip')} disabled={!current}><Coins /> مصروف أو بلاغ</Button>
+          <Button variant="outline" asChild><Link to="/chat"><MessageCircle /> تواصل مع الإدارة</Link></Button>
+        </div>}
+        {trips.isLoading && previewDriver !== 'sample' ? <Loading /> : trips.error ? <div role="alert" className="text-sm text-danger">{errMsg(trips.error)}</div> : !current ? (
+          <div className="panel"><Empty text={demo && !previewDriver ? 'اختر ملفًا لعرض تكليفاته أو مثالًا توضيحيًا' : 'لا توجد رحلة مكلّف بها حاليًا.'} /></div>
         ) : tab === "home" ? (
           <HomeView t={current} custody={demo ? [] : custody.data ?? []} online={online} go={setTab} demo={demo} />
         ) : tab === "inspect" ? (
@@ -221,7 +232,7 @@ function DriverApp() {
         ) : (
           <PodView t={current} uid={auth.session.user.id} done={() => setTab("home")} demo={demo} />
         )}
-        {tab === "home" && <DriverRequests trip={current} driverId={driverId} demo={demo} />}
+        {tab === "home" && (!demo || !!previewDriver) && <DriverRequests trip={current} driverId={driverId} demo={demo} />}
         {tab === "home" && list.filter((t) => ["in_progress", "delivered", "closed"].includes(t.status)).slice(0, 2).map((t) => <DriverReturnRequest key={`ret-${t.id}`} trip={t} demo={demo} />)}
         {tab === "home" && list.filter((t) => t.id !== current?.id).length > 0 && (
           <div className="panel p-4">
@@ -235,9 +246,9 @@ function DriverApp() {
 
       <nav className="fixed right-0 bottom-0 left-0 z-20 mx-auto grid max-w-md grid-cols-4 border-t bg-card">
         {([["home", "الرئيسية", Home], ["inspect", "الفحص", ClipboardCheck], ["trip", "التنفيذ", RouteIcon], ["pod", "التسليم", PackageCheck]] as const).map(([k, l, I]) => (
-          <button key={k} onClick={() => setTab(k)} className={cn("flex flex-col items-center gap-1 py-2.5 text-xs", tab === k ? "rounded-t-xl bg-gold-soft font-bold text-primary" : "text-muted-foreground")}>
+          <Button variant="ghost" key={k} onClick={() => setTab(k)} className={cn("h-16 flex-col gap-1 rounded-none py-2.5 text-xs", tab === k ? "bg-gold-soft font-bold text-primary" : "text-muted-foreground")}>
             <I className="size-5" />{l}
-          </button>
+          </Button>
         ))}
       </nav>
     </div>
@@ -366,9 +377,10 @@ function InspectView({ t, driverId, done, demo }: { t: Row; driverId: string; do
 
 function TripView({ t, driverId, online, demo }: { t: Row; driverId: string; online: boolean; demo?: boolean }) {
   const qc = useQueryClient();
-  const live = useRows(["trip_events", t.id], () => db.from("trip_events").select("*").eq("trip_id", t.id).order("occurred_at", { ascending: false }), !demo);
-  const events = demo ? { data: DEMO_EVENTS } : live;
-  const [cat, setCat] = useState(CATS[0]!);
+  const sample = String(t.id).startsWith('demo');
+  const live = useRows(["trip_events", t.id], () => db.from("trip_events").select("*").eq("trip_id", t.id).order("occurred_at", { ascending: false }), !sample);
+  const events = sample ? { data: DEMO_EVENTS } : live;
+  const [cat, setCat] = useState(CATS[0] ?? 'أخرى');
   const [amt, setAmt] = useState("");
   const [desc, setDesc] = useState("");
   const [receipt, setReceipt] = useState<File | null>(null);

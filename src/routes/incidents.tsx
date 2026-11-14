@@ -1,3 +1,4 @@
+import { RecordActions } from "@/components/darb/RecordActions";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock, Coins, FolderOpen, Plus, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
@@ -66,7 +67,7 @@ function IncidentsPage() {
       </div>
       <div className="split-layout min-w-0">
       <Panel className="min-w-0" title="البلاغات" icon={<ShieldAlert />}>
-        <DataTable rows={visible} selectedId={selected?.id} loading={inc.isLoading} error={inc.error} searchKeys={["number", "description", "asset.code", "driver.full_name"]} onEdit={canEdit ? setRec : undefined} onRowClick={(r) => setSelectedId(r.id)}
+        <DataTable entityTable="incidents" rows={visible} selectedId={selected?.id} loading={inc.isLoading} error={inc.error} searchKeys={["number", "description", "asset.code", "driver.full_name"]} onEdit={canEdit ? setRec : undefined} onRowClick={(r) => setSelectedId(r.id)}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["incident"]!).map(([k, v]) => [k, v[0]])} />}
           cols={[
             { key: "number", label: "الرقم", render: (r) => <span className="num font-semibold">{r.number}</span> },
@@ -97,7 +98,7 @@ function IncidentsPage() {
               ["مرجع المرور / نجم", <span className="num">{selected.police_ref ?? "—"}</span>],
               ["مطالبة التأمين", <span className="num">{selected.insurance_claim_ref ?? "—"}</span>],
             ]} />
-            {canEdit && <Button variant="gold" className="w-full" onClick={() => setRec(selected)}>تحديث البلاغ</Button>}
+            <RecordActions table="incidents" id={selected.id} onEdit={canEdit ? () => setRec(selected) : undefined} />
           </div>
         ) : <Empty text="لا توجد بلاغات" />}
       </Panel>

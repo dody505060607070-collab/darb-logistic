@@ -41,3 +41,5 @@
 - Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush — why: no lost events.
 - English mode = client DOM translation layer over src/lib/i18n/en.json; user text translates on demand server-side — why: covers all pages without rewrites.
 - Review decisions notify the sender via DB status triggers — why: reasons always reach them.
+- RecordActions shares explicit table identity and the deletion allowlist — why: safe adjacent controls.
+- Direct owner driver/representative preview is read-only with opt-in samples — why: no identity substitution.

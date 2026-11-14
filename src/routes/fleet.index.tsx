@@ -1,3 +1,4 @@
+import { RecordActions } from "@/components/darb/RecordActions";
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CircleCheck, CirclePause, Container, Pencil, Plus, Truck, Wrench } from "lucide-react";
@@ -85,11 +86,12 @@ function FleetPage() {
       <div className="split-layout min-w-0">
         <Panel className="min-w-0" title={tab === "tractor" ? "الرؤوس (شاحنات السحب)" : "المقطورات"} icon={tab === "tractor" ? <Truck /> : <Container />}>
           <DataTable
-            rows={list}
+            entityTable="assets" rows={list}
             loading={assets.isLoading}
             error={assets.error}
             searchKeys={["code", "plate", "make_model", "trailer_type", "location_text"]}
             selectedId={selected?.id}
+            onEdit={canEdit ? (r) => setEdit(r) : undefined}
             onRowClick={(r) => setSel(r)}
             filters={
               <Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["asset"]!).map(([k, v]) => [k, v[0]])} />
@@ -137,7 +139,7 @@ function FleetPage() {
               ]}
             />
             <div className="mt-4 space-y-2">
-              {canEdit && <Button variant="gold" className="w-full" onClick={() => setEdit(selected)}><Pencil /> تعديل البيانات</Button>}
+              <RecordActions table="assets" id={selected.id} onEdit={canEdit ? () => setEdit(selected) : undefined} />
               <Button variant="outline" className="w-full" onClick={() => void nav({ to: "/fleet/$id", params: { id: selected.id } })}>عرض الملف الكامل</Button>
             </div>
           </Panel>

@@ -146,7 +146,7 @@ function MaintPage() {
         </TabsContent>
         <TabsContent value="plans">
           <Panel title="خطط الصيانة الدورية" icon={<Wrench />} actions={canEdit && <Button size="sm" variant="gold" onClick={() => { setRec(null); setDlg("plan"); }}><Plus /> خطة</Button>}>
-            <DataTable rows={plans.data} loading={plans.isLoading} onEdit={canEdit ? (r) => { setRec(r); setDlg("plan"); } : undefined} onRowClick={canEdit ? (r) => { setRec(r); setDlg("plan"); } : undefined} cols={[
+            <DataTable entityTable="maintenance_plans" rows={plans.data} loading={plans.isLoading} onEdit={canEdit ? (r) => { setRec(r); setDlg("plan"); } : undefined} onRowClick={canEdit ? (r) => { setRec(r); setDlg("plan"); } : undefined} cols={[
               { key: "asset", label: "الأصل", render: (r) => <span className="num">{r.asset?.code}</span> },
               { key: "title", label: "الخطة" },
               { key: "interval", label: "الفاصل", render: (r) => [r.interval_km && `${fmtNum(r.interval_km)} كم`, r.interval_days && `${r.interval_days} يوم`].filter(Boolean).join(" أو ") },
@@ -161,7 +161,7 @@ function MaintPage() {
             <Button size="sm" variant="outline" onClick={() => { setRec(null); setDlg("mount"); }}>تركيب إطار</Button>
             <Button size="sm" variant="gold" onClick={() => { setRec(null); setDlg("tire"); }}><Plus /> إطار</Button>
           </>}>
-            <DataTable rows={tires.data} loading={tires.isLoading} searchKeys={["serial", "brand", "size"]} cols={[
+            <DataTable entityTable="tires" onEdit={canEdit ? r => { setRec(r); setDlg("tire"); } : undefined} rows={tires.data} loading={tires.isLoading} searchKeys={["serial", "brand", "size"]} cols={[
               { key: "serial", label: "الرقم التسلسلي", render: (r) => <span className="num font-semibold">{r.serial}</span> },
               { key: "size", label: "المقاس", render: (r) => <span className="num">{r.size}</span> },
               { key: "brand", label: "الشركة" },
@@ -174,7 +174,7 @@ function MaintPage() {
         <TabsContent value="stock">
           <div className="grid gap-5 xl:grid-cols-2">
             <Panel title="الأصناف" icon={<Package />} actions={can("maintenance") && <Button size="sm" variant="gold" onClick={() => { setRec(null); setDlg("part"); }}><Plus /> صنف</Button>}>
-              <DataTable rows={parts.data} loading={parts.isLoading} searchKeys={["sku", "name"]} cols={[
+              <DataTable entityTable="parts" onEdit={can("maintenance") ? r => { setRec(r); setDlg("part"); } : undefined} rows={parts.data} loading={parts.isLoading} searchKeys={["sku", "name"]} cols={[
                 { key: "sku", label: "الرمز", render: (r) => <span className="num">{r.sku}</span> },
                 { key: "name", label: "الصنف" },
                 { key: "qty", label: "الرصيد", render: (r) => <span className="num">{fmtNum(r.qty_on_hand)} {r.unit}</span> },
@@ -228,7 +228,7 @@ function MaintPage() {
         { name: "work_order_id", label: "أمر العمل (للصرف)", type: "ref", ref: { table: "work_orders", label: "number", filter: (q) => q.not("status", "eq", "closed") } },
         { name: "notes", label: "ملاحظات", type: "textarea" },
       ]} />
-      <EntityDialog open={dlg === "tire"} onOpenChange={(o) => !o && setDlg(null)} title="إطار جديد" table="tires" invalidate={["tires"]} fields={[
+      <EntityDialog open={dlg === "tire"} onOpenChange={(o) => !o && setDlg(null)} title={rec ? "تعديل الإطار" : "إطار جديد"} table="tires" record={rec} invalidate={["tires"]} fields={[
         { name: "serial", label: "الرقم التسلسلي", required: true },
         { name: "size", label: "المقاس" },
         { name: "brand", label: "الشركة" },

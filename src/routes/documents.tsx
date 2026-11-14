@@ -1,3 +1,4 @@
+import { RecordActions } from "@/components/darb/RecordActions";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, FileText, FolderOpen, Plus, ShieldCheck, TriangleAlert } from "lucide-react";
@@ -91,7 +92,7 @@ function DocsPage() {
               <Button size="sm" variant="gold" disabled={!newEntity} onClick={() => setEdit(null)}><Plus /> إضافة</Button>
             </div>
           )}>
-            <DataTable rows={list} loading={docs.isLoading} error={docs.error} searchKeys={["doc_type", "number"]} onEdit={canEdit ? (r) => setEdit(r) : undefined} selectedId={selected?.id} onRowClick={(r) => setSelectedId(r.id)}
+            <DataTable entityTable="documents" rows={list} loading={docs.isLoading} error={docs.error} searchKeys={["doc_type", "number"]} onEdit={canEdit ? (r) => setEdit(r) : undefined} selectedId={selected?.id} onRowClick={(r) => setSelectedId(r.id)}
               filters={<div className="flex flex-wrap gap-2">{([["", "الكل"], ["expired", "منتهية"], ["soon", "قريبة الانتهاء"], ["valid", "سارية"]] as const).map(([value, label]) => <Button key={value} size="sm" variant={filter === value ? "default" : "outline"} className="rounded-full" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</Button>)}</div>}
               cols={[
                 { key: "entity", label: "الجهة", render: (r) => <span><Badge dot={false}>{r.entity_type === "asset" ? "أصل" : r.entity_type === "driver" ? "سائق" : "شركة"}</Badge> {names.get(r.entity_id) ?? "—"}</span> },
@@ -119,7 +120,7 @@ function DocsPage() {
                     ? <Button variant="outline" onClick={() => void openFile(selected.file_path)}><FileText /> عرض المرفق</Button>
                     : <><FileText className="mx-auto mb-2 size-7 text-muted-foreground" /><p className="text-sm text-muted-foreground">لا يوجد مرفق للعرض</p></>}
                 </div>
-                {canEdit && <Button variant="gold" className="mt-4 w-full" onClick={() => setEdit(selected)}>تعديل المستند</Button>}
+                <RecordActions table="documents" id={selected.id} onEdit={canEdit ? () => setEdit(selected) : undefined} />
               </>
             ) : <p className="text-sm text-muted-foreground">لا توجد مستندات</p>}
           </Panel>
@@ -138,7 +139,7 @@ function DocsPage() {
         </TabsContent>
         <TabsContent value="auth">
           <Panel title="التفويضات" icon={<ShieldCheck />}>
-            <DataTable rows={auths.data} loading={auths.isLoading} onEdit={canEdit ? setAuthEdit : undefined} onRowClick={canEdit ? setAuthEdit : undefined} cols={[
+            <DataTable entityTable="authorizations" rows={auths.data} loading={auths.isLoading} onEdit={canEdit ? setAuthEdit : undefined} onRowClick={canEdit ? setAuthEdit : undefined} cols={[
               { key: "number", label: "الرقم", render: (r) => <span className="num">{r.number ?? "—"}</span> },
               { key: "driver", label: "السائق", render: (r) => r.driver?.full_name },
               { key: "asset", label: "المركبة", render: (r) => r.asset?.code ?? "—" },

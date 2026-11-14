@@ -1,3 +1,4 @@
+import { RecordActions } from "@/components/darb/RecordActions";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Building2, FileSignature, MapPin, Plus, Truck, Users } from "lucide-react";
@@ -105,7 +106,7 @@ function CustomersPage() {
         <TabsContent value="cust">
           <div className="split-layout min-w-0">
           <Panel className="min-w-0" title="العملاء" icon={<Building2 />}>
-            <DataTable rows={customers.data} loading={customers.isLoading} error={customers.error} searchKeys={["name", "cr_number", "vat_number", "city"]} onEdit={canCust ? (r) => open("cust", r) : undefined} selectedId={selectedCustomer?.id} onRowClick={(r) => setSelectedId(r.id)} cols={[
+            <DataTable entityTable="customers" rows={customers.data} loading={customers.isLoading} error={customers.error} searchKeys={["name", "cr_number", "vat_number", "city"]} onEdit={canCust ? (r) => open("cust", r) : undefined} selectedId={selectedCustomer?.id} onRowClick={(r) => setSelectedId(r.id)} cols={[
               { key: "name", label: "العميل", render: (r) => <b className="text-primary">{r.name}</b> },
               { key: "cr_number", label: "السجل", render: (r) => <span className="num">{r.cr_number ?? "—"}</span> },
               { key: "vat_number", label: "الرقم الضريبي", render: (r) => <span className="num">{r.vat_number ?? "—"}</span> },
@@ -129,7 +130,7 @@ function CustomersPage() {
                   ["شروط السداد", selectedCustomer.payment_terms_days == null ? "—" : `${selectedCustomer.payment_terms_days} يوم`],
                   ["المواقع / العقود", <span className="num">{selectedCustomer.locations?.length ?? 0} / {selectedCustomer.contracts?.length ?? 0}</span>],
                 ]} />
-                {canCust && <Button variant="gold" className="w-full" onClick={() => open("cust", selectedCustomer)}>تعديل البيانات</Button>}
+                <RecordActions table="customers" id={selectedCustomer.id} onEdit={canCust ? () => open("cust", selectedCustomer) : undefined} />
               </div>
             ) : <Empty text="لا يوجد عملاء بعد" />}
           </Panel>
@@ -137,7 +138,7 @@ function CustomersPage() {
         </TabsContent>
         <TabsContent value="loc">
           <Panel title="مواقع التحميل والتفريغ" icon={<MapPin />} actions={canLoc && <Button size="sm" variant="gold" onClick={() => open("loc")}><Plus /> موقع</Button>}>
-            <DataTable rows={locations.data} loading={locations.isLoading} searchKeys={["name", "city", "customer.name"]} onEdit={canLoc ? (r) => open("loc", r) : undefined} onRowClick={canLoc ? (r) => open("loc", r) : undefined} cols={[
+            <DataTable entityTable="locations" rows={locations.data} loading={locations.isLoading} searchKeys={["name", "city", "customer.name"]} onEdit={canLoc ? (r) => open("loc", r) : undefined} onRowClick={canLoc ? (r) => open("loc", r) : undefined} cols={[
               { key: "name", label: "الموقع" },
               { key: "city", label: "المدينة" },
               { key: "customer", label: "العميل", render: (r) => r.customer?.name ?? "—" },
@@ -149,7 +150,7 @@ function CustomersPage() {
         </TabsContent>
         <TabsContent value="ctr">
           <Panel title="العقود والأسعار" icon={<FileSignature />} actions={canCust && <Button size="sm" variant="gold" onClick={() => open("ctr")}><Plus /> عقد</Button>}>
-            <DataTable rows={contracts.data} loading={contracts.isLoading} searchKeys={["number", "customer.name"]} onEdit={canCust ? (r) => open("ctr", r) : undefined} onRowClick={canCust ? (r) => open("ctr", r) : undefined} cols={[
+            <DataTable entityTable="contracts" rows={contracts.data} loading={contracts.isLoading} searchKeys={["number", "customer.name"]} onEdit={canCust ? (r) => open("ctr", r) : undefined} onRowClick={canCust ? (r) => open("ctr", r) : undefined} cols={[
               { key: "number", label: "العقد", render: (r) => <span className="num font-semibold">{r.number} (v{r.version})</span> },
               { key: "customer", label: "العميل", render: (r) => r.customer?.name },
               { key: "pricing", label: "التسعير", render: (r) => `${fmtSAR(r.rate)} ${PRICING.find((p) => p[0] === r.pricing_model)?.[1]}` },
@@ -161,7 +162,7 @@ function CustomersPage() {
         </TabsContent>
         <TabsContent value="car">
           <Panel title="الناقلون الخارجيون" icon={<Truck />} actions={canCust && <Button size="sm" variant="gold" onClick={() => open("car")}><Plus /> ناقل</Button>}>
-            <DataTable rows={carriers.data} loading={carriers.isLoading} onEdit={canCust ? (r) => open("car", r) : undefined} onRowClick={canCust ? (r) => open("car", r) : undefined} cols={[
+            <DataTable entityTable="carriers" rows={carriers.data} loading={carriers.isLoading} onEdit={canCust ? (r) => open("car", r) : undefined} onRowClick={canCust ? (r) => open("car", r) : undefined} cols={[
               { key: "name", label: "الناقل" },
               { key: "cr_number", label: "السجل", render: (r) => <span className="num">{r.cr_number ?? "—"}</span> },
               { key: "contact_name", label: "جهة الاتصال" },

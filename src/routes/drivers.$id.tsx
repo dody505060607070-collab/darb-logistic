@@ -1,3 +1,4 @@
+import { RecordActions } from "@/components/darb/RecordActions";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ClipboardCheck, Coins, FileText, Mail, Pencil, Plus, Route as RouteIcon, User } from "lucide-react";
@@ -60,7 +61,7 @@ function DriverProfile() {
       <PageHeader title={r.full_name} subtitle={`${r.code} • ${r.phone ?? ""}`} icon={<User />}
         actions={<>
           {can("owner") && !r.user_id && <Button variant="outline" onClick={() => void invite()}><Mail /> دعوة لتطبيق السائق</Button>}
-          {canEdit && <Button variant="gold" onClick={() => setEdit(true)}><Pencil /> تعديل</Button>}
+          <RecordActions table="drivers" id={id} onEdit={canEdit ? () => setEdit(true) : undefined} onDeleted={() => { window.location.assign("/drivers"); }} />
         </>} />
       <div className="grid gap-5 xl:grid-cols-3">
         <Panel title="البيانات" icon={<User />} actions={<Status kind="driver" value={r.status} />}>
@@ -93,7 +94,7 @@ function DriverProfile() {
           ]} />
         </Panel>
         <Panel title="المستندات" icon={<FileText />} actions={canEdit && <Button size="sm" variant="gold" onClick={() => setDocEdit(null)}><Plus /> مستند</Button>}>
-          <DataTable rows={docs.data} loading={docs.isLoading} onEdit={canEdit ? setDocEdit : undefined} onRowClick={canEdit ? setDocEdit : undefined} cols={[
+          <DataTable entityTable="documents" rows={docs.data} loading={docs.isLoading} onEdit={canEdit ? setDocEdit : undefined} onRowClick={canEdit ? setDocEdit : undefined} cols={[
             { key: "doc_type", label: "النوع" },
             { key: "number", label: "الرقم" },
             { key: "expiry_date", label: "الانتهاء", render: (x) => <DocExpiry d={x.expiry_date} /> },

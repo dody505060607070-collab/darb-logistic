@@ -1,3 +1,4 @@
+import { RecordActions } from "@/components/darb/RecordActions";
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CalendarDays, CircleCheck, Plus, TriangleAlert, Truck, User, Users } from "lucide-react";
@@ -55,9 +56,10 @@ function DriversPage() {
       </div>
       <div className="split-layout min-w-0">
       <Panel className="min-w-0" title="قائمة السائقين" icon={<User />}>
-        <DataTable rows={list} loading={drivers.isLoading} error={drivers.error} selectedId={selected?.id}
+        <DataTable entityTable="drivers" rows={list} loading={drivers.isLoading} error={drivers.error} selectedId={selected?.id}
           searchKeys={["code", "full_name", "phone", "license_no"]}
           filters={<Select value={status} onChange={setStatus} placeholder="كل الحالات" options={Object.entries(STATUS["driver"]!).map(([k, v]) => [k, v[0]])} />}
+          onEdit={can("ops_manager", "fleet_supervisor") ? r => { void nav({ to: "/drivers/$id", params: { id: r.id } }); } : undefined}
           onRowClick={(r) => setSelectedId(r.id)}
           cols={[
             { key: "code", label: "الرقم", render: (r) => <Button variant="link" size="sm" className="num px-0" onClick={e => { e.stopPropagation(); void nav({ to: "/drivers/$id", params: { id: r.id } }); }}>{r.code}</Button> },
@@ -75,6 +77,7 @@ function DriversPage() {
           <div className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" /> صلاحية الرخصة</div>
           <div className="mt-1 font-semibold">{licenseDays == null ? "لا يوجد تاريخ انتهاء مسجل" : licenseDays < 0 ? `منتهية منذ ${Math.abs(licenseDays)} يومًا` : `المتبقي ${licenseDays} يومًا`}</div>
         </div>
+        <RecordActions table="drivers" id={selected.id} onEdit={can("ops_manager", "fleet_supervisor") ? () => { void nav({ to: "/drivers/$id", params: { id: selected.id } }); } : undefined} />
         <Button variant="outline" className="mt-4 w-full" onClick={() => void nav({ to: "/drivers/$id", params: { id: selected.id } })}>ملف السائق</Button>
       </Panel>}
       </div>

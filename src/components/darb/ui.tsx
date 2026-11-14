@@ -5,6 +5,7 @@ import { STATUS, type Tone } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useArrangedCard } from './CardArrangement';
+import { RecordActions } from './RecordActions';
 
 const TONES: Record<Tone, string> = {
   success: "bg-success-soft text-success",
@@ -176,6 +177,7 @@ export function DataTable<T extends Record<string, unknown>>({
   empty,
   selectedId,
   onEdit,
+  entityTable,
 }: {
   rows?: T[];
   cols: Col<T>[];
@@ -188,6 +190,7 @@ export function DataTable<T extends Record<string, unknown>>({
   empty?: ReactNode;
   selectedId?: string | null;
   onEdit?: (r: T) => void;
+  entityTable?: string;
 }) {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
@@ -249,7 +252,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     {c.label}
                   </th>
                 ))}
-                {onEdit && <th className="px-3 py-2.5 text-right">تعديل</th>}
+                {(onEdit || entityTable) && <th className="px-3 py-2.5 text-right">الإجراءات</th>}
               </tr>
             </thead>
             <tbody>
@@ -270,7 +273,7 @@ export function DataTable<T extends Record<string, unknown>>({
                       {c.render ? c.render(r) : String(r[c.key] ?? "—")}
                     </td>
                   ))}
-                  {onEdit && <td className="px-3 py-2.5"><Button variant="ghost" size="icon" title="تعديل السجل" aria-label="تعديل السجل" onClick={e => { e.stopPropagation(); onEdit(r); }}><Pencil className="size-4" /></Button></td>}
+                  {(onEdit || entityTable) && <td className="px-3 py-2.5">{entityTable ? <RecordActions table={entityTable} id={r.id} onEdit={onEdit ? () => onEdit(r) : undefined} /> : <Button variant="ghost" size="icon" title="تعديل السجل" aria-label="تعديل السجل" onClick={e => { e.stopPropagation(); onEdit?.(r); }}><Pencil className="size-4" /></Button>}</td>}
                 </tr>
               ))}
             </tbody>

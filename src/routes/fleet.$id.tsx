@@ -1,3 +1,4 @@
+import { RecordActions } from "@/components/darb/RecordActions";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, FileText, Gauge, MapPin, Pencil, Plus, Truck, Wrench } from "lucide-react";
@@ -70,7 +71,7 @@ function AssetProfile() {
         title={`ملف ${ASSET_KIND[a.kind]} ${a.code}`}
         subtitle={[a.make_model ?? a.trailer_type, a.plate].filter(Boolean).join(" • ")}
         icon={<Truck />}
-        actions={canEdit && <Button variant="gold" onClick={() => setEdit(true)}><Pencil /> تعديل</Button>}
+        actions={<RecordActions table="assets" id={id} onEdit={canEdit ? () => setEdit(true) : undefined} onDeleted={() => { window.location.assign("/fleet"); }} />}
       />
       <div className="grid gap-5 xl:grid-cols-3">
         <Panel title="البيانات الأساسية" icon={<Truck />} actions={<Status kind="asset" value={a.status} />}>
@@ -114,7 +115,7 @@ function AssetProfile() {
       </div>
 
       <Panel title="المستندات" icon={<FileText />} className="mt-5" actions={canEdit && <Button size="sm" variant="gold" onClick={() => setDocEdit(null)}><Plus /> مستند</Button>}>
-        <DataTable rows={docs.data} loading={docs.isLoading} onEdit={canEdit ? (r) => setDocEdit(r) : undefined} onRowClick={canEdit ? (r) => setDocEdit(r) : undefined}
+        <DataTable entityTable="documents" rows={docs.data} loading={docs.isLoading} onEdit={canEdit ? (r) => setDocEdit(r) : undefined} onRowClick={canEdit ? (r) => setDocEdit(r) : undefined}
           cols={[
             { key: "doc_type", label: "النوع" },
             { key: "number", label: "الرقم", render: (r) => <span className="num">{r.number ?? "—"}</span> },
