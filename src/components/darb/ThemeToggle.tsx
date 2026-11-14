@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
+import { getLang } from '@/lib/i18n/lang';
 
 export type ThemeMode = "dark" | "light";
 const KEY = "shitaa-theme";
@@ -33,14 +34,14 @@ export function useThemeMode() {
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { mode, toggle } = useThemeMode();
-  const label = mode === "dark" ? "الوضع الفاتح" : "الوضع الغامق";
+  const label = getLang() === 'en' ? (mode === 'dark' ? 'Light mode' : 'Dark mode') : mode === "dark" ? "الوضع الفاتح" : "الوضع الغامق";
   return (
     <Button variant="ghost" size="icon"
       type="button"
       onClick={toggle}
       aria-label={label}
       title={label}
-      className={cn("inline-flex size-9 items-center justify-center rounded-full border bg-card text-foreground transition-colors hover:bg-muted", className)}
+      className={cn("inline-flex size-8 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted", className)}
     >
       {mode === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </Button>

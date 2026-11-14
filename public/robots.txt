@@ -1,6 +1,9 @@
 # Only the sign-in page is public. Internal screens require an account and are also sent with noindex.
 User-agent: *
 Allow: /login
+Allow: /privacy
+Allow: /terms
+Allow: /contact
 Allow: /favicon.png
 Disallow: /
 

@@ -1,4 +1,5 @@
 /** Date locale follows the chosen site language (Arabic default). */
+import { errorGuidance } from './error-guidance';
 function loc(cal: string) {
   let en = false;
   try { en = typeof localStorage !== "undefined" && localStorage.getItem("shata-lang") === "en"; } catch { /* ssr */ }
@@ -181,13 +182,6 @@ export const CITY_COORDS: Record<string, [number, number]> = {
 };
 
 export function errMsg(e: unknown): string {
-  if (!e) return "حدث خطأ غير متوقع";
-  const m = (e as { message?: string }).message ?? String(e);
-  if (m.includes("duplicate key")) return "سجل مكرر — القيمة مستخدمة مسبقًا";
-  if (m.includes("row-level security")) return "ليست لديك صلاحية لهذه العملية";
-  if (m.includes("custody_one_open_per_asset")) return "توجد عهدة مفتوحة لهذا الأصل";
-  if (m.includes("tire_one_active_mount")) return "الإطار مركب في موقع آخر";
-  if (m.includes("tire_position_one_active")) return "هذا الموضع مشغول بإطار آخر";
-  if (m.includes("qty_on_hand")) return "الرصيد غير كافٍ — لا يُسمح بالرصيد السالب";
-  return m;
+  const guidance = errorGuidance(e);
+  return `${guidance.problem} الحل: ${guidance.solution}`;
 }

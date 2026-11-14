@@ -8,6 +8,7 @@ import { requestLoginCode, verifyLoginCode } from '@/lib/whatsapp-login.function
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { errMsg } from '@/lib/format';
 
 export function PhoneLogin() {
   const requestCode = useServerFn(requestLoginCode);
@@ -31,24 +32,24 @@ export function PhoneLogin() {
         setSentTo(phone); toast.success('أرسلنا رمز الدخول إلى واتساب');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'تعذر تسجيل الدخول');
+      setError(errMsg(err));
     } finally { setBusy(false); }
   }
   return <form onSubmit={submit} className="space-y-4">
     {sentTo ? <>
       <p className="text-center text-sm text-muted-foreground">أرسلنا رمز التحقق على واتساب إلى <b dir="ltr">{sentTo}</b></p>
       <Label htmlFor="sms-code">رمز التحقق</Label>
-      <Input id="sms-code" dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} required minLength={6} maxLength={6} className="h-12 text-center text-xl" />
+      <Input id="sms-code" aria-invalid={!!error} aria-describedby={error ? 'login-error' : undefined} dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} required minLength={6} maxLength={6} className="h-12 text-center text-xl" />
     </> : <>
       <Label htmlFor="phone-number">رقم الجوال</Label>
       <div className="flex gap-2" dir="ltr">
         <select aria-label="رمز الدولة" value={country} onChange={e => setCountry(e.target.value)} className="h-11 max-w-40 rounded-md border border-input bg-card px-2 text-sm">
           {[['+966','السعودية'],['+20','مصر'],['+971','الإمارات'],['+965','الكويت'],['+974','قطر'],['+973','البحرين'],['+968','عُمان'],['+962','الأردن'],['+1','أمريكا / كندا'],['+44','بريطانيا']].map(([v,l]) => <option key={v} value={v}>{l} {v}</option>)}
         </select>
-        <Input id="phone-number" type="tel" autoComplete="tel-national" value={number} onChange={e => setNumber(e.target.value)} required className="h-11 min-w-0 flex-1" />
+        <Input id="phone-number" aria-invalid={!!error} aria-describedby={error ? 'login-error' : undefined} type="tel" autoComplete="tel-national" value={number} onChange={e => setNumber(e.target.value)} required className="h-11 min-w-0 flex-1" />
       </div>
     </>}
-    {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+    {error && <p id="login-error" role="alert" className="rounded-md border border-danger bg-danger-soft p-3 text-sm text-danger">{error}</p>}
     <Button type="submit" variant="gold" disabled={busy} className="h-11 w-full">{busy ? <Loader2 className="animate-spin" /> : <Smartphone />}{sentTo ? 'تحقق وتسجيل الدخول' : 'إرسال الرمز على واتساب'}</Button>
     {sentTo && <Button type="button" variant="ghost" className="w-full" onClick={() => { setSentTo(''); setCode(''); setError(''); }}>تغيير الرقم أو طلب رمز جديد</Button>}
   </form>;

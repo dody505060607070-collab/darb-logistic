@@ -1,3 +1,6 @@
+import { ConsentPanel, PrivacyLinks } from "@/components/darb/ConsentPanel";
+import { Button } from "@/components/ui/button";
+import consentDefaults from "@/lib/consent-defaults.js?raw";
 import { LanguageLayer } from "@/components/darb/LanguageLayer";
 import { THEME_BOOT_SCRIPT } from "@/components/darb/ThemeToggle";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -25,12 +28,7 @@ function NotFoundComponent() {
         <h2 className="mt-4 text-xl font-semibold text-foreground">الصفحة غير موجودة</h2>
         <p className="mt-2 text-sm text-muted-foreground">الصفحة التي تبحث عنها غير موجودة أو تم نقلها.</p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            العودة للرئيسية
-          </Link>
+          <Button asChild><Link to="/login">العودة لتسجيل الدخول</Link></Button>
         </div>
       </div>
     </div>
@@ -50,6 +48,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#123C32" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    scripts: [{ children: consentDefaults }],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
@@ -94,6 +93,8 @@ function RootComponent() {
       <AuthProvider>
         <LanguageLayer />
         <Outlet />
+        <PrivacyLinks />
+        <ConsentPanel />
         <Toaster position="top-center" richColors dir="rtl" />
       </AuthProvider>
     </QueryClientProvider>

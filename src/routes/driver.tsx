@@ -1,4 +1,4 @@
-import { LanguageToggle } from "@/components/darb/LanguageLayer";
+import { DisplayControls } from "@/components/darb/DisplayControls";
 import { DriverReturnRequest } from "@/components/darb/ReturnTrip";
 import { DriverRequests } from "@/components/darb/ApprovalCenter";
 import { flushWa } from "@/lib/wa-flush";
@@ -182,7 +182,7 @@ function DriverApp() {
             {online ? <span className="size-2 rounded-full bg-success" /> : <CloudOff className="size-4" />}
             {online ? "متصل" : "غير متصل"}
           </span>
-          <LanguageToggle className="h-7 px-2" />
+          <DisplayControls />
           <Link to="/chat" aria-label="المحادثة مع الإدارة" className="flex items-center gap-1 rounded-full border px-2 py-1 font-semibold"><MessageCircle className="size-4" /> المحادثة</Link>
           <Bell className="size-5" />
           <Button variant="ghost" size="icon" onClick={() => (demo ? demoToast() : void auth.signOut())} aria-label="خروج"><LogOut className="size-5" /></Button>

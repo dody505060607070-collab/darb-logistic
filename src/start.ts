@@ -18,7 +18,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
-const PUBLIC_INDEXABLE = new Set(["/login", "/robots.txt", "/sitemap.xml"]);
+const PUBLIC_INDEXABLE = new Set(["/login", "/privacy", "/terms", "/contact", "/robots.txt", "/sitemap.xml"]);
 
 /** Baseline security headers; internal screens are never indexed (auth still protects them). */
 const securityHeaders = createMiddleware().server(async ({ next, request }) => {
@@ -27,6 +27,8 @@ const securityHeaders = createMiddleware().server(async ({ next, request }) => {
   try {
     const h = response.headers;
     h.set("X-Content-Type-Options", "nosniff");
+    h.set("Content-Security-Policy", "base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests");
+    if (request.headers.has('Authorization') || !PUBLIC_INDEXABLE.has(new URL(request.url).pathname)) h.set('Cache-Control', 'private, no-store');
     h.set("Referrer-Policy", "strict-origin-when-cross-origin");
     h.set("Permissions-Policy", "camera=(self), geolocation=(self), microphone=(), payment=(), usb=()");
     h.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");

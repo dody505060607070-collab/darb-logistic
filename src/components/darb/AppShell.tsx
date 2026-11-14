@@ -1,6 +1,6 @@
 import { getLang } from "@/lib/i18n/lang";
-import { LanguageToggle } from "@/components/darb/LanguageLayer";
-import { ThemeToggle } from "@/components/darb/ThemeToggle";
+import { DisplayControls } from "@/components/darb/DisplayControls";
+
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
@@ -297,8 +297,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
           </div>
           <div className="mr-auto flex min-w-0 items-center gap-2">
             <CommandPalette />
-            <LanguageToggle />
-            <ThemeToggle />
+            <DisplayControls />
             <Notifications />
             <div className="hidden min-w-0 max-w-48 text-left sm:block">
               <div className="text-sm font-semibold text-primary">{auth.fullName}</div>

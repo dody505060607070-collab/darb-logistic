@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CustodyRouteImport } from './routes/custody'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DocumentsRouteImport } from './routes/documents'
@@ -23,11 +24,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as MaintenanceWalletRouteImport } from './routes/maintenance-wallet'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RepairCenterRouteImport } from './routes/repair-center'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrackingRouteImport } from './routes/tracking'
 import { Route as DriversIndexRouteImport } from './routes/drivers.index'
 import { Route as DriversIdRouteImport } from './routes/drivers.$id'
@@ -55,6 +58,11 @@ const ActivityRoute = ActivityRouteImport.update({
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustodyRoute = CustodyRouteImport.update({
@@ -112,6 +120,11 @@ const OperationsRoute = OperationsRouteImport.update({
   path: '/operations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RepairCenterRoute = RepairCenterRouteImport.update({
   id: '/repair-center',
   path: '/repair-center',
@@ -135,6 +148,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackingRoute = TrackingRouteImport.update({
@@ -210,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/chat': typeof ChatRoute
+  '/contact': typeof ContactRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
@@ -221,11 +240,13 @@ export interface FileRoutesByFullPath {
   '/maintenance': typeof MaintenanceRoute
   '/maintenance-wallet': typeof MaintenanceWalletRoute
   '/operations': typeof OperationsRoute
+  '/privacy': typeof PrivacyRoute
   '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/terms': typeof TermsRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -244,6 +265,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/chat': typeof ChatRoute
+  '/contact': typeof ContactRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
@@ -255,11 +277,13 @@ export interface FileRoutesByTo {
   '/maintenance': typeof MaintenanceRoute
   '/maintenance-wallet': typeof MaintenanceWalletRoute
   '/operations': typeof OperationsRoute
+  '/privacy': typeof PrivacyRoute
   '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/terms': typeof TermsRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -279,6 +303,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/chat': typeof ChatRoute
+  '/contact': typeof ContactRoute
   '/custody': typeof CustodyRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
@@ -290,11 +315,13 @@ export interface FileRoutesById {
   '/maintenance': typeof MaintenanceRoute
   '/maintenance-wallet': typeof MaintenanceWalletRoute
   '/operations': typeof OperationsRoute
+  '/privacy': typeof PrivacyRoute
   '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/terms': typeof TermsRoute
   '/tracking': typeof TrackingRoute
   '/drivers/$id': typeof DriversIdRoute
   '/fleet/$id': typeof FleetIdRoute
@@ -315,6 +342,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/chat'
+    | '/contact'
     | '/custody'
     | '/customers'
     | '/documents'
@@ -326,11 +354,13 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/maintenance-wallet'
     | '/operations'
+    | '/privacy'
     | '/repair-center'
     | '/reports'
     | '/reset-password'
     | '/settings'
     | '/tasks'
+    | '/terms'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -349,6 +379,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/chat'
+    | '/contact'
     | '/custody'
     | '/customers'
     | '/documents'
@@ -360,11 +391,13 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/maintenance-wallet'
     | '/operations'
+    | '/privacy'
     | '/repair-center'
     | '/reports'
     | '/reset-password'
     | '/settings'
     | '/tasks'
+    | '/terms'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -383,6 +416,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/chat'
+    | '/contact'
     | '/custody'
     | '/customers'
     | '/documents'
@@ -394,11 +428,13 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/maintenance-wallet'
     | '/operations'
+    | '/privacy'
     | '/repair-center'
     | '/reports'
     | '/reset-password'
     | '/settings'
     | '/tasks'
+    | '/terms'
     | '/tracking'
     | '/drivers/$id'
     | '/fleet/$id'
@@ -418,6 +454,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivityRoute: typeof ActivityRoute
   ChatRoute: typeof ChatRoute
+  ContactRoute: typeof ContactRoute
   CustodyRoute: typeof CustodyRoute
   CustomersRoute: typeof CustomersRoute
   DocumentsRoute: typeof DocumentsRoute
@@ -429,11 +466,13 @@ export interface RootRouteChildren {
   MaintenanceRoute: typeof MaintenanceRoute
   MaintenanceWalletRoute: typeof MaintenanceWalletRoute
   OperationsRoute: typeof OperationsRoute
+  PrivacyRoute: typeof PrivacyRoute
   RepairCenterRoute: typeof RepairCenterRoute
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
+  TermsRoute: typeof TermsRoute
   TrackingRoute: typeof TrackingRoute
   DriversIdRoute: typeof DriversIdRoute
   FleetIdRoute: typeof FleetIdRoute
@@ -470,6 +509,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/custody': {
@@ -549,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OperationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/repair-center': {
       id: '/repair-center'
       path: '/repair-center'
@@ -582,6 +635,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tracking': {
@@ -682,6 +742,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivityRoute: ActivityRoute,
   ChatRoute: ChatRoute,
+  ContactRoute: ContactRoute,
   CustodyRoute: CustodyRoute,
   CustomersRoute: CustomersRoute,
   DocumentsRoute: DocumentsRoute,
@@ -693,11 +754,13 @@ const rootRouteChildren: RootRouteChildren = {
   MaintenanceRoute: MaintenanceRoute,
   MaintenanceWalletRoute: MaintenanceWalletRoute,
   OperationsRoute: OperationsRoute,
+  PrivacyRoute: PrivacyRoute,
   RepairCenterRoute: RepairCenterRoute,
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
+  TermsRoute: TermsRoute,
   TrackingRoute: TrackingRoute,
   DriversIdRoute: DriversIdRoute,
   FleetIdRoute: FleetIdRoute,

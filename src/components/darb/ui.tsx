@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ChevronLeft, ChevronRight, Download, Inbox, Loader2, Pencil, Printer, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { STATUS, type Tone } from "@/lib/format";
+import { STATUS, errMsg, type Tone } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useArrangedCard } from './CardArrangement';
@@ -158,7 +158,7 @@ export function ErrorBox({ error }: { error: unknown }) {
   return (
     <div className="flex items-center gap-2 rounded-lg bg-danger-soft p-4 text-sm text-danger">
       <AlertTriangle className="size-4" />
-      تعذر تحميل البيانات: {(error as { message?: string })?.message ?? "خطأ"}
+      {errMsg(error)}
     </div>
   );
 }
