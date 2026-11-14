@@ -39,7 +39,7 @@
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
 - Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush — why: no lost events.
-- English uses post-hydration phrase boundaries; free text translates on demand — why: no mixed words or hydration race.
+- English/Urdu use post-hydration one-pass phrase boundaries; Urdu dictionary loads lazily — why: no mixed words, re-translation or hydration race.
 - Review decisions notify the sender via DB status triggers — why: reasons always reach them.
 - RecordActions shares explicit table identity and the deletion allowlist — why: safe adjacent controls.
 - Direct owner driver/representative preview is read-only with opt-in samples — why: no identity substitution.

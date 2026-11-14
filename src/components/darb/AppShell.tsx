@@ -1,4 +1,4 @@
-import { getLang } from "@/lib/i18n/lang";
+import { getLang, localeFor } from "@/lib/i18n/lang";
 import { DisplayControls } from "@/components/darb/DisplayControls";
 
 import { useEffect, useState, type ReactNode } from "react";
@@ -285,7 +285,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
               <>
                 <span className="flex items-center gap-1.5">
                   <Calendar className="size-4 text-gold" />
-                  {new Intl.DateTimeFormat(getLang() === "en" ? "en-GB" : "ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(now)}
+                  {new Intl.DateTimeFormat(localeFor(getLang(), "gregory"), { timeZone: "Asia/Riyadh", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(now)}
                   <span className="text-xs">({fmtHijri(now)})</span>
                 </span>
                 <span className="flex items-center gap-1.5">

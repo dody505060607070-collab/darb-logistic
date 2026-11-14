@@ -210,3 +210,11 @@
 ## طلبات 13 نوفمبر 2026 مساءً
 - [x] رحلة الرجوع: زر في صفحة الرحلة ينشئ رحلة رجوع معكوسة بنفس المسافة، وطلب رجوع من السائق بموعده، موافقة الإدارة، وإشعارات واتساب.
 - [x] الموقع بلغتين (عربي/إنجليزي) لكل الصفحات مع زر تبديل، وترجمة نصوص المهام عند الطلب.
+
+## 2026-11-14 — Urdu, rounded glass, new sign-in (message-20261114-033312)
+- [x] Urdu language (full interface dictionary) with Arabic/English/Urdu picker
+- [x] Glass pill language and light/dark controls
+- [x] Fully rounded buttons, fields, selects, cards, menus and dialogs site-wide
+- [x] Sign-in page rebuilt to the supplied design
+- [x] Deep security scan: critical "field technician can stop any vehicle" fixed (migration 0039); no active findings
+- [ ] Signed-in walkthrough of internal pages — blocked: preview has no signed-in session for this account

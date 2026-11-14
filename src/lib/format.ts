@@ -1,9 +1,10 @@
 /** Date locale follows the chosen site language (Arabic default). */
 import { errorGuidance } from './error-guidance';
+import { localeFor, parseLang } from './i18n/lang';
 function loc(cal: string) {
-  let en = false;
-  try { en = typeof localStorage !== "undefined" && localStorage.getItem("shata-lang") === "en"; } catch { /* ssr */ }
-  return `${en ? "en-GB" : "ar-SA"}-u${cal ? `-ca-${cal}` : ""}-nu-latn`;
+  let raw: string | null = null;
+  try { raw = typeof localStorage !== "undefined" ? localStorage.getItem("shata-lang") : null; } catch { /* ssr */ }
+  return localeFor(parseLang(raw), cal);
 }
 const TZ = "Asia/Riyadh";
 
@@ -49,7 +50,7 @@ export function fmtNum(v?: number | string | null, digits = 0) {
 }
 export function fmtSAR(v?: number | string | null) {
   if (v === null || v === undefined) return "—";
-  return `${fmtNum(v, 2)} ${loc('').startsWith('en') ? 'SAR' : 'ر.س'}`;
+  return `${fmtNum(v, 2)} ${loc('').startsWith('en') ? 'SAR' : loc('').startsWith('ur') ? 'ریال' : 'ر.س'}`;
 }
 export function daysUntil(d?: string | null) {
   if (!d) return null;

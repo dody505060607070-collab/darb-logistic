@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from '@/components/ui/button';
-import { getLang } from '@/lib/i18n/lang';
+import { getLang, type Lang } from '@/lib/i18n/lang';
 
 export type ThemeMode = "dark" | "light";
 const KEY = "shitaa-theme";
@@ -32,21 +31,28 @@ export function useThemeMode() {
   return { mode, toggle };
 }
 
+const THEME_LABELS: Record<Lang, { light: string; dark: string; group: string }> = {
+  ar: { light: 'الوضع النهاري', dark: 'الوضع الليلي', group: 'المظهر' },
+  en: { light: 'Light mode', dark: 'Dark mode', group: 'Appearance' },
+  ur: { light: 'دن کا موڈ', dark: 'رات کا موڈ', group: 'ظاہری شکل' },
+};
+
+/** Glass segmented control: sun (light) and moon (dark), the active one highlighted. */
 export function ThemeToggle({ className }: { className?: string }) {
   const { mode, toggle } = useThemeMode();
-  const [english, setEnglish] = useState(false);
-  useEffect(() => { setEnglish(getLang() === 'en'); }, []);
-  const label = english ? (mode === 'dark' ? 'Light mode' : 'Dark mode') : mode === "dark" ? "الوضع الفاتح" : "الوضع الغامق";
+  const [lang, setLangState] = useState<Lang>('ar');
+  useEffect(() => { setLangState(getLang()); }, []);
+  const t = THEME_LABELS[lang];
+  const item = (m: ThemeMode, label: string, Icon: typeof Sun) => (
+    <button type="button" role="radio" aria-checked={mode === m} aria-label={label} title={label}
+      onClick={() => { if (mode !== m) toggle(); }}
+      className={cn('grid size-8 place-items-center rounded-full transition-all', mode === m ? 'bg-brand-red-soft text-brand-red-ink shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
+      <Icon className="size-4" aria-hidden />
+    </button>
+  );
   return (
-    <Button variant="ghost" size="icon"
-      type="button"
-      onClick={toggle}
-      aria-label={label}
-      title={label}
-      data-no-translate
-      className={cn("inline-flex size-8 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted", className)}
-    >
-      {mode === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-    </Button>
+    <div role="radiogroup" aria-label={t.group} data-no-translate className={cn('glass-chip inline-flex h-9 items-center gap-0.5 rounded-full p-0.5', className)}>
+      {item('light', t.light, Sun)}{item('dark', t.dark, Moon)}
+    </div>
   );
 }
