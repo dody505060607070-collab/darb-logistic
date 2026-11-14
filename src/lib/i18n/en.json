@@ -2107,5 +2107,6 @@
   "الإطار أو موضع التركيب مستخدم بالفعل.": "The tire or mounting position is already in use.",
   "سجل فك الإطار الحالي أولًا ثم أعد التركيب في الموضع الصحيح.": "Record removal of the current tire before mounting in the correct position.",
   "رصيد المخزون غير كافٍ.": "Insufficient stock.",
-  "سجل استلام مخزون حقيقي أو صحح الكمية المطلوبة؛ لا يمكن صرف رصيد سالب.": "Record a real stock receipt or correct the requested quantity; stock cannot be negative."
+  "سجل استلام مخزون حقيقي أو صحح الكمية المطلوبة؛ لا يمكن صرف رصيد سالب.": "Record a real stock receipt or correct the requested quantity; stock cannot be negative.",
+  "،": ","
 }

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { db, useRows, type Row } from "@/lib/db";
 import { fetchFinancials } from "@/lib/queries";
 import { fmtNum, fmtSAR } from "@/lib/format";
+import { csvCell } from '@/lib/safe-csv';
 
 export const Route = createFileRoute("/reports")({
   head: () => ({
@@ -29,8 +30,10 @@ export const Route = createFileRoute("/reports")({
 
 function csv(rows: Row[], name: string) {
   if (!rows.length) return;
-  const keys = Object.keys(rows[0]!);
-  const body = [keys.join(","), ...rows.map((r) => keys.map((k) => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const first = rows[0];
+  if (!first) return;
+  const keys = Object.keys(first);
+  const body = [keys.map(csvCell).join(","), ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(","))].join("\n");
   const url = URL.createObjectURL(new Blob(["\ufeff" + body], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;

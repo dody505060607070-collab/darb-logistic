@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useArrangedCard } from './CardArrangement';
 import { RecordActions } from './RecordActions';
+import { csvCell } from '@/lib/safe-csv';
 
 const TONES: Record<Tone, string> = {
   success: "bg-success-soft text-success",
@@ -372,7 +373,7 @@ function cellText<T extends Record<string, unknown>>(r: T, c: Col<T>) {
   return String(v);
 }
 function exportExcel<T extends Record<string, unknown>>(rows: T[], cols: Col<T>[]) {
-  const esc = (x: string) => `"${x.replace(/"/g, '""')}"`;
+  const esc = csvCell;
   const lines = [cols.map((c) => esc(c.label)).join(","), ...rows.map((r) => cols.map((c) => esc(cellText(r, c))).join(","))];
   const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");

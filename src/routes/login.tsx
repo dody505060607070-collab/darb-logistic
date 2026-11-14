@@ -17,7 +17,9 @@ export const Route = createFileRoute("/login")({
       { property: "og:description", content: "الدخول الآمن بالجوال إلى نظام Shata." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://darb.website/login" },
     ],
+    links: [{ rel: 'canonical', href: 'https://darb.website/login' }],
   }),
   component: LoginPage,
 });
@@ -35,12 +37,11 @@ function LoginPage() {
   }, [auth.ready, auth.session, auth.isStaff, auth.roles, nav]);
 
   return (
-    <div dir="rtl" className="relative flex min-h-screen items-center justify-center bg-background px-4 py-16">
-      <img src={loginTruck} alt="أسطول الشاحنات" className="absolute inset-0 h-full w-full object-cover opacity-15" />
+    <div dir="rtl" className="relative flex min-h-[calc(100svh-64px)] items-center justify-center bg-background px-4 py-16">
+      <img src={loginTruck} alt="أسطول الشاحنات" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-15" />
       <DisplayControls className="absolute end-4 top-4 z-20" />
       <ClientOnly fallback={<div className="min-h-screen bg-background" />}>
           <div dir="rtl" className="panel relative w-full max-w-md p-6 sm:p-8">
-            
             <Logo className="mb-8 justify-center" />
             <h1 className="text-center text-2xl font-bold text-primary">
               تسجيل الدخول

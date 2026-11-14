@@ -30,7 +30,7 @@ export function LanguageLayer() {
         } else if (n.nodeType === 1) {
           const el = n as Element;
           if (el.getAttribute("dir") === "rtl") el.setAttribute("dir", "ltr");
-          for (const a of ATTRS) {
+          for (const a of el.closest('[data-no-translate]') ? [] : ATTRS) {
             const v = el.getAttribute(a);
             if (v && AR.test(v)) { const m = origAttr.get(el) ?? {}; m[a] ??= v; origAttr.set(el, m); el.setAttribute(a, tr(v)); }
           }
@@ -54,23 +54,26 @@ export function LanguageLayer() {
       obs?.disconnect(); obs = null;
       if (l === "ar") return restore();
       document.title = tr(document.title);
-      walk(document.body);
-      walk(document.querySelector("title") ?? document.body);
       obs = new MutationObserver((ms) => {
-        obs?.disconnect();
-        for (const m of ms) {
-          if (m.type === "characterData") { orig.set(m.target, m.target.nodeValue ?? ""); walk(m.target); }
-          else if (m.type === "attributes") walk(m.target);
-          else m.addedNodes.forEach(walk);
-        }
-        obs?.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS, "dir"] });
+        queueWalk();
       });
       obs.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS, "dir"] });
+      queueWalk();
+    };
+    let pending = 0;
+    const queueWalk = () => {
+      window.clearTimeout(pending);
+      pending = window.setTimeout(() => {
+        obs?.disconnect();
+        walk(document.body);
+        walk(document.querySelector('title') ?? document.body);
+        obs?.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS, 'dir'] });
+      }, 120);
     };
     void apply(getLang());
     const on = (e: Event) => void apply((e as CustomEvent<Lang>).detail);
     window.addEventListener("shata-lang", on);
-    return () => { window.removeEventListener("shata-lang", on); obs?.disconnect(); };
+    return () => { window.clearTimeout(pending); window.removeEventListener("shata-lang", on); obs?.disconnect(); };
   }, []);
   return null;
 }

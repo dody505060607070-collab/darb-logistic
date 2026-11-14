@@ -13,6 +13,7 @@ import { db, useOne, useRows, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
 import { ASSET_KIND, errMsg, fmtDateTime, fmtNum, fmtSAR } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
+import { isRecordId } from '@/lib/record-id';
 
 export const Route = createFileRoute("/fleet/$id")({
   head: () => ({
@@ -36,15 +37,17 @@ export const Route = createFileRoute("/fleet/$id")({
 
 function AssetProfile() {
   const { id } = Route.useParams();
+  const validId = isRecordId(id);
   const { can } = useAuth();
   const qc = useQueryClient();
-  const asset = useOne(["assets", id], () => db.from("assets").select("*, branch:branches(name)").eq("id", id).maybeSingle());
-  const docs = useRows(["documents", "asset", id], () => db.from("documents").select("*").eq("entity_type", "asset").eq("entity_id", id).order("expiry_date"));
+  const asset = useOne(["assets", id], () => db.from("assets").select("*, branch:branches(name)").eq("id", id).maybeSingle(), validId);
+  const docs = useRows(["documents", "asset", id], () => db.from("documents").select("*").eq("entity_type", "asset").eq("entity_id", id).order("expiry_date"), validId);
   const trips = useRows(["trips", "asset", id], () =>
     db.from("trips").select("id,number,origin_city,dest_city,status,planned_start,distance_km, driver:drivers!trips_driver_id_fkey(full_name)").or(`tractor_id.eq.${id},trailer_id.eq.${id}`).order("planned_start", { ascending: false }),
+    validId,
   );
-  const wos = useRows(["work_orders", "asset", id], () => db.from("work_orders").select("*").eq("asset_id", id).order("opened_at", { ascending: false }));
-  const insp = useRows(["inspections", "asset", id], () => db.from("inspections").select("*").eq("asset_id", id).order("created_at", { ascending: false }).limit(10));
+  const wos = useRows(["work_orders", "asset", id], () => db.from("work_orders").select("*").eq("asset_id", id).order("opened_at", { ascending: false }), validId);
+  const insp = useRows(["inspections", "asset", id], () => db.from("inspections").select("*").eq("asset_id", id).order("created_at", { ascending: false }).limit(10), validId);
   const [edit, setEdit] = useState(false);
   const [docEdit, setDocEdit] = useState<Row | null | undefined>(undefined);
   const [odo, setOdo] = useState("");
@@ -56,7 +59,7 @@ function AssetProfile() {
 
   async function saveOdo() {
     const v = Number(odo);
-    if (!Number.isFinite(v) || v < Number(a!.odometer_km ?? 0)) return void toast.error("قراءة العداد يجب أن تكون أكبر من القراءة الحالية");
+    if (!a || !Number.isFinite(v) || v < Number(a.odometer_km ?? 0)) return void toast.error("قراءة العداد يجب أن تكون أكبر من القراءة الحالية");
     const { error } = await db.from("assets").update({ odometer_km: v }).eq("id", id);
     if (error) return void toast.error(errMsg(error));
     toast.success("تم تحديث العداد (مصدر: يدوي)");
@@ -103,7 +106,7 @@ function AssetProfile() {
         <Panel title="آخر الفحوصات" icon={<Wrench />}>
           {(insp.data ?? []).length === 0 ? <p className="text-sm text-muted-foreground">لا توجد فحوصات.</p> : (
             <ul className="space-y-2 text-sm">
-              {insp.data!.map((i) => (
+              {(insp.data ?? []).map((i) => (
                 <li key={i.id} className="flex items-center justify-between rounded-md border px-3 py-2">
                   <span className="num">{fmtDateTime(i.created_at)}</span>
                   {i.has_critical ? <Badge tone={i.resolved ? "neutral" : "danger"}>{i.resolved ? "عيب حرج (مُعالج)" : "عيب حرج"}</Badge> : <Badge tone="success">سليم</Badge>}

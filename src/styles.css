@@ -258,3 +258,10 @@ html:not(.light) .company-logo { background: var(--logo-surface); border-radius:
 .kpi-tile.bento-auto .kpi-icon, .kpi-tile.bento-graph .kpi-icon, .kpi-tile.bento-glass .kpi-icon { color: var(--brand-red-ink); background: var(--brand-red-soft); }
 .internal-ui [data-slot="tabs-trigger"][data-state="active"] { box-shadow: inset 0 -3px 0 var(--brand-red); }
 .driver-toolbar { border-bottom: 2px solid var(--brand-red); }
+/* Long translated values wrap instead of covering adjacent record labels. */
+body[data-lang="en"] dl dd { min-width: 0; overflow-wrap: anywhere; max-width: 65%; }
+body[data-lang="en"] dl > div { align-items: start; }
+@media (prefers-reduced-motion: reduce) {
+ html { scroll-behavior: auto; }
+ .page-enter { animation: none; }
+}

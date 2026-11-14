@@ -34,13 +34,16 @@ export function useThemeMode() {
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { mode, toggle } = useThemeMode();
-  const label = getLang() === 'en' ? (mode === 'dark' ? 'Light mode' : 'Dark mode') : mode === "dark" ? "الوضع الفاتح" : "الوضع الغامق";
+  const [english, setEnglish] = useState(false);
+  useEffect(() => { setEnglish(getLang() === 'en'); }, []);
+  const label = english ? (mode === 'dark' ? 'Light mode' : 'Dark mode') : mode === "dark" ? "الوضع الفاتح" : "الوضع الغامق";
   return (
     <Button variant="ghost" size="icon"
       type="button"
       onClick={toggle}
       aria-label={label}
       title={label}
+      data-no-translate
       className={cn("inline-flex size-8 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted", className)}
     >
       {mode === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}

@@ -49,7 +49,7 @@ export function fmtNum(v?: number | string | null, digits = 0) {
 }
 export function fmtSAR(v?: number | string | null) {
   if (v === null || v === undefined) return "—";
-  return `${fmtNum(v, 2)} ر.س`;
+  return `${fmtNum(v, 2)} ${loc('').startsWith('en') ? 'SAR' : 'ر.س'}`;
 }
 export function daysUntil(d?: string | null) {
   if (!d) return null;

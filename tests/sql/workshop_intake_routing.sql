@@ -23,6 +23,7 @@ BEGIN
  IF found_id IS DISTINCT FROM a THEN RAISE EXCEPTION 'Exact vehicle lookup failed'; END IF;
  request_id:=public.workshop_intake(ref,w,a,'rollback problem description','diagnosis test','normal',500,200,'{}',12345);
  IF NOT EXISTS(SELECT 1 FROM public.work_orders WHERE id=request_id AND workshop_id=w AND requested_by=u AND workflow_status='review' AND estimate=700 AND labor_cost=200) THEN RAISE EXCEPTION 'Intake not pending with correct 700 estimate'; END IF;
+ IF (SELECT status FROM public.assets WHERE id=a)<>'available' THEN RAISE EXCEPTION 'Pending workshop intake changed vehicle availability without approval'; END IF;
  IF public.workshop_intake(ref,w,a,'rollback problem description','diagnosis test','normal',500,200,'{}',12345)<>request_id THEN RAISE EXCEPTION 'Retry created duplicate'; END IF;
  BEGIN
   PERFORM public.maintenance_transition(request_id,'repairing');
