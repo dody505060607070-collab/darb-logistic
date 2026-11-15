@@ -16,9 +16,9 @@
 - Overlap prevention for drivers/tractors/trailers is the `no_overlapping_bookings` exclusion constraint on `resource_bookings` — why: correct under concurrent requests.
 - Shared form field configs and helpers live in `src/components/darb/*`, never exported from route files — why: route files must only export `Route`.
 - Leaflet is loaded only inside `MapView` via dynamic import and rendered behind `ClientOnly` + `lazy` — why: SSR runs on workerd without `window`.
-- tsconfig disables `noPropertyAccessFromIndexSignature` and `exactOptionalPropertyTypes` — why: screens work with loosely typed dynamic selects.
-- Business-rule DB checks are described in `tests/sql/business_rules.sql` (the final RAISE rolls everything back; the exact DO block is in the migration history).
-- Morning report: `src/lib/ai-report.server.ts` saves plain figures first, AI wording replaces them if in time — why: scheduler cut-offs cannot lose it.
+- tsconfig disables `noPropertyAccessFromIndexSignature`/`exactOptionalPropertyTypes` — why: loose dynamic selects.
+- Business-rule DB checks: `tests/sql/business_rules.sql` (rolls back).
+- Morning report saves plain figures before AI wording — why: cut-offs can't lose it.
 - Task submit/review go through `task_submit`/`task_review` RPCs; reminder cadence lives in `src/lib/tasks.ts` — why: assignees cannot self-approve.
 - Task events use a DB-trigger outbox with atomic claims and stored provider IDs; ambiguous sends are kept, not resent — why: no lost or duplicate notices.
 
@@ -45,7 +45,7 @@
 - Direct owner driver/representative preview is read-only with opt-in samples — why: no identity substitution.
 - Public policies indexed; ERP noindex/no-store; official consent module — why: preserve privacy.
 - Person intake is owner-only: AI reads uploads into a `person_intakes` draft, WhatsApp missing-items notice needs a click, and accounts are created only when nothing is missing via shared `provisionEmployee` — why: no partial or unapproved accounts.
-- Representative is a separate field job: `/representative` adds customers/places and `customer_requests`, which dispatch converts via `/orders/new?request=`; no driver file — why: sales visits are not driving work.
-- Driver WhatsApp numbers come from `driver_wa_phone` (login profile first, driver file second); `wa-links.ts` appends wa.me links at send time — why: stale file numbers lost messages.
-- Multi-stop trips use `trip_stops` + `trip_routes`; the per-minute outbox job runs `trip-monitor.server.ts` first, opening one `trip_alerts` episode via service-only RPCs; thresholds live in `src/lib/route-plan.ts` — why: alerts once per episode, tested rules.
+- Representative is a separate job (`/representative` → `customer_requests` → order), no driver file — why: sales visits aren't driving.
+- Driver WhatsApp uses `driver_wa_phone` (login phone first) — why: stale file numbers lost messages.
+- Trip alerts: outbox job runs `trip-monitor.server.ts`, one `trip_alerts` episode per service-only RPC — why: no repeat alerts.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
