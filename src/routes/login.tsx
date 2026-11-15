@@ -2,6 +2,7 @@ import { DisplayControls } from "@/components/darb/DisplayControls";
 import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
+import { roleHome } from "@/lib/role-home";
 import { Logo } from "@/components/darb/Logo";
 import { ClientOnly } from "@tanstack/react-router";
 
@@ -31,11 +32,10 @@ function LoginPage() {
 
   useEffect(() => {
     if (auth.ready && auth.session) {
-      const executive = auth.roles.includes('owner') || auth.roles.includes('ops_manager');
-      const workshop = !executive && (auth.roles.includes('workshop') || auth.roles.includes('field_maintenance'));
-      void nav({ to: workshop ? '/repair-center' : auth.isStaff || auth.roles.length === 0 ? '/' : '/driver' });
+      // Each job opens straight on its own page.
+      void nav({ to: roleHome(auth.roles) });
     }
-  }, [auth.ready, auth.session, auth.isStaff, auth.roles, nav]);
+  }, [auth.ready, auth.session, auth.roles, nav]);
 
   return (
     <div dir="rtl" className="grid min-h-svh bg-background lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)]">

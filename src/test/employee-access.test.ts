@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { assertApprovedPhone } from '@/lib/employee-access';
+import { assertApprovedPhone, NOT_REGISTERED, NO_JOB_YET } from '@/lib/employee-access';
 import { newEmployeeSchema } from '@/lib/employees';
 describe('closed employee access', () => {
   it('rejects an unknown phone even with an arbitrary code', () => { expect(() => assertApprovedPhone(0, 0, false)).toThrow(); });
@@ -19,4 +19,8 @@ describe('closed employee access', () => {
   it('rejects simultaneous existing and new workshop choices',()=>{
     expect(newEmployeeSchema.safeParse({fullName:'مسؤول',phone:'+966501234567',branchId:null,role:'workshop',workshopId:'11111111-1111-4111-8111-111111111111',workshopName:'ورشة الاختبار'}).success).toBe(false);
   });
+});
+describe('sign-in refusal tells the person what to do', () => {
+  it('an unknown number is told it is not registered', () => expect(() => assertApprovedPhone(0, 0, false)).toThrow(NOT_REGISTERED));
+  it('a registered number without a job is told to contact administration', () => expect(() => assertApprovedPhone(1, 0, false)).toThrow(NO_JOB_YET));
 });

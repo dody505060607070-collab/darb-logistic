@@ -12,11 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { db, uploadFile, type Row } from "@/lib/db";
 import { errMsg, fromLocalInput, toLocalInput } from "@/lib/format";
+import { tryNormalizePhone } from "@/lib/phone";
 
 export type Field = {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "datetime" | "textarea" | "select" | "ref" | "checkbox" | "file";
+  type?: "text" | "number" | "date" | "datetime" | "textarea" | "select" | "ref" | "checkbox" | "file" | "tel";
   options?: [string, string][];
   ref?: { table: string; label: string | ((r: Row) => string); select?: string; filter?: (q: any) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any
   required?: boolean;
@@ -24,6 +25,16 @@ export type Field = {
   full?: boolean;
   hint?: string;
 };
+
+/** Phone fields are saved as +<country><number> whatever way they were typed (Saudi Arabia by default). */
+const isPhoneField = (f: Field) => f.type === "tel" || f.name === "phone" || f.name.endsWith("_phone");
+
+function PhoneHint({ value }: { value: string }) {
+  const phone = tryNormalizePhone(value);
+  return phone
+    ? <p className="mt-1 text-xs text-success">سيُحفظ كـ <span dir="ltr" className="num">{phone}</span></p>
+    : <p className="mt-1 text-xs text-danger">رقم غير مفهوم بعد — مثال: 0501234567</p>;
+}
 
 function RefSelect({ f, value, onChange }: { f: Field; value: string; onChange: (v: string) => void }) {
   const r = f.ref!;
@@ -107,6 +118,11 @@ export function EntityDialog({
         if (f.type === "number") v = v === "" || v === null ? null : Number(v);
         else if (f.type === "datetime") v = v ? fromLocalInput(v as string) : null;
         else if (f.type !== "checkbox" && v === "") v = null;
+        if (isPhoneField(f) && v) {
+          const phone = tryNormalizePhone(String(v));
+          if (!phone) throw new Error(`${f.label}: رقم الجوال غير صحيح. اكتبه مثل 0501234567 أو 966501234567`);
+          v = phone;
+        }
         payload[f.name] = v;
       }
       const final = transform ? transform(payload) : payload;
@@ -180,7 +196,9 @@ export function EntityDialog({
             else
               input = (
                 <Input
-                  type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "datetime" ? "datetime-local" : "text"}
+                  type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "datetime" ? "datetime-local" : isPhoneField(f) ? "tel" : "text"}
+                  dir={isPhoneField(f) ? "ltr" : undefined}
+                  inputMode={isPhoneField(f) ? "tel" : undefined}
                   step={f.type === "number" ? "any" : undefined}
                   value={v}
                   onChange={(e) => set(f.name, e.target.value)}
@@ -194,6 +212,7 @@ export function EntityDialog({
                 </Label>
                 {input}
                 {f.hint && <p className="mt-1 text-xs text-muted-foreground">{f.hint}</p>}
+                {isPhoneField(f) && v ? <PhoneHint value={String(v)} /> : null}
               </div>
             );
           })}

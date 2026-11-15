@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { normalizePhone } from './phone';
 import { canRestoreProfilePhone, matchesVerifiedPhone, phoneIdentityVariants } from './phone-account';
 import { BRAND } from './brand';
 import { assertApprovedPhone } from './employee-access';
@@ -13,10 +13,9 @@ import { assertApprovedPhone } from './employee-access';
 const TTL_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
+/** Accepts the number however it was typed (05…, 966…, +966…, 00966…) and returns +966…. */
 function validPhone(raw: unknown): string {
-  const p = parsePhoneNumberFromString(String(raw ?? ""));
-  if (!p?.isValid()) throw new Error("أدخل رقم جوال صحيحًا مع رمز الدولة");
-  return p.number;
+  return normalizePhone('+966', String(raw ?? ""));
 }
 
 function gateway() {

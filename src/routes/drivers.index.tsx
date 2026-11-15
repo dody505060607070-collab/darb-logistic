@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { useRows } from "@/lib/db";
 import { fetchDrivers } from "@/lib/queries";
 import { PersonIntake } from "@/components/darb/PersonIntake";
+import { DriverMissingBadge, DriverMissingBox } from "@/components/darb/DriverMissing";
+import { driverMissing } from "@/lib/driver-completeness";
 import { useAuth } from "@/lib/auth";
 import { daysUntil, STATUS } from "@/lib/format";
 
@@ -48,11 +50,12 @@ function DriversPage() {
     <>
       <PageHeader title="السائقون" subtitle="بيانات السائقين والرخص والعهد والرحلات" icon={<User />}
         actions={<div className="flex flex-wrap gap-2">{can("owner") && <PersonIntake />}{can("ops_manager", "fleet_supervisor") && <Button variant="gold" onClick={() => setOpen(true)}><Plus /> سائق جديد</Button>}</div>} />
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-6">
         <Kpi label="إجمالي السائقين" value={all.length} icon={<Users />} />
         <Kpi label="متاح" value={c("available")} tone="info" icon={<CircleCheck />} />
         <Kpi label="في رحلة" value={c("on_trip")} tone="success" icon={<Truck />} />
         <Kpi label="إجازة" value={c("off")} icon={<CalendarDays />} />
+        <Kpi label="ملفات ناقصة" value={all.filter(d => driverMissing(d).length > 0).length} tone="danger" icon={<TriangleAlert />} />
         <Kpi label="رخص منتهية" value={all.filter((d) => d.license_expiry && new Date(d.license_expiry) < new Date()).length} tone="danger" icon={<TriangleAlert />} />
       </div>
       <div className="split-layout min-w-0">
@@ -69,11 +72,13 @@ function DriversPage() {
             { key: "license_expiry", label: "انتهاء الرخصة", render: (r) => <DocExpiry d={r.license_expiry} /> },
             { key: "status", label: "الحالة", render: (r) => <Status kind="driver" value={r.status} /> },
             { key: "app", label: "حساب التطبيق", render: (r) => (r.user_id ? "مرتبط" : "غير مرتبط") },
+            { key: "missing", label: "النواقص", render: (r) => <DriverMissingBadge driver={r} /> },
           ]} />
       </Panel>
       {selected && <Panel className="record-preview side-detail" title={selected.full_name} icon={<User />} actions={<Status kind="driver" value={selected.status} />}>
         <div className="mb-4 grid size-14 place-items-center rounded-full bg-accent text-primary"><User className="size-7" /></div>
         <KV items={[["رقم السائق", <span className="num">{selected.code}</span>], ["الجوال", <span className="num">{selected.phone ?? "—"}</span>], ["انتهاء الرخصة", <DocExpiry d={selected.license_expiry} />], ["حساب التطبيق", selected.user_id ? "مرتبط" : "غير مرتبط"]]} />
+        <DriverMissingBox driver={selected} className="mt-4" onComplete={can("ops_manager", "fleet_supervisor") ? () => { void nav({ to: "/drivers/$id", params: { id: selected.id } }); } : undefined} />
         <div className={licenseDays == null ? "mt-4 rounded-xl border bg-muted p-3" : licenseDays < 0 ? "mt-4 rounded-xl border bg-danger-soft p-3 text-danger" : licenseDays <= 30 ? "mt-4 rounded-xl border bg-gold-soft p-3 text-gold" : "mt-4 rounded-xl border bg-success-soft p-3 text-primary"}>
           <div className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" /> صلاحية الرخصة</div>
           <div className="mt-1 font-semibold">{licenseDays == null ? "لا يوجد تاريخ انتهاء مسجل" : licenseDays < 0 ? `منتهية منذ ${Math.abs(licenseDays)} يومًا` : `المتبقي ${licenseDays} يومًا`}</div>

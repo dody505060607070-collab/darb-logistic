@@ -1,9 +1,9 @@
+import { whatsappNumber } from "./phone";
 /** Phone numbers that appear in a WhatsApp notice: "+" international numbers and Saudi mobiles written 05XXXXXXXX. */
 const PHONE = /(?<![\d/=])(\+\d{9,15}|05\d{8})(?!\d)/g;
 
 export function waDigits(raw: string): string {
-  const d = raw.replace(/\D/g, "");
-  return /^05\d{8}$/.test(d) ? `966${d.slice(1)}` : d;
+  return whatsappNumber(raw) ?? raw.replace(/\D/g, "");
 }
 
 /** Appends a tap-to-chat wa.me link for every phone number in the message (except the recipient's own). */

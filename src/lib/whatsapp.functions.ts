@@ -1,4 +1,5 @@
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
+import { whatsappNumber } from "./phone";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { linkedWhatsAppNumber } from './whatsapp-instance';
 
@@ -93,8 +94,8 @@ export const whatsappQr = createServerFn({ method: "POST" })
 export const whatsappSendTest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { number: string }) => {
-    const n = String(d?.number ?? "").replace(/\D/g, "");
-    if (n.length < 9 || n.length > 15) throw new Error("رقم غير صحيح — اكتبه بالصيغة الدولية مثل 9665xxxxxxxx");
+    const n = whatsappNumber(String(d?.number ?? ""));
+    if (!n) throw new Error("رقم غير صحيح — اكتبه مثل 0501234567 أو 9665xxxxxxxx");
     return { number: n };
   })
   .handler(async ({ context, data }) => {
@@ -147,8 +148,8 @@ export const notifyTripDriver = createServerFn({ method: "POST" })
     if (!c.ready) return { sent: false, reason: "واتساب: لم يتم الربط" };
     const { data: trip, error } = await ctx.supabase.from("trips").select("number, origin_city, dest_city, planned_start, driver:drivers!trips_driver_id_fkey(full_name, phone)").eq("id", data.tripId).single();
     if (error || !trip) throw new Error("تعذر قراءة الرحلة");
-    const phone = String(trip.driver?.phone ?? "").replace(/\D/g, "").replace(/^0/, "966");
-    if (phone.length < 9) return { sent: false, reason: "لا يوجد رقم جوال للسائق — لم يُرسل واتساب" };
+    const phone = whatsappNumber(trip.driver?.phone) ?? "";
+    if (!phone) return { sent: false, reason: "لا يوجد رقم جوال للسائق — لم يُرسل واتساب" };
     const when = trip.planned_start ? new Date(trip.planned_start).toLocaleString("ar-SA", { timeZone: "Asia/Riyadh" }) : "—";
     const text = `مرحبًا ${trip.driver?.full_name ?? ""}\nتم تكليفك برحلة ${trip.number}\nمن: ${trip.origin_city} إلى: ${trip.dest_city}\nموعد التحميل: ${when}\nافتح تطبيق Shata لتفاصيل الرحلة.`;
     const r = await call(`/message/sendText/${encodeURIComponent(c.instance)}`, { method: "POST", body: JSON.stringify({ number: phone, text }) });

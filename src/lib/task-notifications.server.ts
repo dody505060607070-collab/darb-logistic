@@ -1,4 +1,5 @@
 import { taskMessage } from './task-notifications';
+import { whatsappNumber } from './phone';
 import type { TaskEvent } from './task-notifications';
 
 /** Acceptance is not recipient delivery; uncertain outcomes stay visible, never blindly resent. */
@@ -24,9 +25,8 @@ export async function processTaskNotifications(taskId?: string, event?: TaskEven
       return { sent: 0, reason: 'cancelled' };
     }
     const profile = check(await db.from('profiles').select('phone').eq('id', row.recipient_id).maybeSingle());
-    let number = String(profile?.phone ?? '').replace(/\D/g, '');
-    if (/^05\d{8}$/.test(number)) number = `966${number.slice(1)}`;
-    if (!/^[1-9]\d{8,14}$/.test(number)) {
+    const number = whatsappNumber(profile?.phone);
+    if (!number) {
       check(await db.from('task_notifications').update({ state: 'failed', error: 'لا يوجد جوال صحيح للموظف', next_attempt_at: new Date(Date.now() + 3600000).toISOString() }).eq('id', row.id));
       return { sent: 0, reason: 'no_phone' };
     }

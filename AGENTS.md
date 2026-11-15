@@ -49,3 +49,5 @@
 - Driver WhatsApp uses `driver_wa_phone` (login phone first) — why: stale file numbers lost messages.
 - Trip alerts: outbox job runs `trip-monitor.server.ts`; one episode per alert — why: no repeats.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
+- Phones are understood in any common form by `src/lib/phone.ts` and stored/sent as E.164 at every form, login and WhatsApp send — why: one parser, no mistyped numbers.
+- Granting the driver role auto-creates a linked driver file (DB trigger); missing items come from `driver-completeness.ts` — why: no driver without a file.

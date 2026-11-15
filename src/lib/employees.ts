@@ -7,7 +7,7 @@ export const employeeSchema = z.object({
   phone: z.string().trim().transform((value, ctx) => {
     if (!value) return null;
     try { return normalizePhone('+966', value); }
-    catch { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'أدخل رقم الجوال بالصيغة الدولية الصحيحة' }); return z.NEVER; }
+    catch { ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'رقم الجوال غير صحيح. اكتبه مثل 0501234567 أو 966501234567' }); return z.NEVER; }
   }),
   branchId: z.string().uuid().nullable(),
 });
@@ -18,7 +18,7 @@ export function canRemoveEmployeeRole(actorId: string, employeeId: string, role:
 
 const newEmployeeFields = employeeSchema.omit({ id: true }).extend({
   phone: z.string().trim().min(1).transform(value => normalizePhone('+966', value)),
-  role: z.enum(['owner', 'ops_manager', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'driver', 'field_maintenance', 'workshop']),
+  role: z.enum(['owner', 'ops_manager', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'driver', 'representative', 'field_maintenance', 'workshop']),
   workshopId: z.string().uuid().nullable().default(null),
   workshopName: z.string().trim().min(2).max(160).optional(),
 });

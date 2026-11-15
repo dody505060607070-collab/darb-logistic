@@ -4,7 +4,7 @@ import { WhatsAppIcon } from './WhatsAppIcon';
 import { toast } from 'sonner';
 import { useServerFn } from '@tanstack/react-start';
 import { supabase } from '@/integrations/supabase/client';
-import { normalizePhone } from '@/lib/phone';
+import { normalizePhone, tryNormalizePhone } from '@/lib/phone';
 import { requestLoginCode, verifyLoginCode } from '@/lib/whatsapp-login.functions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +55,7 @@ export function PhoneLogin() {
         <span className="h-7 w-px shrink-0 bg-border" aria-hidden />
         <input id="phone-number" aria-invalid={!!error} aria-describedby={error ? 'login-error' : undefined} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="5X XXX XXXX" value={number} onChange={e => setNumber(e.target.value)} required className="h-full min-w-0 flex-1 border-0 bg-transparent px-4 text-lg tracking-wide shadow-none outline-none placeholder:text-muted-foreground/70 focus:shadow-none" style={{ background: 'transparent' }} />
       </div>
+      {number.trim() && (() => { const p = tryNormalizePhone(number, country); return <p className={p ? 'text-center text-sm text-success' : 'text-center text-sm text-muted-foreground'}>{p ? <>سنرسل الرمز إلى <b dir="ltr" className="num">{p}</b></> : 'اكتب الرقم كما تعرفه: 05… أو 966… أو +966…'}</p>; })()}
     </>}
     {error && <p id="login-error" role="alert" className="rounded-3xl border border-danger bg-danger-soft p-3 text-sm text-danger">{error}</p>}
     <Button type="submit" variant="gold" disabled={busy} className="h-14 w-full text-lg font-bold shadow-[0_14px_30px_-14px_var(--brand-red)] [&_svg]:size-6">{busy ? <Loader2 className="animate-spin" /> : sentTo ? <ShieldCheck /> : <WhatsAppIcon />}{sentTo ? 'تحقق وتسجيل الدخول' : 'إرسال رمز التحقق عبر واتساب'}</Button>

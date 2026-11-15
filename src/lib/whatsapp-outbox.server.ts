@@ -1,4 +1,5 @@
 import { withWhatsAppLinks } from '@/lib/wa-links';
+import { whatsappNumber } from './phone';
 
 /** Sends queued WhatsApp messages. Claims are atomic; ambiguous outcomes stay "unresolved" and are never resent. */
 export async function processWhatsAppOutbox(limit = 20) {
@@ -17,10 +18,15 @@ export async function processWhatsAppOutbox(limit = 20) {
     const row = claimed?.[0];
     if (!row) continue;
     let state = 'unresolved', err: string | null = null, providerId: string | null = null;
+    const number = whatsappNumber(row.phone);
+    if (!number) {
+      await db.from('whatsapp_outbox').update({ state: 'failed', attempts: 5, error: 'رقم الجوال غير صحيح، صحّحه في ملف الموظف' }).eq('id', row.id);
+      continue;
+    }
     try {
       const res = await fetch(`${url}/message/sendText/${encodeURIComponent(instance)}`, {
         method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ number: row.phone, text: withWhatsAppLinks(row.body, row.phone) }), signal: AbortSignal.timeout(8000),
+        body: JSON.stringify({ number, text: withWhatsAppLinks(row.body, row.phone) }), signal: AbortSignal.timeout(8000),
       });
       const body = await res.text();
       if (!res.ok) { state = res.status >= 500 ? 'unresolved' : 'failed'; err = `[${res.status}] ${body.slice(0, 300)}`; }

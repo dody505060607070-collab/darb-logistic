@@ -10,3 +10,10 @@ describe("role home", () => {
   it("fleet supervisor gets fleet board", () => expect(dashboardFor(["fleet_supervisor"])).toBe("fleet_supervisor"));
   it("everyone lands on home", () => expect(roleHome(["accountant"])).toBe("/"));
 });
+
+describe("each job signs in straight to its own page", () => {
+  it("driver → driver page", () => expect(roleHome(["driver"])).toBe("/driver"));
+  it("representative → representative page", () => expect(roleHome(["representative"])).toBe("/representative"));
+  it("workshop → repair center", () => expect(roleHome(["workshop"])).toBe("/repair-center"));
+  it("owner keeps the main dashboard even with a driver job", () => expect(roleHome(["owner", "driver"])).toBe("/"));
+});

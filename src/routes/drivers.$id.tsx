@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/darb/AppShell";
 import { DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
+import { DriverMissingBox } from "@/components/darb/DriverMissing";
 import { Button } from "@/components/ui/button";
 import { db, useOne, useRows, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
@@ -63,6 +64,7 @@ function DriverProfile() {
           {can("owner") && !r.user_id && <Button variant="outline" onClick={() => void invite()}><Mail /> دعوة لتطبيق السائق</Button>}
           <RecordActions table="drivers" id={id} onEdit={canEdit ? () => setEdit(true) : undefined} onDeleted={() => { window.location.assign("/drivers"); }} />
         </>} />
+      <DriverMissingBox driver={r} className="mb-5" onComplete={canEdit ? () => setEdit(true) : undefined} />
       <div className="grid gap-5 xl:grid-cols-3">
         <Panel title="البيانات" icon={<User />} actions={<Status kind="driver" value={r.status} />}>
           <KV items={[
