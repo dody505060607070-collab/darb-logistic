@@ -635,12 +635,114 @@ export type Database = {
           },
         ]
       }
+      customer_requests: {
+        Row: {
+          cargo_type: string
+          close_reason: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          customer_id: string
+          delivery_city: string | null
+          delivery_location_id: string | null
+          id: string
+          notes: string | null
+          number: string
+          order_id: string | null
+          pickup_from: string | null
+          pickup_location_id: string | null
+          quantity: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          unit: string | null
+          weight_kg: number | null
+        }
+        Insert: {
+          cargo_type: string
+          close_reason?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id: string
+          delivery_city?: string | null
+          delivery_location_id?: string | null
+          id?: string
+          notes?: string | null
+          number?: string
+          order_id?: string | null
+          pickup_from?: string | null
+          pickup_location_id?: string | null
+          quantity?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          unit?: string | null
+          weight_kg?: number | null
+        }
+        Update: {
+          cargo_type?: string
+          close_reason?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          delivery_city?: string | null
+          delivery_location_id?: string | null
+          id?: string
+          notes?: string | null
+          number?: string
+          order_id?: string | null
+          pickup_from?: string | null
+          pickup_location_id?: string | null
+          quantity?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          unit?: string | null
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_requests_delivery_location_id_fkey"
+            columns: ["delivery_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "transport_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_requests_pickup_location_id_fkey"
+            columns: ["pickup_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           city: string | null
           contact_name: string | null
           cr_number: string | null
           created_at: string
+          created_by: string | null
           email: string | null
           id: string
           name: string
@@ -654,6 +756,7 @@ export type Database = {
           contact_name?: string | null
           cr_number?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           id?: string
           name: string
@@ -667,6 +770,7 @@ export type Database = {
           contact_name?: string | null
           cr_number?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           id?: string
           name?: string
@@ -1312,6 +1416,7 @@ export type Database = {
           city: string
           contact: string | null
           created_at: string
+          created_by: string | null
           customer_id: string | null
           id: string
           instructions: string | null
@@ -1324,6 +1429,7 @@ export type Database = {
           city: string
           contact?: string | null
           created_at?: string
+          created_by?: string | null
           customer_id?: string | null
           id?: string
           instructions?: string | null
@@ -1336,6 +1442,7 @@ export type Database = {
           city?: string
           contact?: string | null
           created_at?: string
+          created_by?: string | null
           customer_id?: string | null
           id?: string
           instructions?: string | null
@@ -2342,6 +2449,59 @@ export type Database = {
           },
         ]
       }
+      trip_alerts: {
+        Row: {
+          cleared_at: string | null
+          distance_m: number | null
+          id: string
+          kind: string
+          last_seen_at: string
+          lat: number | null
+          lng: number | null
+          minutes: number | null
+          opened_at: string
+          reason: string | null
+          reason_at: string | null
+          trip_id: string
+        }
+        Insert: {
+          cleared_at?: string | null
+          distance_m?: number | null
+          id?: string
+          kind: string
+          last_seen_at?: string
+          lat?: number | null
+          lng?: number | null
+          minutes?: number | null
+          opened_at?: string
+          reason?: string | null
+          reason_at?: string | null
+          trip_id: string
+        }
+        Update: {
+          cleared_at?: string | null
+          distance_m?: number | null
+          id?: string
+          kind?: string
+          last_seen_at?: string
+          lat?: number | null
+          lng?: number | null
+          minutes?: number | null
+          opened_at?: string
+          reason?: string | null
+          reason_at?: string | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_alerts_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trip_assignment_history: {
         Row: {
           actor: string | null
@@ -2460,6 +2620,107 @@ export type Database = {
             foreignKeyName: "trip_financials_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: true
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_routes: {
+        Row: {
+          computed_at: string
+          distance_km: number | null
+          duration_min: number | null
+          points: Json
+          provider: string
+          trip_id: string
+        }
+        Insert: {
+          computed_at?: string
+          distance_km?: number | null
+          duration_min?: number | null
+          points: Json
+          provider: string
+          trip_id: string
+        }
+        Update: {
+          computed_at?: string
+          distance_km?: number | null
+          duration_min?: number | null
+          points?: Json
+          provider?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_routes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: true
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_stops: {
+        Row: {
+          arrived_at: string | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          done_at: string | null
+          id: string
+          lat: number
+          lng: number
+          location_id: string | null
+          name: string
+          notes: string | null
+          seq: number
+          status: string
+          trip_id: string
+        }
+        Insert: {
+          arrived_at?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          id?: string
+          lat: number
+          lng: number
+          location_id?: string | null
+          name: string
+          notes?: string | null
+          seq?: number
+          status?: string
+          trip_id: string
+        }
+        Update: {
+          arrived_at?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          location_id?: string | null
+          name?: string
+          notes?: string | null
+          seq?: number
+          status?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_stops_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_stops_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
             referencedRelation: "trips"
             referencedColumns: ["id"]
           },
@@ -3018,6 +3279,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      clear_trip_alert: {
+        Args: { p_kind: string; p_trip_id: string }
+        Returns: undefined
+      }
       close_trip: { Args: { p_trip_id: string }; Returns: undefined }
       create_invoice_from_trips: {
         Args: {
@@ -3048,6 +3313,10 @@ export type Database = {
           p_transfer_to?: string
         }
         Returns: string
+      }
+      driver_explain_alert: {
+        Args: { p_alert_id: string; p_reason: string }
+        Returns: undefined
       }
       driver_my_trips: {
         Args: never
@@ -3115,6 +3384,11 @@ export type Database = {
         }
         Returns: string
       }
+      driver_stop_update: {
+        Args: { p_status: string; p_stop_id: string }
+        Returns: undefined
+      }
+      driver_trip_plan: { Args: { p_trip_id: string }; Returns: Json }
       driver_trips_for: {
         Args: { p_driver_id: string }
         Returns: {
@@ -3149,6 +3423,7 @@ export type Database = {
           weight_kg: number
         }[]
       }
+      driver_wa_phone: { Args: { p_driver: string }; Returns: string }
       enqueue_due_task_reminders: { Args: never; Returns: number }
       enqueue_task_event: {
         Args: {
@@ -3202,6 +3477,17 @@ export type Database = {
           p_workshop_id?: string
         }
         Returns: undefined
+      }
+      open_trip_alert: {
+        Args: {
+          p_distance_m: number
+          p_kind: string
+          p_lat: number
+          p_lng: number
+          p_minutes: number
+          p_trip_id: string
+        }
+        Returns: boolean
       }
       record_trip_event: {
         Args: {
@@ -3279,11 +3565,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      wa_event_label: { Args: { p: string }; Returns: string }
       wa_event_roles: {
         Args: { p_critical?: boolean; p_event: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
       wa_norm: { Args: { p: string }; Returns: string }
+      wa_phone_inline: { Args: { p: string }; Returns: string }
+      wa_phone_line: { Args: { p: string; p_label: string }; Returns: string }
       wa_trip_status_label: { Args: { s: string }; Returns: string }
       wallet_balances: {
         Args: never

@@ -55,6 +55,7 @@ export const NAV: NavItem[] = [
   { to: "/", label: "الرئيسية", icon: Home , group: NAV_GROUPS[0]! },
   { to: "/operations", label: "العمليات", icon: Cog, roles: ["ops_manager", "dispatcher"] , group: NAV_GROUPS[1]! },
   { to: "/orders", label: "أوامر النقل", icon: FileText, roles: ["ops_manager", "dispatcher", "accountant"] , group: NAV_GROUPS[1]! },
+  { to: "/customer-requests", label: "طلبات العملاء", icon: Users, roles: ["ops_manager", "dispatcher"], group: NAV_GROUPS[1]! },
   { to: "/trips", label: "الرحلات", icon: RouteIcon, roles:['ops_manager','dispatcher','fleet_supervisor','accountant'], group: NAV_GROUPS[1]! },
   { to: "/tracking", label: "التتبع", icon: MapPin, roles:['ops_manager','dispatcher','fleet_supervisor'], group: NAV_GROUPS[1]! },
   { to: "/fleet", label: "الأسطول", icon: Truck, roles:['ops_manager','fleet_supervisor','maintenance'], group: NAV_GROUPS[2]! },
@@ -85,7 +86,8 @@ export function navItemForPath(path: string): NavItem | undefined {
 export function roleHome(roles: AppRole[]): string {
   if (roles.includes("owner") || roles.includes("ops_manager")) return "/";
   if(roles.includes('workshop')||roles.includes('field_maintenance')) return '/repair-center';
-  if(roles.includes('driver')||roles.includes('representative')) return '/driver';
+  if(roles.includes('driver')) return '/driver';
+  if(roles.includes('representative')) return '/representative';
   // dispatcher, accountant, maintenance and fleet supervisor get their own dashboard on "/"
   return "/";
 }
@@ -225,7 +227,8 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
   useEffect(() => {
     if (!auth.ready) return;
     if (!auth.session) void nav({ to: "/login" });
-    else if (staffOnly && !auth.isStaff && auth.roles.some(r=>['driver','representative'].includes(r))) void nav({ to: "/driver" });
+    else if (staffOnly && !auth.isStaff && auth.roles.includes('driver')) void nav({ to: "/driver" });
+    else if (staffOnly && !auth.isStaff && auth.roles.includes('representative')) void nav({ to: "/representative" });
     else if (auth.roles.length) {
       // Role-specific home and page guard
       const item = navItemForPath(path);
@@ -360,7 +363,7 @@ function RolePreview({ onNavigate }: { onNavigate?: () => void }) {
   const auth = useAuth();
   const nav = useNavigate();
   if (!auth.isSuperAdmin) return null;
-  const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "field_maintenance", "workshop", "driver"];
+  const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "field_maintenance", "workshop", "driver", "representative"];
   return (
     <div className="border-t border-sidebar-border px-3 py-3">
       <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[11px] text-sidebar-foreground/60">

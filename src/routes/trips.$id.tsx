@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
 import { ReturnTripPanel } from "@/components/darb/ReturnTrip";
+import { TripRouteMap } from "@/components/darb/TripRouteMap";
 import { AssignForm } from "@/components/darb/AssignForm";
 import { Badge, DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { openFile } from "@/components/darb/shared";
@@ -48,6 +49,7 @@ function TripDetails() {
   const bookings = useRows(["bookings", id], () => db.from("resource_bookings").select("*").eq("trip_id", id));
   const expenses = useRows(["expenses", "trip", id], () => db.from("expenses").select("*").eq("trip_id", id));
   const fuel = useRows(["fuel", "trip", id], () => db.from("fuel_entries").select("*").eq("trip_id", id));
+  const locations = useRows(["locations"], () => db.from("locations").select("*").order("name"));
   const showFin = can("ops_manager", "accountant");
   const fin = useOne(["trip_financials", id], () => db.from("trip_financials").select("*").eq("trip_id", id).maybeSingle(), showFin);
   const [ev, setEv] = useState("arrived_pickup");
@@ -126,12 +128,17 @@ function TripDetails() {
             ["الحمولة", t.order ? `${t.order.cargo_type} • ${fmtNum(t.order.quantity)} ${t.order.unit}` : "—"],
           ]} />
         </Panel>
-        <Panel title="المسار" icon={<MapPin />} className="xl:col-span-2" actions={<span className="text-xs text-muted-foreground">آخر موقع للرأس: {fmtDateTime(t.tractor?.last_position_at)} ({t.tractor?.last_position_source ?? "—"})</span>}>
-          <ClientOnly fallback={<Loading />}>
-            <Suspense fallback={<Loading />}>
-              <MapView markers={markers} lines={lines} height={330} />
-            </Suspense>
-          </ClientOnly>
+        <Panel title="المسار ونقاط التنزيل" icon={<MapPin />} className="xl:col-span-2" actions={<span className="text-xs text-muted-foreground">آخر موقع للرأس: {fmtDateTime(t.tractor?.last_position_at)} ({t.tractor?.last_position_source ?? "—"})</span>}>
+          {can("ops_manager", "dispatcher", "fleet_supervisor") ? (
+            <TripRouteMap tripId={id} tripStatus={t.status} mode="staff" readOnly={!ops} locations={locations.data ?? []} height={330}
+              truck={t.tractor?.last_lat ? { lat: t.tractor.last_lat, lng: t.tractor.last_lng, label: t.tractor.code } : null} />
+          ) : (
+            <ClientOnly fallback={<Loading />}>
+              <Suspense fallback={<Loading />}>
+                <MapView markers={markers} lines={lines} height={330} />
+              </Suspense>
+            </ClientOnly>
+          )}
         </Panel>
       </div>
 

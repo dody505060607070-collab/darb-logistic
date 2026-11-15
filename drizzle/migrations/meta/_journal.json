@@ -309,6 +309,20 @@
       "when": 1794732445302,
       "tag": "0043_revoke_owner_clears_phone_reservation",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794770176712,
+      "tag": "0044_representative_stops_tracking_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794770345623,
+      "tag": "0045_trip_plan_endpoints",
+      "breakpoints": true
     }
   ]
 }

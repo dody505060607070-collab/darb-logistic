@@ -6,8 +6,14 @@ export const Route = createFileRoute('/api/public/jobs/whatsapp-outbox')({
     const failure = await authenticateCronRequest(request);
     if (failure) return failure;
     try {
+      // Tracking alerts are queued first so their WhatsApp notices leave in the same run.
+      let tracking: unknown = null;
+      try {
+        const { monitorRunningTrips } = await import('@/lib/trip-monitor.server');
+        tracking = await monitorRunningTrips();
+      } catch (e) { console.error('Trip monitor failed', e); tracking = { error: 'تعذر فحص الرحلات الجارية' }; }
       const { processWhatsAppOutbox } = await import('@/lib/whatsapp-outbox.server');
-      return Response.json(await processWhatsAppOutbox());
+      return Response.json({ ...(await processWhatsAppOutbox()), tracking });
     } catch (e) {
       console.error('WhatsApp outbox failed', e);
       return Response.json({ error: 'تعذر إرسال رسائل واتساب' }, { status: 500 });

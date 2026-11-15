@@ -3,7 +3,7 @@ import { normalizePhone } from './phone';
 /** Person-file intake rules (browser-safe, also used by the server before creating an account). */
 export const INTAKE_DOC_TYPES = ['هوية وطنية', 'إقامة', 'رخصة قيادة', 'بطاقة سائق', 'جواز سفر', 'سيرة ذاتية', 'شهادة', 'أخرى'] as const;
 export type IntakeDocType = (typeof INTAKE_DOC_TYPES)[number];
-export const INTAKE_ROLES = ['driver', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'field_maintenance', 'ops_manager'] as const;
+export const INTAKE_ROLES = ['driver', 'representative', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'field_maintenance', 'ops_manager'] as const;
 export type IntakeRole = (typeof INTAKE_ROLES)[number];
 /** National ID and iqama both prove identity. */
 export const IDENTITY_DOCS = ['هوية وطنية', 'إقامة'];

@@ -14,6 +14,7 @@ import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CustodyRouteImport } from './routes/custody'
+import { Route as CustomerRequestsRouteImport } from './routes/customer-requests'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DriverRouteImport } from './routes/driver'
@@ -27,6 +28,7 @@ import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RepairCenterRouteImport } from './routes/repair-center'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as RepresentativeRouteImport } from './routes/representative'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
@@ -68,6 +70,11 @@ const ContactRoute = ContactRouteImport.update({
 const CustodyRoute = CustodyRouteImport.update({
   id: '/custody',
   path: '/custody',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerRequestsRoute = CustomerRequestsRouteImport.update({
+  id: '/customer-requests',
+  path: '/customer-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersRoute = CustomersRouteImport.update({
@@ -133,6 +140,11 @@ const RepairCenterRoute = RepairCenterRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepresentativeRoute = RepresentativeRouteImport.update({
+  id: '/representative',
+  path: '/representative',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -230,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/custody': typeof CustodyRoute
+  '/customer-requests': typeof CustomerRequestsRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
   '/driver': typeof DriverRoute
@@ -243,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
+  '/representative': typeof RepresentativeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
@@ -267,6 +281,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/custody': typeof CustodyRoute
+  '/customer-requests': typeof CustomerRequestsRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
   '/driver': typeof DriverRoute
@@ -280,6 +295,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
+  '/representative': typeof RepresentativeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
@@ -305,6 +321,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
   '/custody': typeof CustodyRoute
+  '/customer-requests': typeof CustomerRequestsRoute
   '/customers': typeof CustomersRoute
   '/documents': typeof DocumentsRoute
   '/driver': typeof DriverRoute
@@ -318,6 +335,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/repair-center': typeof RepairCenterRoute
   '/reports': typeof ReportsRoute
+  '/representative': typeof RepresentativeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
@@ -344,6 +362,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/custody'
+    | '/customer-requests'
     | '/customers'
     | '/documents'
     | '/driver'
@@ -357,6 +376,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/repair-center'
     | '/reports'
+    | '/representative'
     | '/reset-password'
     | '/settings'
     | '/tasks'
@@ -381,6 +401,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/custody'
+    | '/customer-requests'
     | '/customers'
     | '/documents'
     | '/driver'
@@ -394,6 +415,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/repair-center'
     | '/reports'
+    | '/representative'
     | '/reset-password'
     | '/settings'
     | '/tasks'
@@ -418,6 +440,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contact'
     | '/custody'
+    | '/customer-requests'
     | '/customers'
     | '/documents'
     | '/driver'
@@ -431,6 +454,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/repair-center'
     | '/reports'
+    | '/representative'
     | '/reset-password'
     | '/settings'
     | '/tasks'
@@ -456,6 +480,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ContactRoute: typeof ContactRoute
   CustodyRoute: typeof CustodyRoute
+  CustomerRequestsRoute: typeof CustomerRequestsRoute
   CustomersRoute: typeof CustomersRoute
   DocumentsRoute: typeof DocumentsRoute
   DriverRoute: typeof DriverRoute
@@ -469,6 +494,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RepairCenterRoute: typeof RepairCenterRoute
   ReportsRoute: typeof ReportsRoute
+  RepresentativeRoute: typeof RepresentativeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
@@ -523,6 +549,13 @@ declare module '@tanstack/react-router' {
       path: '/custody'
       fullPath: '/custody'
       preLoaderRoute: typeof CustodyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer-requests': {
+      id: '/customer-requests'
+      path: '/customer-requests'
+      fullPath: '/customer-requests'
+      preLoaderRoute: typeof CustomerRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customers': {
@@ -614,6 +647,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/representative': {
+      id: '/representative'
+      path: '/representative'
+      fullPath: '/representative'
+      preLoaderRoute: typeof RepresentativeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -744,6 +784,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ContactRoute: ContactRoute,
   CustodyRoute: CustodyRoute,
+  CustomerRequestsRoute: CustomerRequestsRoute,
   CustomersRoute: CustomersRoute,
   DocumentsRoute: DocumentsRoute,
   DriverRoute: DriverRoute,
@@ -757,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RepairCenterRoute: RepairCenterRoute,
   ReportsRoute: ReportsRoute,
+  RepresentativeRoute: RepresentativeRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,

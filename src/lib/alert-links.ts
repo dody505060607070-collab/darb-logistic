@@ -4,6 +4,8 @@ export type AlertTarget =
   | { to: '/incidents'; search: { id: string } }
   | { to: '/fleet/$id'; params: { id: string } }
   | { to: '/drivers/$id'; params: { id: string } }
+  | { to: '/trips/$id'; params: { id: string } }
+  | { to: '/customer-requests' }
   | { to: '/documents' }
   | { to: '/maintenance' };
 
@@ -13,6 +15,8 @@ export function alertLink(type: string | null | undefined, id: string | null | u
     case 'incident': return id ? { to: '/incidents', search: { id } } : null;
     case 'asset': return id ? { to: '/fleet/$id', params: { id } } : null;
     case 'driver': return id ? { to: '/drivers/$id', params: { id } } : null;
+    case 'trip': return id ? { to: '/trips/$id', params: { id } } : null;
+    case 'customer_request': return { to: '/customer-requests' };
     case 'documents': return { to: '/documents' };
     case 'parts': return { to: '/maintenance' };
     default: return null;

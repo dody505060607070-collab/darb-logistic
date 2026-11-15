@@ -12,7 +12,7 @@ describe('Shitaa operating rules',()=>{
  it('workshop cannot approve or close its work',()=>{expect(maintenanceActions('review',false)).not.toContain('approved');expect(maintenanceActions('ready_delivery',false)).not.toContain('closed');});
  it('only approved work may be assigned',()=>{expect(maintenanceActions('review',true)).not.toContain('assigned');expect(maintenanceActions('approved',true)).toContain('assigned');});
  it('workshop and field staff land on assigned jobs',()=>{expect(roleHome(['workshop'])).toBe('/repair-center');expect(roleHome(['field_maintenance'])).toBe('/repair-center');});
- it('representative lands in mobile workflow',()=>expect(roleHome(['representative'])).toBe('/driver'));
+ it('representative lands on the representative page',()=>expect(roleHome(['representative'])).toBe('/representative'));
  it('attachment limit is 10MiB and executable types rejected',()=>{expect(MAX_ATTACHMENT_BYTES).toBe(10485760);expect(()=>validateAttachment({size:10485761,type:'application/pdf'})).toThrow();expect(()=>validateAttachment({size:1,type:'text/html'})).toThrow();expect(()=>validateAttachment({size:10485760,type:'application/pdf'})).not.toThrow();});
 });
 import { navItemForPath } from "@/components/darb/AppShell";

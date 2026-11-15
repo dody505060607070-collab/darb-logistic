@@ -25,6 +25,7 @@ import { errMsg, EVENT_LABELS, fmtDateTime, fmtNum, fmtTime } from "@/lib/format
 import { cn } from "@/lib/utils";
 import { deliveryDrafts,saveDeliveryDraft,syncDeliveryDrafts,retryDeliveryDraft,type DeliveryDraft } from '@/lib/delivery-drafts';
 import { driverScreenMode } from '@/lib/driver-preview';
+import { TripRouteMap } from "@/components/darb/TripRouteMap";
 
 export const Route = createFileRoute("/driver")({
   head: () => ({
@@ -322,6 +323,13 @@ function HomeView({ t, custody, online, go, demo }: { t: Row; custody: Row[]; on
         </div>
         {t.stage === "pending" && <Button variant="gold" className="h-11 w-full" onClick={() => go("inspect")}><ClipboardCheck /> فحص ما قبل الانطلاق</Button>}
       </div>
+      {!String(t.id).startsWith("demo") && (
+        <div className="panel space-y-2 p-4">
+          <h3 className="flex items-center gap-2 font-bold text-primary"><MapPin className="size-4 text-gold" /> خريطة الرحلة ونقاط التنزيل</h3>
+          <p className="text-xs text-muted-foreground">النقاط مرتبة بالترتيب الذي تنزل فيه. اضغط «ابدأ الملاحة» لفتح الطريق كاملًا في خرائط Google، وسجّل «تم التنزيل» عند كل نقطة.</p>
+          <TripRouteMap tripId={t.id} tripStatus={t.status} mode="driver" readOnly={demo} height={260} />
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div className="panel p-3 text-sm">
           <h3 className="mb-2 flex items-center gap-1 font-bold text-primary"><Truck className="size-4" /> المركبة</h3>

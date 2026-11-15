@@ -36,7 +36,7 @@ export function PersonIntake() {
   const intakes = useRows(['person_intakes'], () => db.from('person_intakes').select('*').neq('status', 'completed').order('created_at', { ascending: false }), open);
   const [active, setActive] = useState<Row | null>(null);
   return <>
-    <Button variant="outline" onClick={() => setOpen(true)}><FileScan /> ترحيل ملف شخص</Button>
+    <Button onClick={() => setOpen(true)} title="ارفع صور الهوية والرخصة والمستندات، ويقرأها الذكاء الاصطناعي ويجهز ملف الموظف" className="h-11 rounded-full bg-success px-5 text-base font-bold text-primary-foreground shadow-md hover:bg-success/90"><FileScan className="size-5" /> رفع ملف شخص بالذكاء الاصطناعي</Button>
     <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setActive(null); }}>
       <DialogContent dir="rtl" className="max-h-[92svh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>

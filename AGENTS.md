@@ -45,5 +45,7 @@
 - Direct owner driver/representative preview is read-only with opt-in samples — why: no identity substitution.
 - Public policies indexed; ERP noindex/no-store; official consent module — why: preserve privacy.
 - Person intake is owner-only: AI reads uploads into a `person_intakes` draft, WhatsApp missing-items notice needs a click, and accounts are created only when nothing is missing via shared `provisionEmployee` — why: no partial or unapproved accounts.
-- Representative is merged into driver in all screens; the enum value stays only for old data — why: no breaking role migration.
+- Representative is a separate field job: `/representative` adds customers/places and `customer_requests`, which dispatch converts via `/orders/new?request=`; no driver file — why: sales visits are not driving work.
+- Driver WhatsApp numbers come from `driver_wa_phone` (login profile first, driver file second); `wa-links.ts` appends wa.me links at send time — why: stale file numbers lost messages.
+- Multi-stop trips use `trip_stops` + `trip_routes`; the per-minute outbox job runs `trip-monitor.server.ts` first, opening one `trip_alerts` episode via service-only RPCs; thresholds live in `src/lib/route-plan.ts` — why: alerts once per episode, tested rules.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.

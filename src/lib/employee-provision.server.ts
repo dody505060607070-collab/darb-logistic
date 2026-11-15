@@ -27,7 +27,7 @@ export async function provisionEmployee(admin: SupabaseClient<any>, data: Provis
   try {
     const { error: profileError } = await admin.from('profiles').update({ full_name: data.fullName, phone: data.phone, branch_id: data.branchId }).eq('id', id);
     if (profileError) throw profileError;
-    if (['driver', 'representative'].includes(data.role)) {
+    if (data.role === 'driver') {
       const { data: driver, error: driverError } = await admin.from('drivers').insert({ code: `DRV-${id.slice(0, 8)}`, full_name: data.fullName, phone: data.phone, user_id: id, branch_id: data.branchId, ...(data.driver ?? {}) }).select('id').single();
       if (driverError || !driver) throw driverError ?? new Error('تعذر حفظ ملف السائق');
       driverId = driver.id;

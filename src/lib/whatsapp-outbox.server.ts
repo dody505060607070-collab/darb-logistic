@@ -1,3 +1,5 @@
+import { withWhatsAppLinks } from '@/lib/wa-links';
+
 /** Sends queued WhatsApp messages. Claims are atomic; ambiguous outcomes stay "unresolved" and are never resent. */
 export async function processWhatsAppOutbox(limit = 20) {
   const url = (process.env.WHATSAPP_SERVER_URL ?? '').trim().replace(/\/+$/, '');
@@ -18,7 +20,7 @@ export async function processWhatsAppOutbox(limit = 20) {
     try {
       const res = await fetch(`${url}/message/sendText/${encodeURIComponent(instance)}`, {
         method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ number: row.phone, text: row.body }), signal: AbortSignal.timeout(4000),
+        body: JSON.stringify({ number: row.phone, text: withWhatsAppLinks(row.body, row.phone) }), signal: AbortSignal.timeout(8000),
       });
       const body = await res.text();
       if (!res.ok) { state = res.status >= 500 ? 'unresolved' : 'failed'; err = `[${res.status}] ${body.slice(0, 300)}`; }
