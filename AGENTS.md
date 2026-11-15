@@ -18,19 +18,19 @@
 - Leaflet is loaded only inside `MapView` via dynamic import and rendered behind `ClientOnly` + `lazy` — why: SSR runs on workerd without `window`.
 - tsconfig disables `noPropertyAccessFromIndexSignature` and `exactOptionalPropertyTypes` — why: screens work with loosely typed dynamic selects.
 - Business-rule DB checks are described in `tests/sql/business_rules.sql` (the final RAISE rolls everything back; the exact DO block is in the migration history).
-- The AI morning report is generated server-side in `src/lib/ai-report.server.ts`, run by a managed 05:00 UTC schedule on `/api/public/jobs/daily-report` and a role-checked server function — why: AI key and cross-role data stay on the server.
+- Morning report: `src/lib/ai-report.server.ts` saves plain figures first, AI wording replaces them if in time — why: scheduler cut-offs cannot lose it.
 - Task submit/review go through `task_submit`/`task_review` RPCs; reminder cadence lives in `src/lib/tasks.ts` — why: assignees cannot self-approve.
-- Task events enqueue a durable outbox in DB triggers; immediate sends and the managed reminder callback share atomic claims, persist provider acceptance IDs and retain ambiguous outcomes without resending — why: browser exits and retries cannot silently lose or duplicate notifications.
+- Task events use a DB-trigger outbox with atomic claims and stored provider IDs; ambiguous sends are kept, not resent — why: no lost or duplicate notices.
 
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
-- WhatsApp number management matches the unique configured instance, verifies disconnection server-side, and requires explicit in-app confirmation — why: prevents selecting another company's number or interrupting messaging accidentally.
-- Phone login checks approved profile + assigned roles or service-only admin reservation before sending and exchanging OTP; owner-only employee creation provisions identity, role and driver/workshop link with rollback — why: unlisted numbers cannot register or acquire company access.
-- CRM lives in a focused home-page component and role-restricted opportunity/activity tables; pipeline values use integer-cent calculations and remain forecasts, not revenue — why: preserves existing dashboards and finance boundaries.
+- WhatsApp number management matches the configured instance, verifies disconnection server-side and needs in-app confirmation — why: no wrong number or accidental outage.
+- Phone login requires an approved profile with roles (or admin reservation) before OTP; owner-only employee creation provisions identity/role/link with rollback — why: unlisted numbers get no access.
+- CRM is a home-page component with role-restricted tables; pipeline uses integer cents and is a forecast, not revenue — why: keeps finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.
-- Explicit administrator phone reservations are service-only records applied by a service-only RPC after OTP consumption and profile identity matching; new phone-login profiles are normalized to E.164 — why: preserves server-enforced privileges and prevents duplicate identity lookups.
-- Account deletion uses an owner-checked server function with explicit confirmation and a self-deletion guard; reference-record deletion is allowlisted and RLS-enforced, never enabled implicitly on audit or finance tables — why: avoids erasing history or bypassing atomic financial workflows.
-- Workshop membership and field assignments scope work-order access through role-checked RPCs; legacy status mutation is disabled — why: approvals and receiving inspection must not be bypassed.
+- Administrator phone reservations are service-only, applied by a service-only RPC after OTP and identity match; phones normalized to E.164 — why: no privilege bypass or duplicate identities.
+- Account deletion: owner-checked server function, explicit confirmation, no self-deletion, unlinks driver/workshop first; reference deletes are allowlisted, never audit/finance tables — why: history stays intact.
+- Work-order access, edit/delete and workshop removal are role-checked RPCs refusing started/costed records (archive instead) — why: approvals and history cannot be bypassed.
 - Maintenance financial custody is an immutable approved ledger with role-checked creation/review RPCs and derived balances — why: disbursement is not expense, retries cannot debit twice, and corrections preserve history.
 - Delivery and custody return/transfer are atomic RPCs; busy-resource and critical-defect checks are triggers — why: no partial writes.
 - Display identity lives in a browser-safe brand module; legacy directories stay — why: rebrand without touching data/URLs.

@@ -14,3 +14,15 @@ export const MAINTENANCE_TRANSITIONS: Record<string, string[]> = {
 export function maintenanceActions(state: string, manager: boolean): string[] {
   return (MAINTENANCE_TRANSITIONS[state] ?? []).filter(s => manager || (!['approved','returned','rejected','assigned','closed'].includes(s) && state !== 'additional_review'));
 }
+type Who = { manager: boolean; mine: boolean };
+const DELETABLE = ['review', 'returned', 'rejected', 'approved', 'assigned'];
+/** Managers edit any open order; a reporter edits their own request only before it is approved. Mirrors work_order_edit. */
+export function canEditWorkOrder(state: string, who: Who): boolean {
+  if (['closed', 'rejected'].includes(state)) return false;
+  return who.manager || (who.mine && ['review', 'returned'].includes(state));
+}
+/** Deletion only before repair work starts. Mirrors work_order_delete, which also refuses orders with costs or parts. */
+export function canDeleteWorkOrder(state: string, who: Who): boolean {
+  if (!DELETABLE.includes(state)) return false;
+  return who.manager || (who.mine && ['review', 'returned'].includes(state));
+}

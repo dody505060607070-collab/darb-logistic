@@ -77,6 +77,11 @@ export const deleteEmployee = createServerFn({ method: 'POST' })
       const { error: reservationError } = await supabaseAdmin.from('admin_phone_reservations').delete().in('phone', phoneIdentityVariants(identity.phone));
       if (reservationError) throw new Error('تعذر إلغاء صلاحية الرقم');
     }
+    // Keep the driver file and workshop for history, but never leave them pointing at a deleted login.
+    const { error: unlinkError } = await supabaseAdmin.from('drivers').update({ user_id: null }).eq('user_id', data.id);
+    if (unlinkError) throw new Error('تعذر فصل ملف السائق عن الحساب');
+    const { error: memberError } = await supabaseAdmin.from('workshop_members').delete().eq('user_id', data.id);
+    if (memberError) throw new Error('تعذر إلغاء ربط الحساب بالورشة');
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(data.id);
     if (deleteError) throw new Error('تعذر حذف الحساب؛ قد تكون له ملفات مملوكة أو ارتباطات يجب معالجتها أولًا');
     return { deleted: true };

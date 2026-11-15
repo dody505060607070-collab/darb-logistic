@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { fmtDateTime, fmtSAR, STATUS } from "@/lib/format";
 
 export const Route = createFileRoute("/incidents")({
+  validateSearch: (s: { id?: unknown }): { id?: string } => (typeof s.id === "string" ? { id: s.id } : {}),
   head: () => ({
     meta: [
       { title: "الحوادث والبلاغات | Shata" },
@@ -51,7 +52,8 @@ function IncidentsPage() {
   const [rec, setRec] = useState<Row | null | undefined>(undefined);
   const [status, setStatus] = useState("");
   const all = inc.data ?? [];
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { id: focusId } = Route.useSearch();
+  const [selectedId, setSelectedId] = useState<string | null>(focusId ?? null);
   const visible = all.filter((i) => !status || i.status === status);
   const selected = visible.find((i) => i.id === selectedId) ?? visible[0] ?? null;
   const canEdit = can("ops_manager", "fleet_supervisor");

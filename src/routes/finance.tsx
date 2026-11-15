@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Banknote, CalendarClock, CheckCircle2, FileSpreadsheet, FileText, Landmark, Plus, Printer, Receipt, Truck } from "lucide-react";
+import { Banknote, CalendarClock, FileSpreadsheet, Landmark, Plus, Printer, Receipt, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/darb/AppShell";
@@ -71,6 +71,7 @@ function FinancePage() {
     inv();
   }
   async function approve(id: string) {
+    if (!(Number(all.find((i) => i.id === id)?.total) > 0)) return void toast.error("قيمة الفاتورة صفر؛ لا تُعتمد. أدخل سعر الرحلة ثم أنشئ فاتورة جديدة");
     const { error } = await db.from("invoices").update({ status: "approved" }).eq("id", id).eq("status", "draft");
     if (error) return void toast.error(errMsg(error));
     toast.success("اعتُمدت الفاتورة داخليًا. الإصدار الرسمي يتطلب مزود فوترة مهيأ.");
@@ -88,16 +89,14 @@ function FinancePage() {
   return (
     <>
       <PageHeader title="المالية والفوترة والتحصيل" subtitle="فوترة الرحلات المسلّمة، اعتماد الفواتير، وتسجيل الدفعات وتوزيعها." icon={<Landmark />} />
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label="رحلات غير مفوترة" value={unbilled.length} tone="info" icon={<Truck />} />
-        <Kpi label="فواتير مسودة" value={all.filter((i) => i.status === "draft").length} icon={<FileText />} />
-        <Kpi label="فواتير معتمدة" value={approved.length} tone="success" icon={<CheckCircle2 />} />
-        <Kpi label="المستحق القائم" value={fmtSAR(outstanding)} tone="warning" icon={<Banknote />} />
-        <Kpi label="فواتير متأخرة" value={overdue.length} tone={overdue.length ? "danger" : undefined} icon={<CalendarClock />} />
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Kpi label="رحلات تنتظر الفوترة" value={unbilled.length} tone="info" icon={<Truck />} />
+        <Kpi label="مستحق على العملاء" value={fmtSAR(outstanding)} tone="warning" icon={<Banknote />} />
+        <Kpi label="فواتير تأخر سدادها" value={overdue.length} tone={overdue.length ? "danger" : undefined} icon={<CalendarClock />} />
       </div>
       <div className="mb-5 rounded-xl border bg-gold-soft p-4 text-sm text-primary">PDF أو QR وحده لا يعني توافق ZATCA — حالة مزود الفوترة تُعرض كما هي لكل فاتورة.</div>
       <Tabs defaultValue="unbilled" dir="rtl">
-        <TabsList><TabsTrigger value="unbilled">رحلات للفوترة</TabsTrigger><TabsTrigger value="inv">الفواتير</TabsTrigger><TabsTrigger value="pay">الدفعات</TabsTrigger><TabsTrigger value="acct">المحاسبة الآلية</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="unbilled">1. رحلات للفوترة</TabsTrigger><TabsTrigger value="inv">2. الفواتير ({all.filter((i) => i.status === "draft").length} مسودة)</TabsTrigger><TabsTrigger value="pay">3. الدفعات</TabsTrigger><TabsTrigger value="acct">ملخص المحاسبة</TabsTrigger></TabsList>
         <TabsContent value="acct"><AccountingSummary /></TabsContent>
         <TabsContent value="unbilled">
           <Panel title="رحلات مسلّمة غير مفوترة" icon={<FileSpreadsheet />} actions={isAcc && <Button size="sm" variant="gold" disabled={!selTrips.length} onClick={() => void createInvoice()}><Plus /> إنشاء مسودة فاتورة ({selTrips.length})</Button>}>
@@ -107,7 +106,7 @@ function FinancePage() {
               { key: "customer", label: "العميل", render: (r) => r.order?.customer?.name ?? "—" },
               { key: "route", label: "المسار", render: (r) => `${r.origin_city} ← ${r.dest_city}` },
               { key: "end", label: "التسليم", render: (r) => <span className="num">{fmtDate(r.actual_end)}</span> },
-              { key: "rev", label: "الإيراد", render: (r) => <span className="num">{fmtSAR(r.fin?.revenue)}</span> },
+              { key: "rev", label: "الإيراد", render: (r) => Number(r.fin?.revenue ?? 0) > 0 ? <span className="num">{fmtSAR(r.fin?.revenue)}</span> : <Badge tone="danger">بدون سعر — أدخله في أمر النقل</Badge> },
               { key: "status", label: "الحالة", render: (r) => <Status kind="trip" value={r.status} /> },
             ]} />
           </Panel>

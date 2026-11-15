@@ -2838,6 +2838,7 @@ export type Database = {
       }
       workshops: {
         Row: {
+          archived_at: string | null
           branch_id: string | null
           created_at: string
           id: string
@@ -2846,6 +2847,7 @@ export type Database = {
           phone: string | null
         }
         Insert: {
+          archived_at?: string | null
           branch_id?: string | null
           created_at?: string
           id?: string
@@ -2854,6 +2856,7 @@ export type Database = {
           phone?: string | null
         }
         Update: {
+          archived_at?: string | null
           branch_id?: string | null
           created_at?: string
           id?: string
@@ -3259,6 +3262,16 @@ export type Database = {
         Args: { p_approve: boolean; p_id: string; p_note?: string }
         Returns: undefined
       }
+      work_order_delete: { Args: { p_id: string }; Returns: undefined }
+      work_order_edit: {
+        Args: {
+          p_description: string
+          p_expected_at: string
+          p_id: string
+          p_severity: string
+        }
+        Returns: undefined
+      }
       workshop_find_vehicle: {
         Args: { p_query: string }
         Returns: {
@@ -3297,6 +3310,7 @@ export type Database = {
         }
         Returns: Json
       }
+      workshop_remove: { Args: { p_id: string }; Returns: string }
     }
     Enums: {
       app_role:

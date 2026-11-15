@@ -1,5 +1,7 @@
 import { getLang, localeFor } from "@/lib/i18n/lang";
 import { DisplayControls } from "@/components/darb/DisplayControls";
+import { PageGuide } from "@/components/darb/PageGuide";
+import { alertLink } from "@/lib/alert-links";
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -99,16 +101,18 @@ function useClock() {
 }
 
 function Notifications() {
+  const nav = useNavigate();
+  const [openPop, setOpenPop] = useState(false);
   const { data } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
       const { data } = await db.from("notifications").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(20);
-      return (data ?? []) as { id: string; title: string; body: string; severity: string }[];
+      return (data ?? []) as { id: string; title: string; body: string; severity: string; entity_type: string | null; entity_id: string | null }[];
     },
   });
   const n = data?.length ?? 0;
   return (
-    <Popover>
+    <Popover open={openPop} onOpenChange={setOpenPop}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="التنبيهات">
           <Bell className="size-5 text-primary" />
@@ -124,7 +128,7 @@ function Notifications() {
         <div className="max-h-80 divide-y overflow-y-auto">
           {n === 0 && <p className="p-4 text-sm text-muted-foreground">لا توجد تنبيهات</p>}
           {data?.map((x) => (
-            <div key={x.id} className="space-y-1 px-4 py-2.5 text-sm">
+            <button type="button" key={x.id} onClick={() => { const to = alertLink(x.entity_type, x.entity_id); if (to) void nav(to); setOpenPop(false); }} title={alertLink(x.entity_type, x.entity_id) ? "اضغط لفتح التفاصيل" : undefined} className="block w-full space-y-1 px-4 py-2.5 text-start text-sm hover:bg-accent/40">
               <div className="flex items-center gap-2">
                 <Badge tone={x.severity === "critical" ? "danger" : x.severity === "warning" ? "warning" : "info"}>
                   {x.severity === "critical" ? "حرج" : x.severity === "warning" ? "تنبيه" : "معلومة"}
@@ -132,7 +136,7 @@ function Notifications() {
                 <span className="font-medium">{x.title}</span>
               </div>
               {x.body && <p className="text-xs text-muted-foreground">{x.body}</p>}
-            </div>
+            </button>
           ))}
         </div>
         <Link to="/settings" search={{ tab: "alerts" }} className="block border-t px-4 py-2 text-center text-xs font-medium text-gold">
@@ -317,7 +321,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             <button className="underline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع</button>
           </div>
         )}
-        <main key={path} data-page={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6"><CardArrangement account={auth.session.user.id} path={path}>{children}</CardArrangement></main>
+        <main key={path} data-page={path} className="page-enter min-w-0 flex-1 p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 lg:pb-6"><PageGuide path={path} /><CardArrangement account={auth.session.user.id} path={path}>{children}</CardArrangement></main>
         {(() => {
           // Mobile bar shows only screens this account may open (server rules still enforce access).
           const allowed = (to: string) => { const it = NAV.find((n) => n.to === to); return !!it && (!it.roles || auth.can(...it.roles)); };

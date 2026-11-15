@@ -281,6 +281,13 @@
       "when": 1794620655443,
       "tag": "0039_maintenance_request_scoped_vehicle_stop",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794709210162,
+      "tag": "0040_maintenance_record_controls_and_invoice_guard",
+      "breakpoints": true
     }
   ]
 }
