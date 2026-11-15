@@ -13,7 +13,7 @@ import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
 import { LocationPicker } from "@/components/darb/LocationPicker";
 import { flushWa } from "@/lib/wa-flush";
-import { assignmentProblem } from "@/lib/trip-assignment";
+import { assignmentProblem, vehicleNotReady } from "@/lib/trip-assignment";
 import { CITY_COORDS, errMsg, fmtSAR, fromLocalInput } from "@/lib/format";
 
 export const Route = createFileRoute("/orders/new")({
@@ -137,6 +137,7 @@ function Wizard() {
         }
         flushWa();
         toast.success(`تم إنشاء الأمر ${order.number} والرحلة ${trip.number}`);
+        if (!v.driver_id) toast.warning(`الرحلة ${trip.number} بدون سائق، فلن تظهر لأي سائق ولن تصله رسالة حتى تخصص السائق والشاحنة`, { duration: 15000 });
         void qc.invalidateQueries();
         void nav({ to: "/trips/$id", params: { id: trip.id } });
       } else {
@@ -201,15 +202,16 @@ function Wizard() {
                 <F label="رأس القاطرة">
                   <select className={sel} value={v.tractor_id ?? ""} onChange={(e) => set("tractor_id", e.target.value)}>
                     <option value="">لاحقًا</option>
-                    {(assets.data ?? []).filter((a) => a.kind !== "trailer").map((a) => <option key={a.id} value={a.id}>{a.code} — {a.make_model}</option>)}
+                    {(assets.data ?? []).filter((a) => a.kind !== "trailer").map((a) => <option key={a.id} value={a.id} disabled={!!vehicleNotReady(a)}>{a.code}{a.make_model ? ` — ${a.make_model}` : ""}{vehicleNotReady(a) ? " (متوقفة — صيانة)" : ""}</option>)}
                   </select>
                 </F>
                 <F label="المقطورة">
                   <select className={sel} value={v.trailer_id ?? ""} onChange={(e) => set("trailer_id", e.target.value)}>
                     <option value="">بدون</option>
-                    {(assets.data ?? []).filter((a) => a.kind === "trailer").map((a) => <option key={a.id} value={a.id}>{a.code} — {a.trailer_type}</option>)}
+                    {(assets.data ?? []).filter((a) => a.kind === "trailer").map((a) => <option key={a.id} value={a.id} disabled={!!vehicleNotReady(a)}>{a.code} — {a.trailer_type}{vehicleNotReady(a) ? " (متوقفة — صيانة)" : ""}</option>)}
                   </select>
                 </F>
+                <ReadinessNote assets={assets.data ?? []} hasDriver={!!v.driver_id} />
               </div>
             </Panel>
             <Panel title="4. تفاصيل الحمولة" icon={<Box />}>
@@ -255,4 +257,18 @@ function Wizard() {
       </div>
     </>
   );
+}
+
+function ReadinessNote({ assets, hasDriver }: { assets: Row[]; hasDriver: boolean }) {
+  const heads = assets.filter((a) => a.kind !== "trailer");
+  const ready = heads.filter((a) => !vehicleNotReady(a));
+  if (assets.length > 0 && ready.length === 0) {
+    return (
+      <p className="rounded-md bg-danger-soft px-3 py-2 text-xs text-danger">
+        لا توجد شاحنة جاهزة الآن، لذلك لا يمكن إسناد الرحلة لأي سائق: {heads.map((a) => vehicleNotReady(a)).join("، ") || "لم تُسجل أي شاحنة"}. أنهِ أوامر الصيانة المفتوحة من «مركز الصيانة» أو أضف شاحنة أخرى.
+      </p>
+    );
+  }
+  if (!hasDriver) return <p className="text-xs text-muted-foreground">بدون اختيار السائق والشاحنة لن تظهر الرحلة لأي سائق ولن تصله رسالة.</p>;
+  return null;
 }

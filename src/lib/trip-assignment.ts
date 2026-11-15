@@ -10,11 +10,21 @@ export function assignmentProblem(p: { driver: R; tractor: R; trailer: R; endIso
   if (endDate && String(driver.license_expiry) < endDate) return `رخصة السائق ${driver.full_name} تنتهي قبل نهاية الرحلة`;
   if (!tractor) return "اختر رأس القاطرة أو الشاحنة مع السائق، وإلا لن تُسند الرحلة له";
   if (!["tractor", "rigid"].includes(tractor.kind)) return "يجب اختيار رأس قاطرة أو شاحنة منفردة";
-  if (["maintenance", "stopped"].includes(tractor.status)) return `المركبة ${tractor.code} غير جاهزة حاليًا`;
+  const tNotReady = vehicleNotReady(tractor);
+  if (tNotReady) return tNotReady;
   if (trailer) {
     if (tractor.kind === "rigid") return "الشاحنة المنفردة لا تقطر مقطورة";
-    if (["maintenance", "stopped"].includes(trailer.status)) return `المقطورة ${trailer.code} غير جاهزة حاليًا`;
+    const trNotReady = vehicleNotReady(trailer);
+    if (trNotReady) return trNotReady;
     if (p.weightTons != null && trailer.capacity_tons != null && p.weightTons > Number(trailer.capacity_tons)) return "الحمولة تتجاوز سعة المقطورة";
   } else if (tractor.kind === "tractor" && !p.isEmpty) return "رأس القاطرة يحتاج مقطورة لرحلة محمّلة";
+  return null;
+}
+
+/** Vehicles in maintenance or stopped cannot be booked; returns the reason shown next to the vehicle, or null when it can drive. */
+export function vehicleNotReady(v: R): string | null {
+  if (!v) return null;
+  if (v.status === "stopped") return `${v.code} متوقفة حتى تُغلق الصيانة المفتوحة عليها`;
+  if (v.status === "maintenance") return `${v.code} في الصيانة حاليًا`;
   return null;
 }

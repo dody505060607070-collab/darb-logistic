@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
+import { assignmentProblem, vehicleNotReady } from "@/lib/trip-assignment";
 import { errMsg, fromLocalInput, toLocalInput, STATUS } from "@/lib/format";
 
 /** Atomic allocation through the assign_trip_resources RPC (DB exclusion constraint blocks overlaps). */
@@ -43,6 +44,15 @@ export function AssignForm({ trip, trips, onDone }: { trip?: Row | null; trips?:
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!tripId) return void toast.error("اختر الرحلة");
+    const problem = assignmentProblem({
+      driver: (drivers.data ?? []).find((d) => d.id === driver),
+      tractor: a.find((x) => x.id === tractor),
+      trailer: a.find((x) => x.id === trailer),
+      endIso: fromLocalInput(end),
+      isEmpty: !!cur?.is_empty,
+      weightTons: cur?.cargo_weight_tons != null ? Number(cur.cargo_weight_tons) : null,
+    });
+    if (problem) return void toast.error(problem, { duration: 10000 });
     setBusy(true);
     const { error } = await db.rpc("assign_trip_resources", {
       p_trip_id: tripId,
@@ -86,14 +96,14 @@ export function AssignForm({ trip, trips, onDone }: { trip?: Row | null; trips?:
         <Label className="mb-1 block text-xs">الرأس / الشاحنة *</Label>
         <select className={sel} value={tractor} onChange={(e) => setTractor(e.target.value)} required>
           <option value="">— اختر —</option>
-          {a.filter((x) => x.kind !== "trailer").map((x) => <option key={x.id} value={x.id}>{lbl(x)}</option>)}
+          {a.filter((x) => x.kind !== "trailer").map((x) => <option key={x.id} value={x.id} disabled={!!vehicleNotReady(x)}>{lbl(x)}</option>)}
         </select>
       </div>
       <div>
         <Label className="mb-1 block text-xs">المقطورة</Label>
         <select className={sel} value={trailer} onChange={(e) => setTrailer(e.target.value)}>
           <option value="">بدون</option>
-          {a.filter((x) => x.kind === "trailer").map((x) => <option key={x.id} value={x.id}>{lbl(x)}</option>)}
+          {a.filter((x) => x.kind === "trailer").map((x) => <option key={x.id} value={x.id} disabled={!!vehicleNotReady(x)}>{lbl(x)}</option>)}
         </select>
       </div>
       <div>
@@ -109,6 +119,11 @@ export function AssignForm({ trip, trips, onDone }: { trip?: Row | null; trips?:
           <Label className="mb-1 block text-xs">سبب استثناء (اختياري)</Label>
           <Input value={override} onChange={(e) => setOverride(e.target.value)} placeholder="للمستندات فقط — لا يتجاوز العيب الحرج" />
         </div>
+      )}
+      {a.length > 0 && a.filter((x) => x.kind !== "trailer" && !vehicleNotReady(x)).length === 0 && (
+        <p className="sm:col-span-3 rounded-md bg-danger-soft px-3 py-2 text-xs text-danger">
+          لا توجد شاحنة جاهزة الآن: {a.filter((x) => x.kind !== "trailer").map((x) => vehicleNotReady(x)).join("، ")}. أنهِ أوامر الصيانة المفتوحة أو أضف شاحنة أخرى ثم خصّص الرحلة.
+        </p>
       )}
       <div className="sm:col-span-3">
         <Button type="submit" disabled={busy} className="w-full sm:w-auto">

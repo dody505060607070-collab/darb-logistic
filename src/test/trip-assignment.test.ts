@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assignmentProblem } from "@/lib/trip-assignment";
+import { assignmentProblem, vehicleNotReady } from "@/lib/trip-assignment";
 
 const driver = { full_name: "khaled", status: "available", license_expiry: "2030-01-01" };
 const tractor = { code: "T1", kind: "tractor", status: "available" };
@@ -13,5 +13,8 @@ describe("trip assignment preflight", () => {
   it("refuses a driver without a truck", () => expect(assignmentProblem({ driver, tractor: null, trailer: null, endIso })).toContain("رأس القاطرة"));
   it("a loaded trip with a tractor needs a trailer", () => expect(assignmentProblem({ driver, tractor, trailer: null, endIso })).toContain("مقطورة"));
   it("refuses cargo heavier than the trailer", () => expect(assignmentProblem({ driver, tractor, trailer, endIso, weightTons: 342 })).toContain("سعة"));
+  it("refuses a stopped truck head", () => expect(assignmentProblem({ driver, tractor: { ...tractor, status: "stopped" }, trailer, endIso })).toContain("متوقفة"));
+  it("a truck in maintenance is not ready", () => expect(vehicleNotReady({ code: "T1", status: "maintenance" })).toContain("الصيانة"));
+  it("an available truck is ready", () => expect(vehicleNotReady(tractor)).toBeNull());
   it("accepts a complete valid assignment", () => expect(assignmentProblem({ driver, tractor, trailer, endIso, weightTons: 10 })).toBeNull());
 });
