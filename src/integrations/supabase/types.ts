@@ -3284,6 +3284,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"][]
       }
       wa_norm: { Args: { p: string }; Returns: string }
+      wa_trip_status_label: { Args: { s: string }; Returns: string }
       wallet_balances: {
         Args: never
         Returns: {

@@ -38,7 +38,7 @@
 - Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
-- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush — why: no lost events.
+- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush; department routing falls back to owners when no department member has a phone — why: no lost or silently dropped events.
 - English/Urdu use post-hydration one-pass phrase boundaries; Urdu dictionary loads lazily — why: no mixed words, re-translation or hydration race.
 - Review decisions notify the sender via DB status triggers — why: reasons always reach them.
 - RecordActions shares explicit table identity and the deletion allowlist — why: safe adjacent controls.
