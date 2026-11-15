@@ -38,7 +38,7 @@
 - Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
-- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush; department routing falls back to owners when no department member has a phone — why: no lost or silently dropped events.
+- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush; owners get department notices nobody else can receive — why: none dropped.
 - English/Urdu use post-hydration one-pass phrase boundaries; Urdu dictionary loads lazily — why: no mixed words, re-translation or hydration race.
 - Review decisions notify the sender via DB status triggers — why: reasons always reach them.
 - RecordActions shares explicit table identity and the deletion allowlist — why: safe adjacent controls.
@@ -47,4 +47,3 @@
 - Person intake is owner-only: AI reads uploads into a `person_intakes` draft, WhatsApp missing-items notice needs a click, and accounts are created only when nothing is missing via shared `provisionEmployee` — why: no partial or unapproved accounts.
 - Representative is merged into driver in all screens; the enum value stays only for old data — why: no breaking role migration.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
-- The order wizard pre-checks driver/truck choices with `src/lib/trip-assignment.ts`, which mirrors `assign_trip_resources` — why: a trip is never silently saved without its driver.
