@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useArrangedCard } from './CardArrangement';
 import { RecordActions } from './RecordActions';
-import { csvCell } from '@/lib/safe-csv';
+import { displayValue, downloadSheets } from '@/lib/excel';
 
 const TONES: Record<Tone, string> = {
   success: "bg-success-soft text-success",
@@ -367,25 +367,17 @@ function CountUp({ value }: { value: ReactNode }) {
 }
 
 function cellText<T extends Record<string, unknown>>(r: T, c: Col<T>) {
-  const v = r[c.key];
-  if (v === null || v === undefined) return "";
-  if (typeof v === "object") return "";
-  return String(v);
+  return String(displayValue(c.key, r[c.key]));
 }
 function exportExcel<T extends Record<string, unknown>>(rows: T[], cols: Col<T>[]) {
-  const esc = csvCell;
-  const lines = [cols.map((c) => esc(c.label)).join(","), ...rows.map((r) => cols.map((c) => esc(cellText(r, c))).join(","))];
-  const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `darb-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const columns = cols.filter(c => c.key !== 'actions').map(c => ({ header: c.label, key: c.key }));
+  void downloadSheets([{ name: 'البيانات', columns, rows: rows.map(r => Object.fromEntries(columns.map(c => [c.key, displayValue(c.key, r[c.key])]))) }], 'table')
+    .catch(() => window.alert('تعذر إنشاء ملف Excel'));
 }
 function printTable<T extends Record<string, unknown>>(rows: T[], cols: Col<T>[]) {
   const w = window.open("", "_blank");
   if (!w) return;
   const h = (x: string) => x.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch] as string);
-  w.document.write(`<html dir="rtl"><head><meta charset="utf-8"><title>دَرب — تقرير</title><style>body{font-family:'IBM Plex Sans Arabic',sans-serif;padding:24px;color:#111}header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #a3c400;padding-bottom:10px;margin-bottom:16px}h1{margin:0;font-size:22px}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f4ffb8;text-align:right}th,td{border:1px solid #ddd;padding:6px 8px}</style></head><body><header><h1>دَرب — لوجستيات</h1><span>${new Date().toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" })}</span></header><table><thead><tr>${cols.map((c) => `<th>${h(c.label)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${cols.map((c) => `<td>${h(cellText(r, c))}</td>`).join("")}</tr>`).join("")}</tbody></table><script>setTimeout(()=>print(),300)</script></body></html>`);
+  w.document.write(`<html dir="rtl"><head><meta charset="utf-8"><title>Shata — تقرير</title><style>body{font-family:'IBM Plex Sans Arabic',sans-serif;padding:24px;color:#111}header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #a3c400;padding-bottom:10px;margin-bottom:16px}h1{margin:0;font-size:22px}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f4ffb8;text-align:right}th,td{border:1px solid #ddd;padding:6px 8px}</style></head><body><header><h1>Shata — تقرير</h1><span>${new Date().toLocaleString("ar-SA-u-nu-latn", { timeZone: "Asia/Riyadh" })}</span></header><table><thead><tr>${cols.map((c) => `<th>${h(c.label)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${cols.map((c) => `<td>${h(cellText(r, c))}</td>`).join("")}</tr>`).join("")}</tbody></table><script>setTimeout(()=>print(),300)</script></body></html>`);
   w.document.close();
 }

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { db, useOne, useRows } from '@/lib/db';
-import { ROLE_LABELS, useAuth, type AppRole } from '@/lib/auth';
+import { ASSIGNABLE_ROLES, ROLE_LABELS, useAuth, type AppRole } from '@/lib/auth';
 import { updateEmployee, deleteEmployee } from '@/lib/employees.functions';
 import { DeleteConfirmation } from '@/components/darb/DeleteConfirmation';
 import { canRemoveEmployeeRole } from '@/lib/employees';
@@ -58,7 +58,7 @@ function EmployeePage() {
   }
   async function grantRole() {
     if (!role) return;
-    if (['driver','representative'].includes(role) && !driver && !(drivers.data ?? []).some(d => d.user_id === id)) return void toast.error('اختر ملف السائق أو المندوب');
+    if (['driver','representative'].includes(role) && !driver && !(drivers.data ?? []).some(d => d.user_id === id)) return void toast.error('اختر ملف السائق');
     if(role==='workshop'&&!workshopId)return void toast.error('اختر الورشة');
     setBusy(true);
     try {
@@ -99,12 +99,12 @@ function EmployeePage() {
       <section className="space-y-4"><h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="text-info" /> الصلاحيات</h2>
         <div className="flex flex-wrap gap-2">{employeeRoles.map(r => <div key={r.id} className="flex items-center gap-1"><Badge tone="gold">{ROLE_LABELS[r.role as AppRole]}</Badge>{canRemoveEmployeeRole(auth.session?.user.id ?? '', id, r.role) && <Button size="icon" variant="ghost" aria-label={`إزالة ${ROLE_LABELS[r.role as AppRole]}`} title={`إزالة ${ROLE_LABELS[r.role as AppRole]}`} onClick={() => void revokeRole(r.id, r.role)}><Trash2 className="size-4 text-danger" /></Button>}</div>)}</div>
         {employeeRoles.some(r => ['driver','representative'].includes(r.role)) && !drivers.isLoading && !(drivers.data ?? []).some(d => d.user_id === id) && <div role="alert" className="space-y-2 rounded-2xl border border-warning/40 bg-warning/10 p-3 text-sm">
-          <p className="font-semibold">الحساب دوره سائق أو مندوب لكنه غير مربوط بملف سائق، فلن يرى رحلاته عند الدخول.</p>
+          <p className="font-semibold">الحساب دوره سائق لكنه غير مربوط بملف سائق، فلن يرى رحلاته عند الدخول.</p>
           <p className="text-muted-foreground">الحل: اختر ملفه ثم اضغط «ربط الملف».</p>
-          <div className="flex flex-wrap gap-2"><select aria-label="ملف السائق للربط" value={driver} onChange={e => setDriver(e.target.value)} className="h-10 flex-1 rounded-full border bg-card px-3"><option value="">اختر ملف السائق أو المندوب</option>{(drivers.data ?? []).map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}</select><Button variant="outline" disabled={busy || !driver} onClick={() => void linkDriver()}>ربط الملف</Button></div>
+          <div className="flex flex-wrap gap-2"><select aria-label="ملف السائق للربط" value={driver} onChange={e => setDriver(e.target.value)} className="h-10 flex-1 rounded-full border bg-card px-3"><option value="">اختر ملف السائق</option>{(drivers.data ?? []).map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}</select><Button variant="outline" disabled={busy || !driver} onClick={() => void linkDriver()}>ربط الملف</Button></div>
         </div>}
-        <div className="flex flex-wrap gap-2"><select aria-label="إضافة صلاحية" className="h-10 rounded-md border bg-card px-3" value={role} onChange={e => setRole(e.target.value)}><option value="">اختر الصلاحية</option>{Object.entries(ROLE_LABELS).filter(([key]) => !employeeRoles.some(r => r.role === key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><Button variant="outline" disabled={busy || !role} onClick={() => void grantRole()}>منح الصلاحية</Button></div>
-        {['driver','representative'].includes(role) && <select aria-label="ملف السائق" value={driver} onChange={e => setDriver(e.target.value)} className="h-10 w-full rounded-md border bg-card px-3"><option value="">اختر ملف السائق أو المندوب</option>{(drivers.data ?? []).map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}</select>}
+        <div className="flex flex-wrap gap-2"><select aria-label="إضافة صلاحية" className="h-10 rounded-md border bg-card px-3" value={role} onChange={e => setRole(e.target.value)}><option value="">اختر الصلاحية</option>{ASSIGNABLE_ROLES.filter(key => !employeeRoles.some(r => r.role === key)).map(key => <option key={key} value={key}>{ROLE_LABELS[key]}</option>)}</select><Button variant="outline" disabled={busy || !role} onClick={() => void grantRole()}>منح الصلاحية</Button></div>
+        {['driver','representative'].includes(role) && <select aria-label="ملف السائق" value={driver} onChange={e => setDriver(e.target.value)} className="h-10 w-full rounded-md border bg-card px-3"><option value="">اختر ملف السائق</option>{(drivers.data ?? []).map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}</select>}
         {role==='workshop'&&<select aria-label="ورشة الموظف" value={workshopId} onChange={e=>setWorkshopId(e.target.value)} className="h-10 w-full border bg-card px-3"><option value="">اختر الورشة</option>{(workshops.data??[]).map(w=><option key={w.id} value={w.id}>{w.name}</option>)}</select>}
         <h3 className="text-sm font-semibold">الصفحات المتاحة</h3><div className="flex flex-wrap gap-2">{NAV.filter(n => !n.roles || employeeRoles.some(r => r.role === 'owner' || n.roles?.includes(r.role))).map(n => <Badge key={n.to} tone="info">{n.label}</Badge>)}</div>
       </section>

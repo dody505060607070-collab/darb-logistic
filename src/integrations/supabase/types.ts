@@ -1704,6 +1704,57 @@ export type Database = {
           },
         ]
       }
+      person_intakes: {
+        Row: {
+          completed_user_id: string | null
+          created_at: string
+          created_by: string
+          extracted: Json
+          file_paths: string[]
+          full_name: string | null
+          id: string
+          missing: string[]
+          notified_at: string | null
+          person_type: string
+          phone: string | null
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_user_id?: string | null
+          created_at?: string
+          created_by?: string
+          extracted?: Json
+          file_paths?: string[]
+          full_name?: string | null
+          id?: string
+          missing?: string[]
+          notified_at?: string | null
+          person_type?: string
+          phone?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_user_id?: string | null
+          created_at?: string
+          created_by?: string
+          extracted?: Json
+          file_paths?: string[]
+          full_name?: string | null
+          id?: string
+          missing?: string[]
+          notified_at?: string | null
+          person_type?: string
+          phone?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pods: {
         Row: {
           captured_at: string | null

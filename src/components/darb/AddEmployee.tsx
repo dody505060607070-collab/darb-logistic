@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { createEmployee } from '@/lib/employees.functions';
-import { ROLE_LABELS, type AppRole } from '@/lib/auth';
+import { ASSIGNABLE_ROLES, ROLE_LABELS, type AppRole } from '@/lib/auth';
 import { db, useRows } from '@/lib/db';
 import { errMsg } from '@/lib/format';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ export function AddEmployee({ workshopMode = false }: { workshopMode?: boolean }
         {role === 'workshop' && <><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={newWorkshop} onChange={e => setNewWorkshop(e.target.checked)}/> ورشة جديدة</label>{newWorkshop ? <div><Label htmlFor="new-workshop-name">اسم الورشة</Label><Input id="new-workshop-name" required minLength={2} value={workshopName} onChange={e => setWorkshopName(e.target.value)}/></div> : <div><Label htmlFor="new-employee-workshop">الورشة الموجودة</Label><select id="new-employee-workshop" required className="h-10 w-full rounded-md border bg-card px-3" value={workshop} onChange={e => setWorkshop(e.target.value)}><option value="">اختر الورشة</option>{(workshops.data ?? []).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>}</>}
         <div><Label htmlFor="new-employee-name">{workshopMode ? 'اسم مسؤول حساب الورشة' : 'اسم الموظف'}</Label><Input id="new-employee-name" required value={name} onChange={e => setName(e.target.value)} /></div>
         <div><Label htmlFor="new-employee-phone">{workshopMode ? 'رقم الجوال للدخول وواتساب' : 'رقم الجوال'}</Label><Input id="new-employee-phone" required type="tel" dir="ltr" placeholder="+966" value={phone} onChange={e => setPhone(e.target.value)} /></div>
-        {!workshopMode && <div><Label htmlFor="new-employee-role">الوظيفة</Label><select id="new-employee-role" className="h-10 w-full rounded-md border bg-card px-3" value={role} onChange={e => {setRole(e.target.value as AppRole);setNewWorkshop(false);}}>{Object.entries(ROLE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>}
+        {!workshopMode && <div><Label htmlFor="new-employee-role">الوظيفة</Label><select id="new-employee-role" className="h-10 w-full rounded-md border bg-card px-3" value={role} onChange={e => {setRole(e.target.value as AppRole);setNewWorkshop(false);}}>{ASSIGNABLE_ROLES.map(value => <option key={value} value={value}>{ROLE_LABELS[value]}</option>)}</select></div>}
         <Button type="submit" variant="gold" disabled={busy}><Save /> {busy ? 'جارٍ الحفظ' : workshopMode ? 'حفظ الورشة وحسابها' : 'حفظ الموظف'}</Button>
       </form>
     </DialogContent></Dialog>

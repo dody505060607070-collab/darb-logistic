@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { db, useRows, type Row } from "@/lib/db";
 import { fetchFinancials } from "@/lib/queries";
 import { fmtNum, fmtSAR } from "@/lib/format";
-import { csvCell } from '@/lib/safe-csv';
+import { displayValue, downloadSheets } from '@/lib/excel';
+import { DataExports } from '@/components/darb/DataExports';
 
 export const Route = createFileRoute("/reports")({
   head: () => ({
@@ -28,20 +29,12 @@ export const Route = createFileRoute("/reports")({
   ),
 });
 
-function csv(rows: Row[], name: string) {
-  if (!rows.length) return;
+async function csv(rows: Row[], name: string) {
   const first = rows[0];
   if (!first) return;
-  const keys = Object.keys(first);
-  const body = [keys.map(csvCell).join(","), ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(","))].join("\n");
-  const url = URL.createObjectURL(new Blob(["\ufeff" + body], { type: "text/csv;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${name}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const keys = Object.keys(first).filter((k) => k !== "id");
+  await downloadSheets([{ name, columns: keys.map((k) => ({ header: k, key: k })), rows: rows.map((r) => Object.fromEntries(keys.map((k) => [k, displayValue(k, r[k])]))) }], name);
 }
-
 function Reports() {
   const trips = useRows(["trips", "report"], () =>
     db.from("trips").select("id,number,status,is_empty,distance_km,actual_start,actual_end,planned_end,tractor_id, tractor:assets!trips_tractor_id_fkey(code), order:transport_orders(delivery_due_at, customer:customers(name)), events:trip_events(event_type,occurred_at)").in("status", ["in_progress", "delivered", "closed"]),
@@ -105,6 +98,7 @@ function Reports() {
   return (
     <>
       <PageHeader title="التقارير" subtitle="كل مؤشر بتعريفه ووحدته؛ «غير متاح» عند نقص البيانات أو القسمة على صفر. الفعلي منفصل عن التقديري." icon={<BarChart3 />} />
+      <DataExports />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="كم محملة (مخطط معتمد)" value={`${fmtNum(r.loadedKm)} كم`} icon={<Truck />} />
         <Kpi label="كم فارغة" value={`${fmtNum(r.emptyKm)} كم`} icon={<Truck />} />
@@ -129,7 +123,7 @@ function Reports() {
             </ResponsiveContainer>
           )}
         </Panel>
-        <Panel className="min-w-0 xl:col-start-2 xl:row-start-2" title="مديونية العملاء" icon={<BarChart3 />} actions={<Button size="sm" variant="outline" onClick={() => csv(r.debt, "debt")}><Download /> CSV</Button>}>
+        <Panel className="min-w-0 xl:col-start-2 xl:row-start-2" title="مديونية العملاء" icon={<BarChart3 />} actions={<Button size="sm" variant="outline" onClick={() => void csv(r.debt, "debt")}><Download /> Excel</Button>}>
           <DataTable rows={r.debt} cols={[
             { key: "number", label: "الفاتورة", render: (x) => <span className="num">{x.number}</span> },
             { key: "customer", label: "العميل" },
@@ -138,7 +132,7 @@ function Reports() {
             { key: "outstanding", label: "المتبقي", render: (x) => <b className="num">{fmtSAR(x.outstanding)}</b> },
           ]} empty={<p className="py-6 text-center text-sm text-muted-foreground">لا توجد فواتير معتمدة.</p>} />
         </Panel>
-      <Panel title="تشغيل الأصول" icon={<BarChart3 />} className="min-w-0 xl:col-start-1 xl:row-start-2" actions={<Button size="sm" variant="outline" onClick={() => csv(r.perAsset, "assets")}><Download /> CSV</Button>}>
+      <Panel title="تشغيل الأصول" icon={<BarChart3 />} className="min-w-0 xl:col-start-1 xl:row-start-2" actions={<Button size="sm" variant="outline" onClick={() => void csv(r.perAsset, "assets")}><Download /> Excel</Button>}>
         <DataTable rows={r.perAsset} cols={[
           { key: "code", label: "الرأس", render: (x) => <span className="num">{x.code}</span> },
           { key: "trips", label: "الرحلات", render: (x) => <span className="num">{x.trips}</span> },

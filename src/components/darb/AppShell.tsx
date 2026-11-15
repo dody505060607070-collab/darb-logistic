@@ -58,7 +58,7 @@ export const NAV: NavItem[] = [
   { to: "/trips", label: "الرحلات", icon: RouteIcon, roles:['ops_manager','dispatcher','fleet_supervisor','accountant'], group: NAV_GROUPS[1]! },
   { to: "/tracking", label: "التتبع", icon: MapPin, roles:['ops_manager','dispatcher','fleet_supervisor'], group: NAV_GROUPS[1]! },
   { to: "/fleet", label: "الأسطول", icon: Truck, roles:['ops_manager','fleet_supervisor','maintenance'], group: NAV_GROUPS[2]! },
-  { to: "/drivers", label: "السائقون والمندوبون", icon: User, roles:['ops_manager','fleet_supervisor'], group: NAV_GROUPS[2]! },
+  { to: "/drivers", label: "السائقون", icon: User, roles:['ops_manager','fleet_supervisor'], group: NAV_GROUPS[2]! },
   { to: "/custody", label: "العهد والفحص", icon: ClipboardCheck, roles: ["ops_manager", "fleet_supervisor", "maintenance"] , group: NAV_GROUPS[2]! },
   { to: "/documents", label: "المستندات", icon: FolderOpen, roles: ["ops_manager", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
   { to: "/maintenance", label: "الصيانة", icon: Wrench, roles: ["ops_manager", "maintenance", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
@@ -360,7 +360,7 @@ function RolePreview({ onNavigate }: { onNavigate?: () => void }) {
   const auth = useAuth();
   const nav = useNavigate();
   if (!auth.isSuperAdmin) return null;
-  const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "field_maintenance", "workshop", "driver", "representative"];
+  const opts: AppRole[] = ["owner", "dispatcher", "accountant", "fleet_supervisor", "maintenance", "field_maintenance", "workshop", "driver"];
   return (
     <div className="border-t border-sidebar-border px-3 py-3">
       <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[11px] text-sidebar-foreground/60">

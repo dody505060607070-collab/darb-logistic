@@ -44,3 +44,6 @@
 - RecordActions shares explicit table identity and the deletion allowlist — why: safe adjacent controls.
 - Direct owner driver/representative preview is read-only with opt-in samples — why: no identity substitution.
 - Public policies indexed; ERP noindex/no-store; official consent module — why: preserve privacy.
+- Person intake is owner-only: AI reads uploads into a `person_intakes` draft, WhatsApp missing-items notice needs a click, and accounts are created only when nothing is missing via shared `provisionEmployee` — why: no partial or unapproved accounts.
+- Representative is merged into driver in all screens; the enum value stays only for old data — why: no breaking role migration.
+- Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.

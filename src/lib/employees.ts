@@ -18,7 +18,7 @@ export function canRemoveEmployeeRole(actorId: string, employeeId: string, role:
 
 const newEmployeeFields = employeeSchema.omit({ id: true }).extend({
   phone: z.string().trim().min(1).transform(value => normalizePhone('+966', value)),
-  role: z.enum(['owner', 'ops_manager', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'driver', 'field_maintenance', 'workshop', 'representative']),
+  role: z.enum(['owner', 'ops_manager', 'dispatcher', 'fleet_supervisor', 'accountant', 'maintenance', 'driver', 'field_maintenance', 'workshop']),
   workshopId: z.string().uuid().nullable().default(null),
   workshopName: z.string().trim().min(2).max(160).optional(),
 });

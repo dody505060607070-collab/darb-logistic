@@ -9,6 +9,7 @@ import { DocExpiry, DRIVER_FIELDS } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
 import { useRows } from "@/lib/db";
 import { fetchDrivers } from "@/lib/queries";
+import { PersonIntake } from "@/components/darb/PersonIntake";
 import { useAuth } from "@/lib/auth";
 import { daysUntil, STATUS } from "@/lib/format";
 
@@ -46,7 +47,7 @@ function DriversPage() {
   return (
     <>
       <PageHeader title="السائقون" subtitle="بيانات السائقين والرخص والعهد والرحلات" icon={<User />}
-        actions={can("ops_manager", "fleet_supervisor") && <Button variant="gold" onClick={() => setOpen(true)}><Plus /> سائق جديد</Button>} />
+        actions={<div className="flex flex-wrap gap-2">{can("owner") && <PersonIntake />}{can("ops_manager", "fleet_supervisor") && <Button variant="gold" onClick={() => setOpen(true)}><Plus /> سائق جديد</Button>}</div>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
         <Kpi label="إجمالي السائقين" value={all.length} icon={<Users />} />
         <Kpi label="متاح" value={c("available")} tone="info" icon={<CircleCheck />} />

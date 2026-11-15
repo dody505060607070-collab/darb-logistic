@@ -29,9 +29,9 @@ import { driverScreenMode } from '@/lib/driver-preview';
 export const Route = createFileRoute("/driver")({
   head: () => ({
     meta: [
-      { title: "السائق والمندوب | Shata" },
-      { name: "description", content: "تكليفات السائق والمندوب ومواعيد التحميل والتسليم والطلبات وإثبات الاستلام." },
-      { property: "og:title", content: "السائق والمندوب | Shata" },
+      { title: "صفحة السائق | Shata" },
+      { name: "description", content: "تكليفات السائق ومواعيد التحميل والتسليم والطلبات وإثبات الاستلام." },
+      { property: "og:title", content: "صفحة السائق | Shata" },
       { property: "og:description", content: "التكليفات الحالية والطلبات والفحص وإثبات التسليم." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -137,7 +137,6 @@ function DriverApp() {
   const [previewDriver, setPreviewDriver] = useState("");
   const screenMode = driverScreenMode(auth.isSuperAdmin, auth.driverId, auth.viewAs);
   const previewing = screenMode.preview;
-  const representative = screenMode.representative || auth.roles.includes('representative');
   const allDrivers = useRows(["drivers", "preview-list"], () => db.from("drivers").select("id,full_name,code,phone").order("full_name"), previewing);
   const trips = useRows(["driver_my_trips", previewing ? previewDriver : auth.driverId], () => previewing ? db.rpc("driver_trips_for", { p_driver_id: previewDriver }) : db.rpc("driver_my_trips"), previewing ? !!previewDriver && previewDriver !== 'sample' : !!auth.driverId);
   const me = useRows(["drivers", "me"], () => db.from("drivers").select("*").eq("id", auth.driverId), !!auth.driverId);
@@ -151,7 +150,7 @@ function DriverApp() {
       <div dir="rtl" className="flex min-h-screen items-center justify-center p-6">
         <div className="panel max-w-sm p-8 text-center">
           <Logo className="mb-4 justify-center" />
-          <p className="text-sm text-muted-foreground">حسابك غير مرتبط بملف سائق أو مندوب. اطلب من المدير ربط رقم جوالك بملفك.</p>
+          <p className="text-sm text-muted-foreground">حسابك غير مرتبط بملف سائق. اطلب من المدير ربط رقم جوالك بملفك.</p>
           {auth.isStaff && <Button className="mt-4" onClick={() => void nav({ to: "/" })}>لوحة الإدارة</Button>}
           <Button variant="outline" className="mt-4 mr-2" onClick={() => void auth.signOut()}><LogOut /> خروج</Button>
         </div>
@@ -170,7 +169,7 @@ function DriverApp() {
       {demo && <div className="space-y-1 bg-gold-soft px-4 py-2 text-center text-xs font-semibold text-primary">
         <div>{previewDriver === 'sample' ? 'مثال توضيحي — ليس بيانات تشغيل' : 'معاينة الإدارة — قراءة فقط'}</div>
         <select aria-label="اختيار سائق للمعاينة" className="h-8 w-full rounded-md border bg-card px-2" value={previewDriver} onChange={(e) => setPreviewDriver(e.target.value)}>
-          <option value="">اختر ملف السائق أو المندوب</option>
+          <option value="">اختر ملف السائق</option>
           <option value="sample">مثال توضيحي للشاشة</option>
           {(allDrivers.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.full_name} — {x.phone ?? x.code}</option>)}
         </select></div>}
@@ -193,7 +192,7 @@ function DriverApp() {
         <div className="flex size-11 items-center justify-center rounded-full border-2 border-gold"><User className="size-5 text-primary" /></div>
         <div>
           <div className="font-bold text-primary">مرحبًا، {d?.full_name ?? auth.fullName}</div>
-          <div className="num text-xs text-muted-foreground">{representative ? 'مندوب' : 'سائق'} • {d?.code}</div>
+          <div className="num text-xs text-muted-foreground">سائق • {d?.code}</div>
         </div>
       </div>
 
@@ -214,7 +213,7 @@ function DriverApp() {
       {drafts.length>0&&<div className="mx-4 mt-3 border border-warning bg-warning-soft p-3 text-xs"><b>مسودات إثبات التسليم — غير معتمدة</b>{drafts.map(d=><div key={d.id} className="mt-2"><p>{d.status==='pending'?'بانتظار الاتصال والإرسال':`تعذر الإرسال: ${d.error}`}</p><Button size="sm" variant="outline" onClick={()=>void retryDeliveryDraft(d.id,d.userId).then(()=>qc.invalidateQueries())}><RefreshCw/> إعادة الإرسال</Button></div>)}</div>}
 
       <main className="flex-1 space-y-4 p-4">
-        <h1 className="text-xl font-bold text-primary">{representative ? 'تكليفات المندوب' : 'تكليفات السائق'}</h1>
+        <h1 className="text-xl font-bold text-primary">تكليفات السائق</h1>
         {tab === 'home' && <div className="grid grid-cols-2 gap-2">
           <div className="border-b p-3"><p className="text-xs text-muted-foreground">تكليفات جارية</p><b className="num text-xl">{list.filter(t => ['planned', 'ready', 'in_progress'].includes(t.status)).length}</b></div>
           <div className="border-b p-3"><p className="text-xs text-muted-foreground">تم التسليم</p><b className="num text-xl">{list.filter(t => ['delivered', 'closed'].includes(t.status)).length}</b></div>

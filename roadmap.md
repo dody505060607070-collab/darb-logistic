@@ -230,3 +230,10 @@
 - [x] Sign-in page rebuilt to the supplied design
 - [x] Deep security scan: critical "field technician can stop any vehicle" fixed (migration 0039); no active findings
 - [ ] Signed-in walkthrough of internal pages — blocked: preview has no signed-in session for this account
+
+## ترحيل ملفات الأشخاص وExcel ودمج المندوب — 2026-11-15
+- [x] نافذة «ترحيل ملف شخص» للمدير العام: رفع ملفات، قراءة آلية، تحديد سائق/موظف، مراجعة وتعديل، قائمة النواقص.
+- [x] إرسال النواقص على واتساب بضغطة تأكيد فقط، وإنشاء الحساب والملف والمستندات عند الاكتمال فقط.
+- [x] تنزيل Excel حقيقي من كل الجداول، ولوحة تنزيل شاملة في التقارير.
+- [x] إزالة «المندوب» من الشاشات والأدوار المتاحة ودمجه مع السائق.
+- [ ] تجربة الترحيل كاملة داخل المعاينة بحساب المدير، ووصول رسالة واتساب لهاتف حقيقي — تحتاج دخول المدير بالمعاينة.

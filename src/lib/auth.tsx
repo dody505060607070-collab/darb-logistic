@@ -16,6 +16,9 @@ export type AppRole =
   | "representative"
   | "driver";
 
+/** Representative was merged into driver; kept only so old data still has a label. */
+export const ASSIGNABLE_ROLES = ["owner", "ops_manager", "dispatcher", "fleet_supervisor", "accountant", "maintenance", "field_maintenance", "workshop", "driver"] as const satisfies readonly AppRole[];
+
 export const ROLE_LABELS: Record<AppRole, string> = {
   owner: "مالك",
   ops_manager: "مدير تشغيل",
@@ -25,7 +28,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   maintenance: "مسؤول صيانة",
   field_maintenance: "صيانة ميدانية",
   workshop: "الورشة",
-  representative: "مندوب",
+  representative: "سائق",
   driver: "سائق",
 };
 

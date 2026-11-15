@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { errMsg } from '@/lib/format';
 import { DeleteConfirmation } from './DeleteConfirmation';
 import { AddEmployee } from './AddEmployee';
+import { PersonIntake } from './PersonIntake';
 import { useRows, db } from '@/lib/db';
 import { ROLE_LABELS, type AppRole } from '@/lib/auth';
 import { Input } from '@/components/ui/input';
@@ -39,7 +40,7 @@ export function EmployeeDirectory() {
     <div className="employee-directory min-w-0 space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 className="flex items-center gap-2 text-xl font-bold"><Users className="text-primary" /> الموظفون <span className="num text-muted-foreground">{profiles.data?.length ?? 0}</span></h2>
-      {auth.can('owner') && <AddEmployee />}
+      {auth.can('owner') && <div className="flex flex-wrap gap-2"><PersonIntake /><AddEmployee /></div>}
       <div className="relative w-full sm:w-72"><Search className="absolute right-3 top-3 size-4 text-muted-foreground" /><Input aria-label="البحث عن موظف" placeholder="اسم الموظف أو رقم الجوال" value={search} onChange={e => setSearch(e.target.value)} className="pr-9" /></div>
     </div>
     <DataTable rows={rows} pageSize={8} selectedId={selected?.id} onRowClick={p => setSelectedId(p.id)} cols={[
