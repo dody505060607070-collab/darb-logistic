@@ -28,7 +28,7 @@
 - CRM is a home-page component with role-restricted tables; pipeline uses integer cents and is a forecast, not revenue — why: keeps finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.
-- Administrator phone reservations are service-only, applied by a service-only RPC after OTP and identity match; phones normalized to E.164 — why: no privilege bypass or duplicate identities.
+- Admin phone reservations are service-only, applied by a service-only RPC after OTP and identity match, cleared by trigger when another owner revokes owner; phones E.164 — why: no privilege bypass or revoked admins regaining access.
 - Account deletion: owner-checked server function, explicit confirmation, no self-deletion, unlinks driver/workshop first; reference deletes are allowlisted, never audit/finance tables — why: history stays intact.
 - Work-order access, edit/delete and workshop removal are role-checked RPCs refusing started/costed records (archive instead) — why: approvals and history cannot be bypassed.
 - Maintenance financial custody is an immutable approved ledger with role-checked creation/review RPCs and derived balances — why: disbursement is not expense, retries cannot debit twice, and corrections preserve history.

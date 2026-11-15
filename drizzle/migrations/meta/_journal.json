@@ -302,6 +302,13 @@
       "when": 1794731982419,
       "tag": "0042_whatsapp_fallback_to_admins",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794732445302,
+      "tag": "0043_revoke_owner_clears_phone_reservation",
+      "breakpoints": true
     }
   ]
 }
