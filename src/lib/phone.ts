@@ -50,3 +50,9 @@ export function tryNormalizePhone(raw: string | null | undefined, countryCode = 
 export function whatsappNumber(raw: string | null | undefined): string | null {
   return tryNormalizePhone(raw)?.slice(1) ?? null;
 }
+
+/** For optional phone boxes: empty → null, understood → +966…, otherwise an error to show the user. */
+export function optionalPhone(raw: string | null | undefined): string | null {
+  if (!raw || !String(raw).trim()) return null;
+  return normalizePhone('+966', String(raw));
+}

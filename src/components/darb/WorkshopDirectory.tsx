@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { db, useRows, type Row } from '@/lib/db';
 import { errMsg } from '@/lib/format';
+import { optionalPhone } from '@/lib/phone';
 import { AddEmployee } from './AddEmployee';
 import { Badge, DataTable } from './ui';
 import { DeleteConfirmation } from './DeleteConfirmation';
@@ -25,7 +26,7 @@ export function WorkshopDirectory() {
  async function save(){
   if(!edit||name.trim().length<2)return void toast.error('اكتب اسم الورشة');
   setBusy(true);
-  try{const {error}=await db.from('workshops').update({name:name.trim(),phone:phone.trim()||null}).eq('id',edit.id);if(error)throw error;await qc.invalidateQueries({queryKey:['workshops']});setEdit(null);toast.success('تم حفظ بيانات الورشة');}
+  try{const {error}=await db.from('workshops').update({name:name.trim(),phone:optionalPhone(phone)}).eq('id',edit.id);if(error)throw error;await qc.invalidateQueries({queryKey:['workshops']});setEdit(null);toast.success('تم حفظ بيانات الورشة');}
   catch(e){toast.error(errMsg(e));}finally{setBusy(false);}
  }
  async function confirmRemove(){

@@ -1,4 +1,5 @@
 import { DisplayControls } from "@/components/darb/DisplayControls";
+import { tryNormalizePhone } from "@/lib/phone";
 import { DriverReturnRequest } from "@/components/darb/ReturnTrip";
 import { DriverRequests } from "@/components/darb/ApprovalCenter";
 import { flushWa } from "@/lib/wa-flush";
@@ -518,7 +519,7 @@ function PodView({ t, uid, done, demo }: { t: Row; uid: string; done: () => void
       const pos = await getPos();
       const cid = crypto.randomUUID();
       await saveDeliveryDraft({id:cid,userId:uid,tripId:t.id,status:'pending',files:photos,payload:{
-        p_trip_id:t.id,p_receiver:name,p_phone:phone||null,p_captured_at:captured,
+        p_trip_id:t.id,p_receiver:name,p_phone:tryNormalizePhone(phone)??(phone.trim()||null),p_captured_at:captured,
         p_quantity:qty?Number(qty):null,p_short:Number(short),p_damaged:Number(dmg),p_notes:notes||null,
         p_signature:sig,p_lat:pos?.lat??null,p_lng:pos?.lng??null,
       }});
@@ -535,7 +536,7 @@ function PodView({ t, uid, done, demo }: { t: Row; uid: string; done: () => void
       <h2 className="flex items-center gap-2 font-bold text-primary"><PackageCheck className="size-5" /> إثبات التسليم — {t.number}</h2>
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2"><Label className="mb-1 block text-xs">اسم المستلم *</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="col-span-2"><Label className="mb-1 block text-xs">جوال المستلم</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+        <div className="col-span-2"><Label className="mb-1 block text-xs">جوال المستلم</Label><Input type="tel" dir="ltr" inputMode="tel" placeholder="05XXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
         <div><Label className="mb-1 block text-xs">الكمية المسلّمة ({t.unit})</Label><Input type="number" value={qty} onChange={(e) => setQty(e.target.value)} /></div>
         <div><Label className="mb-1 block text-xs">المطلوب</Label><Input disabled value={fmtNum(t.quantity)} /></div>
         <div><Label className="mb-1 block text-xs">نقص</Label><Input type="number" value={short} onChange={(e) => setShort(e.target.value)} /></div>

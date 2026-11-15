@@ -16,6 +16,7 @@ import { roleHome } from "@/components/darb/AppShell";
 import { useAuth } from "@/lib/auth";
 import { db, useRows, type Row } from "@/lib/db";
 import { CITY_COORDS, errMsg, fmtDateTime, fromLocalInput } from "@/lib/format";
+import { optionalPhone } from "@/lib/phone";
 import { flushWa } from "@/lib/wa-flush";
 import { waDigits } from "@/lib/wa-links";
 
@@ -89,9 +90,10 @@ function CustomerDialog({ open, onOpenChange, onSaved }: { open: boolean; onOpen
   const [busy, setBusy] = useState(false);
   async function save() {
     if (f.name.trim().length < 2) return void toast.error("اكتب اسم العميل أو الشركة");
-    if (f.phone && !/^(\+?\d{9,15}|05\d{8})$/.test(f.phone.replace(/\s/g, ""))) return void toast.error("رقم الجوال غير صحيح");
+    let phone: string | null;
+    try { phone = optionalPhone(f.phone); } catch (e) { return void toast.error(errMsg(e)); }
     setBusy(true);
-    const { data, error } = await db.from("customers").insert({ name: f.name.trim(), contact_name: f.contact_name.trim() || null, phone: f.phone.replace(/\s/g, "") || null, city: f.city }).select("id").single();
+    const { data, error } = await db.from("customers").insert({ name: f.name.trim(), contact_name: f.contact_name.trim() || null, phone, city: f.city }).select("id").single();
     setBusy(false);
     if (error) return void toast.error(errMsg(error));
     toast.success("أُضيف العميل");
@@ -125,12 +127,14 @@ function NewRequest({ customers, locations, reloadCustomers, reloadLocations, do
     if (!v.customer_id) return void toast.error("اختر العميل");
     if (!v.cargo_type || String(v.cargo_type).trim().length < 2) return void toast.error("اكتب نوع الحمولة");
     if (!v.pickup_location_id) return void toast.error("حدد مكان الاستلام على الخريطة");
+    let contactPhone: string | null;
+    try { contactPhone = optionalPhone(v.contact_phone); } catch (e) { return void toast.error(errMsg(e)); }
     setBusy(true);
     const { error } = await db.from("customer_requests").insert({
       customer_id: v.customer_id, pickup_location_id: v.pickup_location_id, delivery_location_id: v.delivery_location_id || null,
       delivery_city: v.delivery_city || null, cargo_type: String(v.cargo_type).trim(), quantity: v.quantity ? Number(v.quantity) : null, unit: v.unit,
       weight_kg: v.weight_kg ? Number(v.weight_kg) : null, pickup_from: v.pickup_from ? fromLocalInput(v.pickup_from) : null,
-      contact_name: v.contact_name?.trim() || null, contact_phone: v.contact_phone?.replace(/\s/g, "") || null, notes: v.notes?.trim() || null,
+      contact_name: v.contact_name?.trim() || null, contact_phone: contactPhone, notes: v.notes?.trim() || null,
     });
     setBusy(false);
     if (error) return void toast.error(errMsg(error));
