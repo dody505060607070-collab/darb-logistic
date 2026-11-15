@@ -47,5 +47,5 @@
 - Person intake is owner-only: AI reads uploads into a `person_intakes` draft, WhatsApp missing-items notice needs a click, and accounts are created only when nothing is missing via shared `provisionEmployee` — why: no partial or unapproved accounts.
 - Representative is a separate job (`/representative` → `customer_requests` → order), no driver file — why: sales visits aren't driving.
 - Driver WhatsApp uses `driver_wa_phone` (login phone first) — why: stale file numbers lost messages.
-- Trip alerts: outbox job runs `trip-monitor.server.ts`, one `trip_alerts` episode per service-only RPC — why: no repeat alerts.
+- Trip alerts: outbox job runs `trip-monitor.server.ts`; one episode per alert — why: no repeats.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
