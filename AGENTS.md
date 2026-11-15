@@ -47,3 +47,4 @@
 - Person intake is owner-only: AI reads uploads into a `person_intakes` draft, WhatsApp missing-items notice needs a click, and accounts are created only when nothing is missing via shared `provisionEmployee` — why: no partial or unapproved accounts.
 - Representative is merged into driver in all screens; the enum value stays only for old data — why: no breaking role migration.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
+- The order wizard pre-checks driver/truck choices with `src/lib/trip-assignment.ts`, which mirrors `assign_trip_resources` — why: a trip is never silently saved without its driver.

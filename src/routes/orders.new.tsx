@@ -13,6 +13,7 @@ import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
 import { LocationPicker } from "@/components/darb/LocationPicker";
 import { flushWa } from "@/lib/wa-flush";
+import { assignmentProblem } from "@/lib/trip-assignment";
 import { CITY_COORDS, errMsg, fmtSAR, fromLocalInput } from "@/lib/format";
 
 export const Route = createFileRoute("/orders/new")({
@@ -78,6 +79,19 @@ function Wizard() {
   async function save(withTrip: boolean) {
     if (!v.customer_id || !v.pickup_location_id || !v.delivery_location_id) return void toast.error("أكمل العميل ومواقع التحميل والتسليم");
     if (!v.pickup_at || !v.delivery_due_at) return void toast.error("حدد مواعيد التحميل والتسليم");
+    if (withTrip && (v.driver_id || v.tractor_id)) {
+      const all = assets.data ?? [];
+      const problem = v.driver_id
+        ? assignmentProblem({
+            driver: (drivers.data ?? []).find((d) => d.id === v.driver_id),
+            tractor: all.find((a) => a.id === v.tractor_id),
+            trailer: all.find((a) => a.id === v.trailer_id),
+            endIso: fromLocalInput(v.delivery_due_at),
+            weightTons: v.weight_kg ? Number(v.weight_kg) / 1000 : null,
+          })
+        : "اختر السائق مع الشاحنة، وإلا لن تظهر الرحلة لأي سائق";
+      if (problem) return void toast.error(problem, { duration: 10000 });
+    }
     setBusy(true);
     try {
       const { data: order, error } = await db.from("transport_orders").insert({
@@ -114,13 +128,12 @@ function Wizard() {
         }).select().single();
         if (e2) throw e2;
         await db.from("trip_financials").insert({ trip_id: trip.id, revenue: price, est_cost: cost });
-        if (v.driver_id && !v.tractor_id) toast.warning("اخترت سائقًا بدون شاحنة — لن يُكلَّف السائق ولن تصله رسالة حتى تختار رأس القاطرة");
         if (v.driver_id && v.tractor_id) {
           const { error: e3 } = await db.rpc("assign_trip_resources", {
             p_trip_id: trip.id, p_driver_id: v.driver_id, p_tractor_id: v.tractor_id, p_trailer_id: v.trailer_id || null,
             p_start: fromLocalInput(v.pickup_at), p_end: fromLocalInput(v.delivery_due_at), p_override_reason: null,
           });
-          if (e3) toast.warning(`أُنشئت الرحلة لكن التخصيص لم يتم: ${errMsg(e3)}`);
+          if (e3) toast.error(`أُنشئت الرحلة لكن لم تُسند للسائق، فلن تظهر عنده: ${errMsg(e3)}`, { duration: 15000 });
         }
         flushWa();
         toast.success(`تم إنشاء الأمر ${order.number} والرحلة ${trip.number}`);

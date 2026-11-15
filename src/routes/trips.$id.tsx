@@ -186,6 +186,11 @@ function TripDetails() {
         </Panel>
       </div>
 
+      {!t.driver_id && !["delivered", "closed", "cancelled"].includes(t.status) && (
+        <p role="alert" className="mt-5 rounded-2xl border border-warning/40 bg-warning-soft px-4 py-3 text-sm">
+          لم يُسند سائق لهذه الرحلة بعد، لذلك لا تظهر في صفحة أي سائق ولا تصله رسالة. اختر السائق والشاحنة في «تخصيص الموارد» ثم احفظ.
+        </p>
+      )}
       <div className="mt-5 grid gap-5 xl:grid-cols-3">
         {ops && !["delivered", "closed", "cancelled", "in_progress"].includes(t.status) && (
           <Panel title="تخصيص الموارد" icon={<Truck />} className="xl:col-span-2">
