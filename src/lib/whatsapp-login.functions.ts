@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { normalizePhone } from './phone';
-import { canRestoreProfilePhone, matchesVerifiedPhone, phoneIdentityVariants } from './phone-account';
+import { canRestoreProfilePhone, phoneIdentityVariants } from './phone-account';
 import { BRAND } from './brand';
 import { assertApprovedPhone } from './employee-access';
 
@@ -37,10 +37,9 @@ export const requestLoginCode = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: allowed, error: accessError } = await supabaseAdmin.from('profiles').select('id').in('phone', phoneIdentityVariants(data.phone));
-    const { data: reservation, error: reservationError } = await supabaseAdmin.from('admin_phone_reservations').select('phone').eq('phone', data.phone).maybeSingle();
-    const { count, error: rolesError } = allowed?.[0] ? await supabaseAdmin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', allowed[0].id) : { count: 0, error: null };
-    if (accessError || reservationError || rolesError) throw new Error('تعذر التحقق من صلاحية الدخول');
-    assertApprovedPhone(allowed?.length ?? 0, count ?? 0, !!reservation);
+    const { count, error: rolesError } = allowed?.length === 1 ? await supabaseAdmin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', allowed[0]!.id) : { count: 0, error: null };
+    if (accessError || rolesError) throw new Error('تعذر التحقق من صلاحية الدخول');
+    assertApprovedPhone(allowed?.length ?? 0, count ?? 0);
     const g = gateway();
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recent, error } = await supabaseAdmin.from("login_codes").select("created_at").eq("phone", data.phone).gte("created_at", since).order("created_at", { ascending: false });
@@ -90,23 +89,11 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
     if (lookupError) throw new Error('تعذر البحث عن حساب الموظف، حاول مجددًا');
     if (prof && prof.length > 1) throw new Error("هذا الرقم مرتبط بأكثر من حساب. تواصل مع المدير.");
     userId = prof?.[0]?.id ?? null;
-    const { data: reservation, error: reservationError } = await supabaseAdmin.from('admin_phone_reservations').select('phone').eq('phone', data.phone).maybeSingle();
     const { count, error: rolesError } = userId ? await supabaseAdmin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', userId) : { count: 0, error: null };
-    if (reservationError || rolesError) throw new Error('تعذر التحقق من صلاحيات الموظف');
-    assertApprovedPhone(prof?.length ?? 0, count ?? 0, !!reservation);
+    if (rolesError) throw new Error('تعذر التحقق من صلاحيات الموظف');
+    // Only numbers already added by administration with a job may enter; login never creates accounts or grants roles.
+    assertApprovedPhone(prof?.length ?? 0, count ?? 0);
     const digits = data.phone.replace(/^\+/, "");
-    // Older phone accounts can have no profile phone. Require BOTH the immutable
-    // Auth phone and our synthetic address, not user-editable metadata or email alone.
-    if (!userId) {
-      for (let page = 1; ; page++) {
-        const { data: accounts, error: accountsError } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
-        if (accountsError) throw new Error('تعذر البحث عن حساب الدخول، حاول مجددًا');
-        const matches = accounts.users.filter(account => matchesVerifiedPhone(account, data.phone));
-        if (matches.length > 1) throw new Error('هذا الرقم مرتبط بأكثر من حساب. تواصل مع المدير.');
-        if (matches[0]) { userId = matches[0].id; break; }
-        if (accounts.users.length < 100) break;
-      }
-    }
     let email: string | null = null;
     if (userId) {
       const { data: u, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
@@ -117,16 +104,8 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
         const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(userId, { email, email_confirm: true });
         if (emailError) throw new Error('تعذر تجهيز حساب الدخول');
       }
-    } else {
-      email = `${digits}@phone.darb.app`;
-      const { data: created, error } = await supabaseAdmin.auth.admin.createUser({ email, email_confirm: true, phone: data.phone, phone_confirm: true, user_metadata: { full_name: data.phone, phone: data.phone } });
-      if (error || !created.user) {
-        console.error('Phone account creation failed', { code: error?.code, status: error?.status });
-        throw new Error("تعذر إنشاء حساب الدخول. تواصل مع المدير للتحقق من ربط رقم الجوال.");
-      }
-      userId = created.user.id;
     }
-    if (!userId) throw new Error('تعذر تحديد حساب الموظف');
+    if (!userId || !email) throw new Error('تعذر تحديد حساب الموظف');
     const { data: profile, error: profileLookupError } = await supabaseAdmin.from('profiles').select('phone').eq('id', userId).single();
     if (profileLookupError || !profile) throw new Error('ملف الموظف غير موجود، تواصل مع المدير');
     if (!canRestoreProfilePhone(profile.phone, data.phone)) throw new Error('رقم الحساب لا يطابق ملف الموظف، تواصل مع المدير');
@@ -134,9 +113,6 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
       const { data: updated, error: profileError } = await supabaseAdmin.from('profiles').update({ phone: data.phone }).eq('id', userId).select('id').single();
       if (profileError || !updated) throw new Error('تعذر تثبيت رقم الجوال للحساب');
     }
-    // Only after a valid code has been consumed: apply server-owned reservations.
-    const { error: ownerError } = await supabaseAdmin.rpc('apply_reserved_phone_owner', { p_user_id: userId, p_verified_phone: data.phone });
-    if (ownerError) throw new Error('تعذر التحقق من صلاحيات الحساب');
     const { data: link, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
     if (linkErr || !link?.properties?.hashed_token) throw new Error("تعذر إنشاء جلسة الدخول");
     return { tokenHash: link.properties.hashed_token };

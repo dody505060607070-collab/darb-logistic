@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { assertApprovedPhone, NOT_REGISTERED, NO_JOB_YET } from '@/lib/employee-access';
 import { newEmployeeSchema } from '@/lib/employees';
 describe('closed employee access', () => {
-  it('rejects an unknown phone even with an arbitrary code', () => { expect(() => assertApprovedPhone(0, 0, false)).toThrow(); });
-  it('rejects an account without an assigned job', () => { expect(() => assertApprovedPhone(1, 0, false)).toThrow(); });
-  it('allows an employee with an assigned job', () => { expect(() => assertApprovedPhone(1, 1, false)).not.toThrow(); });
-  it('preserves a reserved administrator after account reset', () => { expect(() => assertApprovedPhone(0, 0, true)).not.toThrow(); });
-  it('rejects ambiguous phone identity', () => { expect(() => assertApprovedPhone(2, 2, true)).toThrow(); });
+  it('rejects an unknown phone even with an arbitrary code', () => { expect(() => assertApprovedPhone(0, 0)).toThrow(); });
+  it('rejects an account without an assigned job', () => { expect(() => assertApprovedPhone(1, 0)).toThrow(); });
+  it('allows an employee with an assigned job', () => { expect(() => assertApprovedPhone(1, 1)).not.toThrow(); });
+  it('never lets a number outside the employee list in, even with no job check', () => { expect(() => assertApprovedPhone(0, 5)).toThrow(NOT_REGISTERED); });
+  it('rejects ambiguous phone identity', () => { expect(() => assertApprovedPhone(2, 2)).toThrow(); });
   it('does not default a new employee to owner', () => { expect(newEmployeeSchema.safeParse({ fullName: 'موظف', phone: '+966501234567', branchId: null }).success).toBe(false); });
   it('requires workshop assignment for a workshop employee', () => { expect(newEmployeeSchema.safeParse({ fullName: 'موظف', phone: '+966501234567', branchId: null, role: 'workshop' }).success).toBe(false); });
   it('creates a workshop account using its name and normalized login phone',()=>{
@@ -21,6 +21,6 @@ describe('closed employee access', () => {
   });
 });
 describe('sign-in refusal tells the person what to do', () => {
-  it('an unknown number is told it is not registered', () => expect(() => assertApprovedPhone(0, 0, false)).toThrow(NOT_REGISTERED));
-  it('a registered number without a job is told to contact administration', () => expect(() => assertApprovedPhone(1, 0, false)).toThrow(NO_JOB_YET));
+  it('an unknown number is told it is not registered', () => expect(() => assertApprovedPhone(0, 0)).toThrow(NOT_REGISTERED));
+  it('a registered number without a job is told to contact administration', () => expect(() => assertApprovedPhone(1, 0)).toThrow(NO_JOB_YET));
 });

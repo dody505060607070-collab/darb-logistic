@@ -11,7 +11,7 @@
 
 # DARB project rules
 - Data access is client-side through the Supabase client with RLS; every sensitive multi-step operation (resource allocation, trip events, invoicing, payment allocation, expense review, advance settlement, work-order status, re-inspection) is a SECURITY DEFINER RPC that checks roles itself — why: atomicity and server-side enforcement.
-- Roles live only in `user_roles` (enum `app_role`); invited accounts keep their role, uninvited new accounts await assignment, and verified administrator reservations apply separately — why: scoped workshop and employee access requires safe onboarding.
+- Roles live only in `user_roles` (enum `app_role`); invited accounts keep their role and nothing grants a role at sign-in — why: scoped workshop and employee access requires safe onboarding.
 - Trip money lives in `trip_financials` (finance roles only), never on `trips` — why: drivers must not see revenue/margins.
 - Overlap prevention for drivers/tractors/trailers is the `no_overlapping_bookings` exclusion constraint on `resource_bookings` — why: correct under concurrent requests.
 - Shared form field configs and helpers live in `src/components/darb/*`, never exported from route files — why: route files must only export `Route`.
@@ -24,11 +24,11 @@
 
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
 - WhatsApp number management matches the configured instance, verifies disconnection server-side and needs in-app confirmation — why: no wrong number or accidental outage.
-- Phone login requires an approved profile with roles (or admin reservation) before OTP; owner-only employee creation provisions identity/role/link with rollback — why: unlisted numbers get no access.
+- Phone login requires exactly one employee profile with a role before OTP and after it; login never creates accounts; owner-only employee creation provisions identity/role/link with rollback — why: unlisted numbers get no access.
 - CRM is a home-page component with role-restricted tables; pipeline uses integer cents and is a forecast, not revenue — why: keeps finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.
-- Admin phone reservations are service-only, applied by a service-only RPC after OTP and identity match, cleared by trigger when another owner revokes owner; phones E.164 — why: no privilege bypass or revoked admins regaining access.
+- Admin phone reservations are retired (table emptied and blocked, RPC is a no-op); administrators are only employees given the owner role — why: reserved numbers bypassed the employee list.
 - Account deletion: owner-checked server function, explicit confirmation, no self-deletion, unlinks driver/workshop first; reference deletes are allowlisted, never audit/finance tables — why: history stays intact.
 - Work-order access, edit/delete and workshop removal are role-checked RPCs refusing started/costed records (archive instead) — why: approvals and history cannot be bypassed.
 - Maintenance financial custody is an immutable approved ledger with role-checked creation/review RPCs and derived balances — why: disbursement is not expense, retries cannot debit twice, and corrections preserve history.

@@ -1,7 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { employeeSchema, newEmployeeSchema, assertEmployeeDeletion } from './employees';
-import { phoneIdentityVariants } from './phone-account';
 import { z } from 'zod';
 
 export const createEmployee = createServerFn({ method: 'POST' })
@@ -40,11 +39,6 @@ export const deleteEmployee = createServerFn({ method: 'POST' })
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { data: target, error: targetError } = await supabaseAdmin.from('profiles').select('id').eq('id', data.id).single();
     if (targetError || !target) throw new Error('الموظف غير موجود');
-    const { data: identity } = await supabaseAdmin.from('profiles').select('phone').eq('id', data.id).single();
-    if (identity?.phone) {
-      const { error: reservationError } = await supabaseAdmin.from('admin_phone_reservations').delete().in('phone', phoneIdentityVariants(identity.phone));
-      if (reservationError) throw new Error('تعذر إلغاء صلاحية الرقم');
-    }
     // Keep the driver file and workshop for history, but never leave them pointing at a deleted login.
     const { error: unlinkError } = await supabaseAdmin.from('drivers').update({ user_id: null }).eq('user_id', data.id);
     if (unlinkError) throw new Error('تعذر فصل ملف السائق عن الحساب');

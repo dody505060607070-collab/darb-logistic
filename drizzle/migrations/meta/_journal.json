@@ -330,6 +330,13 @@
       "when": 1794779118473,
       "tag": "0046_driver_role_creates_driver_file",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1794834704591,
+      "tag": "0047_disable_automatic_admin_numbers",
+      "breakpoints": true
     }
   ]
 }
