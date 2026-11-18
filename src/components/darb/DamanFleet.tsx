@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { db, type Row } from "@/lib/db";
 import { damanSyncNow, damanVehicleStops } from "@/lib/daman-gps.functions";
 import { DAMAN_GSM_LABEL, DAMAN_STATE_LABEL, DAMAN_TYPE_LABEL, damanAssetKind, isDamanTruck } from "@/lib/daman-gps";
-import { errMsg, fmtDateTime, fmtNum, fmtTime, type Tone } from "@/lib/format";
+import { errMsg, fmtDate, fmtDateTime, fmtNum, fmtTime, type Tone } from "@/lib/format";
 
 const STATE_TONE: Record<string, Tone> = { moving: "success", stopped: "gold", disconnected: "danger" };
 
@@ -25,9 +25,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 export function SubscriptionBadge({ date }: { date: string | null | undefined }) {
   if (!date) return <span className="text-muted-foreground">—</span>;
   const days = Math.floor((Date.parse(date) - Date.parse(today())) / 86400000);
-  if (days < 0) return <Badge tone="danger">منتهٍ {date}</Badge>;
-  if (days <= 30) return <Badge tone="gold">ينتهي {date}</Badge>;
-  return <span className="num text-xs">{date}</span>;
+  if (days < 0) return <Badge tone="danger">منتهٍ {fmtDate(date)}</Badge>;
+  if (days <= 30) return <Badge tone="gold">ينتهي {fmtDate(date)}</Badge>;
+  return <span className="num text-xs">{fmtDate(date)}</span>;
 }
 
 function deviceLine(r: Row) {
@@ -40,7 +40,8 @@ function StopsDialog({ row, onClose }: { row: Row | null; onClose: () => void })
   const fetchStops = useServerFn(damanVehicleStops);
   const [day, setDay] = useState(riyadhDay());
   const q = useQuery({ queryKey: ["daman-stops", row?.provider_vehicle_id, day], queryFn: () => fetchStops({ data: { id: row!.provider_vehicle_id, day } }), enabled: !!row, staleTime: 60000 });
-  const stops = (q.data ?? []).filter((x) => !x.moving);
+  // Sub-minute halts (traffic lights, crawling) are noise, not stops.
+  const stops = (q.data ?? []).filter((x) => !x.moving && (x.minutes ?? 0) >= 1);
   const total = stops.reduce((m, x) => m + (x.minutes ?? 0), 0);
   return (
     <Dialog open={!!row} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -54,11 +55,15 @@ function StopsDialog({ row, onClose }: { row: Row | null; onClose: () => void })
           : q.error ? <p role="alert" className="text-sm text-danger">{errMsg(q.error)}</p>
           : !stops.length ? <p className="text-sm text-muted-foreground">لا توجد توقفات مسجلة في هذا اليوم.</p>
           : <ul className="space-y-2">{stops.map((x, i) => (
-            <li key={i} className="flex items-center justify-between gap-2 rounded-2xl border p-2.5 text-sm">
-              <span className="num inline-flex items-center gap-1.5"><Clock className="size-4 text-muted-foreground" /> {fmtTime(x.from)} ← {fmtTime(x.to)}</span>
-              <span className="num font-semibold">{x.minutes != null ? `${fmtNum(x.minutes)} د` : "—"}</span>
-              <span className="text-xs text-muted-foreground">{x.ignition ? "المحرك يعمل" : "المحرك مطفأ"}</span>
-              {x.lat != null && <a className="inline-flex items-center gap-1 text-xs text-primary underline" href={`https://maps.google.com/?q=${x.lat},${x.lng}`} target="_blank" rel="noreferrer"><MapPin className="size-3" /> الموقع</a>}
+            <li key={i} className="rounded-2xl border p-2.5 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="num inline-flex items-center gap-1.5"><Clock className="size-4 shrink-0 text-muted-foreground" /> من {fmtTime(x.from)} إلى {fmtTime(x.to)}</span>
+                <span className="num whitespace-nowrap font-semibold">{x.minutes != null ? `${fmtNum(x.minutes)} د` : "—"}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span>{x.ignition ? "المحرك يعمل" : "المحرك مطفأ"}</span>
+                {x.lat != null && <a className="inline-flex items-center gap-1 text-primary underline" href={`https://maps.google.com/?q=${x.lat},${x.lng}`} target="_blank" rel="noreferrer"><MapPin className="size-3" /> الموقع</a>}
+              </div>
             </li>))}</ul>}
       </DialogContent>
     </Dialog>
@@ -162,15 +167,11 @@ export function DamanFleet({ rows, assets, loading, canLink, onSelect }: { rows:
       <DataTable rows={shown} loading={loading} searchKeys={["plate", "car_name", "driver_name"]} onRowClick={(r) => onSelect(r.asset_id ?? null, r.lat, r.lng)} cols={[
         { key: "plate", label: "اللوحة", render: (r) => <span className="num font-semibold text-primary">{r.plate ?? "—"}</span> },
         { key: "car_name", label: "النوع", render: (r) => <span>{r.car_name ?? "—"}{r.vehicle_type && <span className="block text-xs text-muted-foreground">{DAMAN_TYPE_LABEL[r.vehicle_type] ?? r.vehicle_type}</span>}</span> },
-        { key: "driver_name", label: "السائق في الجهاز", render: (r) => r.driver_name ?? "—" },
-        { key: "state", label: "الحالة", render: (r) => <DamanStateBadge state={r.vehicle_state} /> },
-        { key: "speed", label: "السرعة", render: (r) => <span className="num">{r.speed_kmh != null ? `${Math.round(r.speed_kmh)} كم/س` : "—"}</span> },
-        { key: "gps_time", label: "آخر إشارة", render: (r) => <span className="num text-xs">{fmtDateTime(r.gps_time)}</span> },
+        { key: "driver_name", label: "السائق في الجهاز", render: (r) => <span className="block max-w-28 truncate" title={r.driver_name ?? undefined}>{r.driver_name ?? "—"}</span> },
+        { key: "state", label: "الحالة", render: (r) => <span className="inline-flex flex-col items-start gap-1"><DamanStateBadge state={r.vehicle_state} /><span className="num max-w-32 whitespace-normal text-xs text-muted-foreground">{r.speed_kmh != null ? `${Math.round(r.speed_kmh)} كم/س • ` : ""}{fmtDateTime(r.gps_time)}</span></span> },
         { key: "odometer_km", label: "العداد", render: (r) => <span className="num text-xs">{r.odometer_km != null ? `${fmtNum(r.odometer_km)} كم` : "—"}</span> },
-        { key: "device", label: "الجهاز", render: (r) => <span className="num text-xs">{deviceLine(r)}{r.wasl_linked && <span className="ms-1"><Badge tone="success">وصل</Badge></span>}</span> },
-        { key: "subscription", label: "اشتراك الجهاز", render: (r) => <SubscriptionBadge date={r.subscription_expires} /> },
-        { key: "asset", label: "مركبة شتاء", render: (r) => linkControl(r) },
-        { key: "stops", label: "", render: (r) => <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setStopsOf(r); }}><Clock /> التوقفات</Button> },
+        { key: "device", label: "الجهاز والاشتراك", render: (r) => <span className="inline-flex flex-col items-start gap-1"><span className="num text-xs text-muted-foreground">{deviceLine(r)}</span><span className="inline-flex flex-wrap gap-1">{r.wasl_linked && <Badge tone="success">وصل</Badge>}<SubscriptionBadge date={r.subscription_expires} /></span></span> },
+        { key: "asset", label: "مركبة شتاء", render: (r) => <span className="inline-flex flex-col items-start gap-1">{linkControl(r)}<Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setStopsOf(r); }}><Clock /> التوقفات</Button></span> },
       ]} />
       </div>
       <StopsDialog row={stopsOf} onClose={() => setStopsOf(null)} />
