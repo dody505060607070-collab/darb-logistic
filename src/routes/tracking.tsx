@@ -14,6 +14,7 @@ import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchTrips } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { CITY_COORDS, errMsg, fmtDateTime } from "@/lib/format";
+import { DamanFleet, DamanStateBadge } from "@/components/darb/DamanFleet";
 
 const MapView = lazy(() => import("@/components/darb/MapView"));
 
@@ -54,14 +55,25 @@ function Tracking() {
   const [search, setSearch] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
+  const provider = useRows(["gps-provider"], () => db.from("gps_provider_vehicles").select("*").order("plate"), can("ops_manager", "dispatcher", "fleet_supervisor"));
+  const providerRows = provider.data ?? [];
+  const providerOf = (assetId: string) => providerRows.find((p) => p.asset_id === assetId);
+  const gpsLive = providerRows.length > 0;
   const history = useRows(["gps", sel], () => db.from("gps_readings").select("*").eq("asset_id", sel).order("event_time", { ascending: false }).limit(50), !!sel);
 
   const tractors = (assets.data ?? []).filter((a) => a.kind !== "trailer");
   const tripOf = (id: string) => (trips.data ?? []).find((t) => t.tractor_id === id && t.status === "in_progress");
-  const markers = useMemo(() => tractors.filter((a) => a.last_lat).map((a) => ({
-    id: a.id, lat: a.last_lat, lng: a.last_lng, label: a.code,
-    color: (a.id === sel ? "gold" : a.status === "active" ? "green" : a.status === "stopped" ? "red" : "blue") as "green",
-  })), [tractors, sel]);
+  const markers = useMemo(() => [
+    ...tractors.filter((a) => a.last_lat).map((a) => ({
+      id: a.id, lat: a.last_lat, lng: a.last_lng, label: a.code,
+      color: (a.id === sel ? "gold" : a.status === "active" ? "green" : a.status === "stopped" ? "red" : "blue") as "green",
+    })),
+    // Tracked vehicles not yet linked to a Shata vehicle still show on the map.
+    ...providerRows.filter((p) => !p.asset_id && p.lat != null).map((p) => ({
+      id: `gps:${p.id}`, lat: p.lat, lng: p.lng, label: p.plate ?? "GPS",
+      color: (p.vehicle_state === "moving" ? "green" : p.vehicle_state === "disconnected" ? "red" : "blue") as "green",
+    })),
+  ], [tractors, providerRows, sel]);
   const lines = useMemo(() => {
     const out: { id: string; points: [number, number][]; color?: string; dashed?: boolean }[] = [];
     (trips.data ?? []).filter((t) => t.status === "in_progress").forEach((t) => {
@@ -95,13 +107,23 @@ function Tracking() {
         <Kpi label="بدون تحديث حديث" value={tractors.filter((a) => freshness(a.last_position_at)[0] !== "success").length} icon={<Clock />} tone="warning" />
         <Kpi label="بدون قراءة محفوظة" value={tractors.filter((a) => !a.last_position_at).length} icon={<WifiOff />} tone="neutral" />
       </div>
-      <div className="mb-5 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm">
-        <WifiOff className="mt-0.5 size-5 text-warning" />
-        <div>
-          <b>GPS غير مربوط — آخر مواقع محفوظة، ليست بيانات حية</b>
-          <p className="mt-1">المواقع المعروضة آخر قراءات محفوظة مع مصدرها ووقتها، وليست تتبعًا حيًا من ضمان المهندس.</p>
+      {gpsLive ? (
+        <div className="mb-5 flex items-start gap-3 rounded-lg border border-success/40 bg-success-soft p-3 text-sm">
+          <Radio className="mt-0.5 size-5 text-success" />
+          <div>
+            <b>مربوط بأجهزة ضمان المهندس — {providerRows.length} مركبة</b>
+            <p className="mt-1">تتحرك {providerRows.filter((p) => p.vehicle_state === "moving").length}، واقفة {providerRows.filter((p) => p.vehicle_state === "stopped").length}، منقطعة {providerRows.filter((p) => p.vehicle_state === "disconnected").length}. المواقع تتحدث كل دقيقة.</p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="mb-5 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm">
+          <WifiOff className="mt-0.5 size-5 text-warning" />
+          <div>
+            <b>GPS غير مربوط — آخر مواقع محفوظة، ليست بيانات حية</b>
+            <p className="mt-1">المواقع المعروضة آخر قراءات محفوظة مع مصدرها ووقتها، وليست تتبعًا حيًا من ضمان المهندس.</p>
+          </div>
+        </div>
+      )}
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.85fr)]">
         <Panel title={`قائمة المركبات (${tractors.length})`} icon={<Truck />} className="min-w-0" bodyClass="space-y-3">
           <Input aria-label="البحث في المركبات" placeholder="البحث برقم المركبة أو الموقع…" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -110,14 +132,14 @@ function Tracking() {
               { key: "code", label: "المركبة", render: (r) => <span className="num font-semibold text-primary">{r.code}</span> },
               { key: "status", label: "الحالة", render: (r) => <Status kind="asset" value={r.status} /> },
               { key: "updated", label: "آخر تحديث", render: (r) => <span className="num text-xs">{fmtDateTime(r.last_position_at)}</span> },
-              { key: "connection", label: "الاتصال", render: () => <span className="inline-flex items-center gap-1 text-warning"><WifiOff className="size-4" /> غير مربوط</span> },
+              { key: "connection", label: "الاتصال", render: (r) => providerOf(r.id) ? <DamanStateBadge state={providerOf(r.id)?.vehicle_state} /> : <span className="inline-flex items-center gap-1 text-warning"><WifiOff className="size-4" /> غير مربوط</span> },
             ]} />
           </div>
         </Panel>
         <Panel title="خريطة المملكة" icon={<Radio />} className="min-w-0 overflow-hidden" bodyClass="p-0">
           <ClientOnly fallback={<Loading />}>
             <Suspense fallback={<Loading />}>
-              <MapView markers={markers} lines={lines} height={520} onMarkerClick={setSel} />
+              <MapView markers={markers} lines={lines} height={520} onMarkerClick={(id: string) => { if (!id.startsWith("gps:")) setSel(id); }} />
             </Suspense>
           </ClientOnly>
         </Panel>
@@ -135,7 +157,7 @@ function Tracking() {
                 ["السائق", st?.driver?.full_name ?? "—"],
                 ["آخر تحديث", <span className="num">{fmtDateTime(s.last_position_at)}</span>],
                 ["المصدر", s.last_position_source ?? "—"],
-                ["حالة الربط", <Badge tone="warning">GPS غير مربوط</Badge>],
+                ["حالة الربط", providerOf(s.id) ? <span className="inline-flex items-center gap-2"><Badge tone="success">ضمان المهندس</Badge><DamanStateBadge state={providerOf(s.id)?.vehicle_state} /></span> : <Badge tone="warning">GPS غير مربوط</Badge>],
                 ["حداثة القراءة", <Badge tone={freshness(s.last_position_at)[0]}>{freshness(s.last_position_at)[1]}</Badge>],
                 ["الوصول المتوقع", st ? <span className="num">{fmtDateTime(st.planned_end)} (تقديري)</span> : "—"],
               ]} />
@@ -160,6 +182,9 @@ function Tracking() {
           )}
         </Panel>
       </div>
+      {(gpsLive || can("owner")) && (
+        <DamanFleet rows={providerRows} assets={assets.data ?? []} loading={provider.isLoading} canLink={can("ops_manager", "fleet_supervisor")} onSelect={(id) => { if (id) setSel(id); }} />
+      )}
       <Panel title="حالة الرؤوس" icon={<Truck />} className="mt-5">
         <DataTable rows={tractors} loading={assets.isLoading} onRowClick={(r) => setSel(r.id)} selectedId={sel} searchKeys={["code", "location_text"]} cols={[
           { key: "code", label: "الرأس", render: (r) => <span className="num font-semibold text-primary">{r.code}</span> },

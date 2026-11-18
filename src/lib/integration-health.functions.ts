@@ -33,5 +33,17 @@ export const integrationHealth = createServerFn({ method: 'POST' })
         routing = body?.features?.length ? { state: 'connected', detail: 'تم التحقق من مسار الرياض–الدمام' } : { state: 'error', detail: 'تعذر التحقق من خدمة المسارات' };
       } catch { routing = { state: 'error', detail: 'تعذر الاتصال بخدمة المسارات' }; }
     }
-    return { tracking, routing, checkedAt: new Date().toISOString() };
+    // ضمان المهندس: read-only check that the fleet answers; ingestion runs in the per-minute job.
+    let daman = { state: 'missing', detail: 'لم يتم الربط' };
+    const fleet = process.env.DAMAN_GPS_FLEET_ID?.trim();
+    const damanKey = process.env.DAMAN_GPS_API_KEY?.trim();
+    if (fleet && damanKey) {
+      try {
+        const { DAMAN_API_BASE, parseDamanVehicles } = await import('@/lib/daman-gps');
+        const response = await fetch(`${DAMAN_API_BASE}/api/v1/vehicles/report/last-online-history-state?fleetId=${encodeURIComponent(fleet)}&isEnglish=true`, { headers: { 'X-Api-Key': damanKey, ApiKey: damanKey }, redirect: 'manual', signal: AbortSignal.timeout(15000) });
+        const vehicles = response.ok ? parseDamanVehicles(await response.json()) : [];
+        daman = vehicles.length ? { state: 'connected', detail: `متصل — ${vehicles.length} مركبة` } : { state: 'error', detail: 'لم يُرجع الخادم مركبات' };
+      } catch { daman = { state: 'error', detail: 'تعذر الاتصال بضمان المهندس' }; }
+    }
+    return { tracking, routing, daman, checkedAt: new Date().toISOString() };
   });

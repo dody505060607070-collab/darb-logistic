@@ -337,6 +337,13 @@
       "when": 1794834704591,
       "tag": "0047_disable_automatic_admin_numbers",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1795015014725,
+      "tag": "0048_daman_gps_provider_vehicles",
+      "breakpoints": true
     }
   ]
 }

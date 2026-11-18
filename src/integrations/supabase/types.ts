@@ -1081,6 +1081,68 @@ export type Database = {
           },
         ]
       }
+      gps_provider_vehicles: {
+        Row: {
+          asset_id: string | null
+          car_name: string | null
+          created_at: string
+          gps_time: string | null
+          id: string
+          ignition: boolean | null
+          lat: number | null
+          lng: number | null
+          plate: string | null
+          plate_key: string | null
+          provider: string
+          provider_vehicle_id: string
+          speed_kmh: number | null
+          synced_at: string
+          vehicle_state: string | null
+        }
+        Insert: {
+          asset_id?: string | null
+          car_name?: string | null
+          created_at?: string
+          gps_time?: string | null
+          id?: string
+          ignition?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          plate?: string | null
+          plate_key?: string | null
+          provider?: string
+          provider_vehicle_id: string
+          speed_kmh?: number | null
+          synced_at?: string
+          vehicle_state?: string | null
+        }
+        Update: {
+          asset_id?: string | null
+          car_name?: string | null
+          created_at?: string
+          gps_time?: string | null
+          id?: string
+          ignition?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          plate?: string | null
+          plate_key?: string | null
+          provider?: string
+          provider_vehicle_id?: string
+          speed_kmh?: number | null
+          synced_at?: string
+          vehicle_state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_provider_vehicles_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gps_readings: {
         Row: {
           asset_id: string
@@ -3433,6 +3495,15 @@ export type Database = {
         Returns: undefined
       }
       generate_critical_alerts: { Args: never; Returns: number }
+      gps_add_vehicle_to_fleet: {
+        Args: { p_id: string; p_kind: string }
+        Returns: string
+      }
+      gps_link_vehicle: {
+        Args: { p_asset_id: string; p_id: string }
+        Returns: undefined
+      }
+      gps_provider_push_reading: { Args: { p_id: string }; Returns: undefined }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]

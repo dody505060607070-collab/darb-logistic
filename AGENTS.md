@@ -49,3 +49,4 @@
 - Driver WhatsApp uses `driver_wa_phone` (login phone first) — why: stale file numbers lost messages.
 - Trip alerts: outbox job runs `trip-monitor.server.ts`; one episode per alert — why: no repeats.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
+- ضمان المهندس GPS: per-minute job runs `daman-gps.server.ts` into `gps_provider_vehicles`; only vehicles linked via role-checked RPCs write `gps_readings` — why: provider devices aren't silently turned into fleet assets.

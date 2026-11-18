@@ -42,8 +42,8 @@ export const Route = createFileRoute("/settings")({
 
 type FreeOption = { label: string; url: string; note: string };
 const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOption[] }[] = [
-  { name: "ضمان المهندس — Eco5 Lite", desc: "قراءات أجهزة الشركة حسب الاشتراك الفعلي", needs: "توثيق الربط وعنوان المنصة والوصول الآمن ومعرفات الأجهزة وربطها باللوحات", free: [
-    { label: "لم يتم الربط", url: "", note: "اسم الجهاز لا يثبت خصائصه؛ ينتظر التوثيق الرسمي. الربط السابق مع Traccar منفصل وليس ربط ضمان المهندس." },
+  { name: "ضمان المهندس — Eco5 Lite", desc: "آخر موقع وحالة كل مركبة من أجهزة الشركة، يتحدث كل دقيقة", needs: "مفتاح API ورقم الأسطول (محفوظان)، ثم ربط كل جهاز بمركبته من صفحة التتبع", free: [
+    { label: "صفحة التتبع", url: "/tracking", note: "اربط كل جهاز بمركبة شتاء حتى تدخل مواقعه في سجلها وتنبيهات الرحلات." },
   ] },
   { name: "مزود توجيه الشاحنات", desc: "مسارات تراعي قيود الشاحنات ووقت الوصول", needs: "مفتاح API", free: [
     { label: "OpenRouteService", url: "https://account.heigit.org/signup", note: "اتصال التوجيه السابق متاح للفحص؛ لم يتم اعتماد الأبعاد والحمولات كتوجيه شاحنات رسمي." },
@@ -134,7 +134,7 @@ function SettingsPage() {
               <WhatsAppIntegrationCard isOwner={isOwner} />
               {INTEGRATIONS.map((i, index) => (
                 <div key={i.name} className="rounded-lg border p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2"><b className="text-primary">{i.name}</b><Badge tone={index===1&&health.data?.routing.state==='connected'?'success':'neutral'}>{index===1&&health.data?.routing.state==='connected'?'خادم التوجيه متصل':'لم يتم الربط'}</Badge></div>
+                  <div className="flex flex-wrap items-center justify-between gap-2"><b className="text-primary">{i.name}</b><Badge tone={(index===1&&health.data?.routing.state==='connected')||(index===0&&health.data?.daman?.state==='connected')?'success':index===0&&health.data?.daman?.state==='error'?'danger':'neutral'}>{index===1&&health.data?.routing.state==='connected'?'خادم التوجيه متصل':index===0&&health.data?.daman?health.data.daman.detail:'لم يتم الربط'}</Badge></div>
                   <p className="mt-1 text-sm text-muted-foreground">{i.desc}</p>
                   <p className="mt-2 text-xs"><span className="font-semibold">المطلوب للربط:</span> {i.needs}</p>
                   <ul className="mt-3 space-y-2 border-t pt-3 text-xs">
