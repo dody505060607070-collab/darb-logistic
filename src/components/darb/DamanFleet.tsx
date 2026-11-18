@@ -53,6 +53,16 @@ export function DamanFleet({ rows, assets, loading, canLink, onSelect }: { rows:
     refresh();
   }
 
+  const linkControl = (r: Row) => canLink ? (
+    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+      <select aria-label="ربط بمركبة" className="h-8 max-w-40 rounded-full border bg-background px-2 text-xs text-foreground" disabled={busy === r.id} value={r.asset_id ?? ""} onChange={(e) => void link(r.id, e.target.value)}>
+        <option value="">غير مربوطة</option>
+        {assets.filter((a) => a.kind !== "trailer" && (a.id === r.asset_id || !linkedIds.has(a.id))).map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}
+      </select>
+      {!r.asset_id && <Button size="sm" variant="ghost" disabled={busy === r.id} title="إضافة إلى أسطول شتاء" onClick={() => void addToFleet(r.id)}><Plus /> إضافة</Button>}
+    </div>
+  ) : (r.asset_id ? <Badge tone="success"><Link2 className="size-3" /> مربوطة</Badge> : <Badge>غير مربوطة</Badge>);
+
   const last = rows.reduce<string | null>((m, r) => (!m || r.synced_at > m ? r.synced_at : m), null);
   return (
     <Panel
@@ -65,22 +75,33 @@ export function DamanFleet({ rows, assets, loading, canLink, onSelect }: { rows:
       </div>}
     >
       <p className="mb-3 text-xs text-muted-foreground">تتحدث المواقع تلقائيًا كل دقيقة. المركبة المربوطة بمركبة في شتاء تدخل مواقعها في سجلها وتنبيهات الرحلات.</p>
+      {/* Phone: one card per vehicle so the link controls stay visible without sideways scrolling. */}
+      <div className="space-y-2 sm:hidden">
+        {rows.map((r) => (
+          <div key={r.id} className="rounded-2xl border p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="num font-semibold text-primary">{r.plate ?? "—"}</span>
+              <DamanStateBadge state={r.vehicle_state} />
+            </div>
+            <div className="num mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+              <span>{r.car_name ?? "—"}</span>
+              <span>{r.speed_kmh != null ? `${Math.round(r.speed_kmh)} كم/س` : "—"}</span>
+              <span>{fmtDateTime(r.gps_time)}</span>
+            </div>
+            <div className="mt-2">{linkControl(r)}</div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden sm:block">
       <DataTable rows={rows} loading={loading} searchKeys={["plate", "car_name"]} onRowClick={(r) => onSelect(r.asset_id ?? null, r.lat, r.lng)} cols={[
         { key: "plate", label: "اللوحة", render: (r) => <span className="num font-semibold text-primary">{r.plate ?? "—"}</span> },
         { key: "car_name", label: "النوع", render: (r) => r.car_name ?? "—" },
         { key: "state", label: "الحالة", render: (r) => <DamanStateBadge state={r.vehicle_state} /> },
         { key: "speed", label: "السرعة", render: (r) => <span className="num">{r.speed_kmh != null ? `${Math.round(r.speed_kmh)} كم/س` : "—"}</span> },
         { key: "gps_time", label: "آخر إشارة", render: (r) => <span className="num text-xs">{fmtDateTime(r.gps_time)}</span> },
-        { key: "asset", label: "مركبة شتاء", render: (r) => canLink ? (
-          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <select aria-label="ربط بمركبة" className="h-8 max-w-40 rounded-full border bg-background px-2 text-xs" disabled={busy === r.id} value={r.asset_id ?? ""} onChange={(e) => void link(r.id, e.target.value)}>
-              <option value="">غير مربوطة</option>
-              {assets.filter((a) => a.kind !== "trailer" && (a.id === r.asset_id || !linkedIds.has(a.id))).map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}
-            </select>
-            {!r.asset_id && <Button size="sm" variant="ghost" disabled={busy === r.id} title="إضافة إلى أسطول شتاء" onClick={() => void addToFleet(r.id)}><Plus /> إضافة</Button>}
-          </div>
-        ) : (r.asset_id ? <Badge tone="success"><Link2 className="size-3" /> مربوطة</Badge> : <Badge>غير مربوطة</Badge>) },
+        { key: "asset", label: "مركبة شتاء", render: (r) => linkControl(r) },
       ]} />
+      </div>
     </Panel>
   );
 }

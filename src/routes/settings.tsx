@@ -140,7 +140,7 @@ function SettingsPage() {
                   <ul className="mt-3 space-y-2 border-t pt-3 text-xs">
                     {i.free.map((f) => (
                       <li key={f.label}>
-                        {f.url ? <a href={f.url} target="_blank" rel="noreferrer" className="font-semibold text-primary underline underline-offset-4">{f.label}</a> : <b>{f.label}</b>}
+                        {f.url ? <a href={f.url} {...(f.url.startsWith("/") ? {} : { target: "_blank", rel: "noreferrer" })} className="font-semibold text-primary underline underline-offset-4">{f.label}</a> : <b>{f.label}</b>}
                         <span className="text-muted-foreground"> — {f.note}</span>
                       </li>
                     ))}
