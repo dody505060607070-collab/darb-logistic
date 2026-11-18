@@ -15,6 +15,7 @@ import { fetchAssets, fetchTrips } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { CITY_COORDS, errMsg, fmtDateTime } from "@/lib/format";
 import { DamanFleet, DamanStateBadge } from "@/components/darb/DamanFleet";
+import { isDamanTruck } from "@/lib/daman-gps";
 
 const MapView = lazy(() => import("@/components/darb/MapView"));
 
@@ -113,6 +114,10 @@ function Tracking() {
           <div>
             <b>مربوط بأجهزة ضمان المهندس — {providerRows.length} مركبة</b>
             <p className="mt-1">تتحرك {providerRows.filter((p) => p.vehicle_state === "moving").length}، واقفة {providerRows.filter((p) => p.vehicle_state === "stopped").length}، منقطعة {providerRows.filter((p) => p.vehicle_state === "disconnected").length}. المواقع تتحدث كل دقيقة.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              شاحنات: {providerRows.filter((p) => isDamanTruck(p)).length} (مربوطة بأسطول شتاء {providerRows.filter((p) => isDamanTruck(p) && p.asset_id).length}) • مربوطة بمنصة وصل {providerRows.filter((p) => p.wasl_linked).length}
+              {providerRows.some((p) => p.subscription_expires && p.subscription_expires < new Date().toISOString().slice(0, 10)) && <> • <span className="text-danger">اشتراك جهاز منتهٍ: {providerRows.filter((p) => p.subscription_expires && p.subscription_expires < new Date().toISOString().slice(0, 10)).length}</span></>}
+            </p>
           </div>
         </div>
       ) : (

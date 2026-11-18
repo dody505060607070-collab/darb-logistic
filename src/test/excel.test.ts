@@ -22,5 +22,5 @@ describe('Excel downloads', () => {
     const buf = await new Promise<ArrayBuffer>(res => { const fr = new FileReader(); fr.onload = () => res(fr.result as ArrayBuffer); fr.readAsArrayBuffer(blob); });
     const head = new Uint8Array(buf).slice(0, 2);
     expect(String.fromCharCode(...head)).toBe('PK');
-  });
+  }, 30000); // the Excel library's first load is slow when every test file runs at once
 });

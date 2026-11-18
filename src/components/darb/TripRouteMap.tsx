@@ -18,7 +18,7 @@ const MapView = lazy(() => import("./MapView"));
 
 type Place = { name?: string | null; city?: string | null; lat: number | null; lng: number | null } | null;
 export type TripStop = { id: string; seq: number; name: string; city: string | null; lat: number; lng: number; notes: string | null; status: "pending" | "arrived" | "done" | "skipped"; done_at: string | null };
-type TripAlert = { id: string; kind: "off_route" | "stopped"; opened_at: string; reason: string | null; minutes: number | null; distance_m: number | null };
+type TripAlert = { id: string; kind: "off_route" | "stopped" | "gps_lost"; opened_at: string; reason: string | null; minutes: number | null; distance_m: number | null };
 export type TripPlan = { origin: Place; dest: Place; origin_city: string | null; dest_city: string | null; stops: TripStop[]; route: { points: [number, number][]; distance_km: number | null; duration_min: number | null; provider: "ors" | "straight"; computed_at: string } | null; alerts: TripAlert[] };
 
 const STOP_LABEL: Record<TripStop["status"], [string, "neutral" | "info" | "success" | "warning"]> = {
@@ -136,12 +136,12 @@ export function TripRouteMap({ tripId, tripStatus, mode, readOnly, truck, locati
       {(p?.alerts ?? []).map((a) => (
         <div key={a.id} role="alert" className="space-y-2 rounded-2xl border border-danger/40 bg-danger-soft p-3 text-sm">
           <div className="flex items-center gap-2 font-bold text-danger"><AlertTriangle className="size-4" />
-            {a.kind === "stopped" ? `المركبة متوقفة منذ ${fmtNum(a.minutes ?? 0)} دقيقة خارج نقاط الرحلة` : `خروج عن المسار المخطط بحوالي ${fmtNum(Math.round((a.distance_m ?? 0) / 100) / 10)} كم`}
+            {a.kind === "gps_lost" ? "انقطعت إشارة جهاز التتبع في المركبة" : a.kind === "stopped" ? `المركبة متوقفة منذ ${fmtNum(a.minutes ?? 0)} دقيقة خارج نقاط الرحلة` : `خروج عن المسار المخطط بحوالي ${fmtNum(Math.round((a.distance_m ?? 0) / 100) / 10)} كم`}
           </div>
           <p className="text-xs text-muted-foreground">منذ {fmtDateTime(a.opened_at)} — وصل تنبيه لمشرف الأسطول وموظف الحركة مع رقم السائق.</p>
           {a.reason ? <p>السبب من السائق: <b>{a.reason}</b></p> : mode === "driver" && !readOnly ? (
             <div className="flex gap-2">
-              <Textarea rows={2} maxLength={300} placeholder={a.kind === "stopped" ? "لماذا توقفت؟ مثال: زحمة، نقطة تفتيش، استراحة" : "لماذا غيرت الطريق؟ مثال: تحويلة، إغلاق طريق"} value={reason[a.id] ?? ""} onChange={(e) => setReason((r) => ({ ...r, [a.id]: e.target.value }))} />
+              <Textarea rows={2} maxLength={300} placeholder={a.kind === "gps_lost" ? "هل الجهاز مفصول؟ مثال: عطل كهرباء، فحص ورشة" : a.kind === "stopped" ? "لماذا توقفت؟ مثال: زحمة، نقطة تفتيش، استراحة" : "لماذا غيرت الطريق؟ مثال: تحويلة، إغلاق طريق"} value={reason[a.id] ?? ""} onChange={(e) => setReason((r) => ({ ...r, [a.id]: e.target.value }))} />
               <Button size="sm" disabled={busy === a.id} onClick={() => void explain(a)}>{busy === a.id ? <Loader2 className="animate-spin" /> : <Send />} إرسال</Button>
             </div>
           ) : <p className="text-xs">لم يكتب السائق سببًا بعد.</p>}

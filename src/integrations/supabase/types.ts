@@ -1084,54 +1084,93 @@ export type Database = {
       gps_provider_vehicles: {
         Row: {
           asset_id: string | null
+          battery_pct: number | null
           car_name: string | null
           created_at: string
+          details_synced_at: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          engine_on_today: string | null
           gps_time: string | null
+          gsm_state: string | null
+          icon: string | null
           id: string
           ignition: boolean | null
           lat: number | null
           lng: number | null
+          load_kg: number | null
+          odometer_km: number | null
           plate: string | null
           plate_key: string | null
           provider: string
           provider_vehicle_id: string
+          satellites: number | null
           speed_kmh: number | null
+          subscription_expires: string | null
           synced_at: string
           vehicle_state: string | null
+          vehicle_type: string | null
+          wasl_linked: boolean | null
         }
         Insert: {
           asset_id?: string | null
+          battery_pct?: number | null
           car_name?: string | null
           created_at?: string
+          details_synced_at?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          engine_on_today?: string | null
           gps_time?: string | null
+          gsm_state?: string | null
+          icon?: string | null
           id?: string
           ignition?: boolean | null
           lat?: number | null
           lng?: number | null
+          load_kg?: number | null
+          odometer_km?: number | null
           plate?: string | null
           plate_key?: string | null
           provider?: string
           provider_vehicle_id: string
+          satellites?: number | null
           speed_kmh?: number | null
+          subscription_expires?: string | null
           synced_at?: string
           vehicle_state?: string | null
+          vehicle_type?: string | null
+          wasl_linked?: boolean | null
         }
         Update: {
           asset_id?: string | null
+          battery_pct?: number | null
           car_name?: string | null
           created_at?: string
+          details_synced_at?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          engine_on_today?: string | null
           gps_time?: string | null
+          gsm_state?: string | null
+          icon?: string | null
           id?: string
           ignition?: boolean | null
           lat?: number | null
           lng?: number | null
+          load_kg?: number | null
+          odometer_km?: number | null
           plate?: string | null
           plate_key?: string | null
           provider?: string
           provider_vehicle_id?: string
+          satellites?: number | null
           speed_kmh?: number | null
+          subscription_expires?: string | null
           synced_at?: string
           vehicle_state?: string | null
+          vehicle_type?: string | null
+          wasl_linked?: boolean | null
         }
         Relationships: [
           {
@@ -3499,11 +3538,16 @@ export type Database = {
         Args: { p_id: string; p_kind: string }
         Returns: string
       }
+      gps_auto_add_trucks: { Args: { p_provider: string }; Returns: number }
       gps_link_vehicle: {
         Args: { p_asset_id: string; p_id: string }
         Returns: undefined
       }
       gps_provider_push_reading: { Args: { p_id: string }; Returns: undefined }
+      gps_store_details: {
+        Args: { p_provider: string; p_rows: Json }
+        Returns: number
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]

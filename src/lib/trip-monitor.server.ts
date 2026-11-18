@@ -1,4 +1,4 @@
-import { distanceToRouteM, nearAny, offRouteState, stoppedMinutes, thinLine, FRESH_MINUTES, STOP_MINUTES, type GpsPoint, type LatLng } from '@/lib/route-plan';
+import { distanceToRouteM, nearAny, offRouteState, stoppedMinutes, thinLine, trackerLost, withProviderFix, FRESH_MINUTES, STOP_MINUTES, type GpsPoint, type LatLng, type ProviderFix } from '@/lib/route-plan';
 
 type Admin = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -72,11 +72,20 @@ export async function monitorRunningTrips(now = Date.now()) {
   let planned = 0;
   for (const id of ids) if (!routeOf.has(id) && planned < 3) { planned++; await computeTripRoute(db, id).catch((e) => console.error('Route planning failed', id, (e as Error).message)); }
 
-  const since = new Date(now - Math.max(STOP_MINUTES * 3, FRESH_MINUTES) * 60000).toISOString();
+  // Live tracker state of each trip's truck (ضمان المهندس), so parked or offline trucks are still judged.
+  const { data: fixes } = await db.from('gps_provider_vehicles').select('asset_id, lat, lng, speed_kmh, vehicle_state, synced_at').in('asset_id', (trips ?? []).map((t: { tractor_id: string }) => t.tractor_id));
+  const fixOf = new Map<string, ProviderFix>((fixes ?? []).map((f: ProviderFix & { asset_id: string }) => [f.asset_id, f]));
   let opened = 0;
   for (const t of trips ?? []) {
-    const { data: readings } = await db.from('gps_readings').select('lat,lng,speed_kmh,event_time').eq('asset_id', t.tractor_id).gte('event_time', since).order('event_time', { ascending: false }).limit(120);
-    const pts: GpsPoint[] = (readings ?? []).map((r: { lat: number; lng: number; speed_kmh: number | null; event_time: string }) => ({ lat: r.lat, lng: r.lng, speed: r.speed_kmh, at: r.event_time }));
+    const fix = fixOf.get(t.tractor_id);
+    if (trackerLost(fix, now)) {
+      const { data } = await db.rpc('open_trip_alert', { p_trip_id: t.id, p_kind: 'gps_lost', p_lat: fix?.lat ?? null, p_lng: fix?.lng ?? null, p_distance_m: null, p_minutes: null });
+      if (data) opened++;
+      continue;
+    }
+    if (fix && isOpen(t.id, 'gps_lost')) await db.rpc('clear_trip_alert', { p_trip_id: t.id, p_kind: 'gps_lost' });
+    const { data: readings } = await db.from('gps_readings').select('lat,lng,speed_kmh,event_time').eq('asset_id', t.tractor_id).order('event_time', { ascending: false }).limit(120);
+    const pts: GpsPoint[] = withProviderFix((readings ?? []).map((r: { lat: number; lng: number; speed_kmh: number | null; event_time: string }) => ({ lat: r.lat, lng: r.lng, speed: r.speed_kmh, at: r.event_time })), fix, now);
     const latest = pts[0];
     if (!latest || now - Date.parse(latest.at) > FRESH_MINUTES * 60000) continue;
     const waypoints = await tripWaypoints(db, t.id);

@@ -105,3 +105,24 @@ export function thinLine(line: [number, number][], max = 400): [number, number][
   const step = (line.length - 1) / (max - 1);
   return Array.from({ length: max }, (_, i) => line[Math.round(i * step)]!);
 }
+
+/** A tracker's live state as last confirmed by the provider sync. */
+export type ProviderFix = { lat: number | null; lng: number | null; speed_kmh: number | null; vehicle_state: string | null; synced_at: string | null };
+/** The provider sync must have confirmed the state this recently to count as live. */
+export const PROVIDER_FRESH_MINUTES = 5;
+
+/**
+ * Parked trucks report rarely, so their last reading goes stale while they are still standing there.
+ * When the provider confirmed the device online just now, its current position is added as a reading
+ * "at now" so a long stop is still recognised. Disconnected devices add nothing.
+ */
+export function withProviderFix(points: GpsPoint[], fix: ProviderFix | null | undefined, now = Date.now()): GpsPoint[] {
+  if (!fix || fix.lat == null || fix.lng == null || !fix.synced_at || fix.vehicle_state === 'disconnected') return points;
+  if (now - Date.parse(fix.synced_at) > PROVIDER_FRESH_MINUTES * 60000) return points;
+  return [{ lat: fix.lat, lng: fix.lng, speed: fix.speed_kmh, at: new Date(now).toISOString() }, ...points];
+}
+
+/** The trip's truck tracker is confirmed offline by a fresh provider sync. */
+export function trackerLost(fix: ProviderFix | null | undefined, now = Date.now()): boolean {
+  return !!fix && fix.vehicle_state === 'disconnected' && !!fix.synced_at && now - Date.parse(fix.synced_at) <= PROVIDER_FRESH_MINUTES * 60000;
+}
