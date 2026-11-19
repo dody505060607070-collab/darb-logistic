@@ -2332,5 +2332,16 @@
  "الرقم مسجل لأكثر من حساب؛ راجع صفحة الموظفين": "This number belongs to several accounts; check the employees page",
  "الرقم مرتبط بملف سائق آخر": "This number is linked to another driver file",
  "الرقم لموظف له وظيفة أخرى؛ يربطه المدير العام فقط": "This number belongs to an employee with another job; only the general manager can link it",
- "الرقم لموظف بدون وظيفة سائق": "This number belongs to an employee without a driver job"
+ "الرقم لموظف بدون وظيفة سائق": "This number belongs to an employee without a driver job",
+ "ترخيص وزارة النقل": "Ministry of Transport licence",
+ "ترخيص وزارة النقل (بطاقة التشغيل)": "Ministry of Transport licence (operating card)",
+ "مرفوع وساري": "Uploaded and valid",
+ "منتهٍ — ارفع النسخة الجديدة": "Expired — upload the new copy",
+ "مسجل بدون ملف": "Recorded without file",
+ "غير مرفوع": "Not uploaded",
+ "رفع الترخيص": "Upload licence",
+ "لكل مركبة": "per vehicle",
+ "الملف": "File",
+ "ارفع صورة أو PDF ترخيص وزارة النقل (بطاقة التشغيل) لكل مركبة مع رقمه وتاريخ انتهائه؛ يظهر التنبيه قبل الانتهاء حسب أيام التنبيه في الإعدادات.": "Upload an image or PDF of each vehicle's Ministry of Transport licence (operating card) with its number and expiry date; alerts appear before expiry per the alert days in settings.",
+ "رفع": "Upload"
 }

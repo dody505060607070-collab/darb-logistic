@@ -1,7 +1,7 @@
 import { RecordActions } from "@/components/darb/RecordActions";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, FileText, FolderOpen, Plus, ShieldCheck, TriangleAlert } from "lucide-react";
+import { CalendarDays, FileText, FolderOpen, Landmark, Plus, ShieldCheck, TriangleAlert, Upload } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, Kpi, KV, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
@@ -9,7 +9,7 @@ import { DOC_FIELDS, DocExpiry, openFile } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db, useOne, useRows, type Row } from "@/lib/db";
-import { DEFAULT_ALERT_DAYS, DEFAULT_REQUIRED_ASSET, DEFAULT_REQUIRED_DRIVER, docStage, driverProfileDocs, missingDocs } from "@/lib/doc-alerts";
+import { DEFAULT_ALERT_DAYS, DEFAULT_REQUIRED_ASSET, DEFAULT_REQUIRED_DRIVER, MOT_LICENSE, docStage, driverProfileDocs, missingDocs, motLicenseStatus } from "@/lib/doc-alerts";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { daysUntil, fmtDate } from "@/lib/format";
@@ -64,6 +64,8 @@ function DocsPage() {
     [...(all as { entity_type: string; entity_id: string | null; doc_type: string; review_status?: string | null }[]), ...driverProfileDocs((drivers.data ?? []) as { id: string; license_no?: string | null; license_expiry?: string | null }[])],
     { driver: settings.data?.doc_required_driver ?? DEFAULT_REQUIRED_DRIVER, asset: settings.data?.doc_required_asset ?? DEFAULT_REQUIRED_ASSET },
   ), [all, drivers.data, assets.data, settings.data]);
+  const mot = useMemo(() => motLicenseStatus((assets.data ?? []) as { id: string }[], all as Parameters<typeof motLicenseStatus>[1]), [assets.data, all]);
+  const motPending = mot.filter((m) => m.state !== "valid").length;
   const [preset, setPreset] = useState<Row | undefined>(undefined);
   const [etype, eid] = newEntity.split(":");
 
@@ -79,7 +81,7 @@ function DocsPage() {
         <Kpi label="تفويضات سارية" value={(auths.data ?? []).filter((a) => (daysUntil(a.valid_to) ?? -1) >= 0).length} tone="success" icon={<ShieldCheck />} />
       </div>
       <Tabs defaultValue="docs" dir="rtl">
-        <TabsList><TabsTrigger value="docs">المستندات</TabsTrigger><TabsTrigger value="missing">الناقصة ({missing.length})</TabsTrigger><TabsTrigger value="auth">التفويضات</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="docs">المستندات</TabsTrigger><TabsTrigger value="mot">{MOT_LICENSE} ({motPending ? `${motPending} ناقص` : "مكتمل"})</TabsTrigger><TabsTrigger value="missing">الناقصة ({missing.length})</TabsTrigger><TabsTrigger value="auth">التفويضات</TabsTrigger></TabsList>
         <TabsContent value="docs">
           <div className="split-layout min-w-0">
           <Panel className="min-w-0" title="المستندات" icon={<FileText />} actions={canEdit && (
@@ -125,6 +127,23 @@ function DocsPage() {
             ) : <p className="text-sm text-muted-foreground">لا توجد مستندات</p>}
           </Panel>
           </div>
+        </TabsContent>
+        <TabsContent value="mot">
+          <Panel title={`${MOT_LICENSE} لكل مركبة`} icon={<Landmark />}>
+            <DataTable rows={mot.map((m) => ({ ...m, id: m.asset_id }))} loading={docs.isLoading || assets.isLoading}
+              cols={[
+                { key: "asset", label: "المركبة", render: (r) => <span className="num font-semibold">{names.get(r.asset_id) ?? "—"}</span> },
+                { key: "state", label: "الحالة", render: (r) => r.state === "valid" ? <Badge tone="success">مرفوع وساري</Badge> : r.state === "expired" ? <Badge tone="danger">منتهٍ — ارفع النسخة الجديدة</Badge> : r.state === "no_file" ? <Badge tone="warning">مسجل بدون ملف</Badge> : <Badge tone="danger">غير مرفوع</Badge> },
+                { key: "expiry", label: "الانتهاء", render: (r) => <DocStageCell d={r.expiry_date} days={alertDays} /> },
+                { key: "file", label: "الملف", render: (r) => r.file_path ? <button className="text-gold underline" onClick={(e) => { e.stopPropagation(); void openFile(r.file_path); }}>عرض</button> : "—" },
+                { key: "act", label: "", render: (r) => canEdit ? <Button size="sm" variant={r.state === "valid" ? "outline" : "gold"} onClick={() => {
+                  const existing = r.doc_id && r.state !== "expired" ? all.find((d) => d.id === r.doc_id) : undefined;
+                  setNewEntity(`asset:${r.asset_id}`);
+                  if (existing) { setPreset(undefined); setEdit(existing); } else { setPreset({ doc_type: MOT_LICENSE }); setEdit(null); }
+                }}><Upload /> {r.state === "valid" ? "تحديث" : "رفع الترخيص"}</Button> : null },
+              ]} />
+            <p className="mt-3 text-xs text-muted-foreground">ارفع صورة أو PDF ترخيص وزارة النقل (بطاقة التشغيل) لكل مركبة مع رقمه وتاريخ انتهائه؛ يظهر التنبيه قبل الانتهاء حسب أيام التنبيه في الإعدادات.</p>
+          </Panel>
         </TabsContent>
         <TabsContent value="missing">
           <Panel title="المستندات المطلوبة غير المسجلة" icon={<FileText />}>

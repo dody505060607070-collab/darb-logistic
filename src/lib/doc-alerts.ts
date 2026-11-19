@@ -1,7 +1,9 @@
 /** Document expiry stages and missing-document detection (pure, browser-safe). */
 export const DEFAULT_ALERT_DAYS = [30, 15, 7];
 export const DEFAULT_REQUIRED_DRIVER = ["إقامة", "رخصة قيادة", "بطاقة سائق"];
-export const DEFAULT_REQUIRED_ASSET = ["استمارة", "تأمين", "فحص دوري", "تصريح تشغيل"];
+/** Ministry of Transport operating licence (بطاقة التشغيل) every vehicle must carry. */
+export const MOT_LICENSE = "ترخيص وزارة النقل";
+export const DEFAULT_REQUIRED_ASSET = ["استمارة", "تأمين", "فحص دوري", MOT_LICENSE];
 
 /** Parse "30, 15, 7" into a sorted unique list of 1..365 days (max 5). Returns null if invalid. */
 export function parseAlertDays(input: string): number[] | null {
@@ -49,4 +51,23 @@ export function parseDocTypes(input: string): string[] {
 /** A licence recorded on the driver profile counts as the "رخصة قيادة" document. */
 export function driverProfileDocs(drivers: { id: string; license_no?: string | null; license_expiry?: string | null }[]) {
   return drivers.filter((d) => d.license_no || d.license_expiry).map((d) => ({ entity_type: "driver", entity_id: d.id, doc_type: "رخصة قيادة", review_status: "approved" }));
+}
+
+export type MotState = "missing" | "no_file" | "expired" | "valid";
+export type MotRow = { asset_id: string; state: MotState; doc_id: string | null; expiry_date: string | null; file_path: string | null };
+
+/** Per-vehicle Ministry of Transport licence state: missing, recorded without an uploaded file, expired, or valid. Rejected records don't count. */
+export function motLicenseStatus(
+  assets: { id: string }[],
+  docs: { id: string; entity_type: string; entity_id: string | null; doc_type: string; review_status?: string | null; expiry_date?: string | null; file_path?: string | null }[],
+  today = new Date().toISOString().slice(0, 10),
+): MotRow[] {
+  return assets.map((a) => {
+    const mine = docs.filter((d) => d.entity_type === "asset" && d.entity_id === a.id && d.doc_type === MOT_LICENSE && d.review_status !== "rejected")
+      .sort((x, y) => String(y.expiry_date ?? "9999").localeCompare(String(x.expiry_date ?? "9999")));
+    const d = mine[0];
+    if (!d) return { asset_id: a.id, state: "missing", doc_id: null, expiry_date: null, file_path: null };
+    const state: MotState = d.expiry_date && d.expiry_date < today ? "expired" : !d.file_path ? "no_file" : "valid";
+    return { asset_id: a.id, state, doc_id: d.id, expiry_date: d.expiry_date ?? null, file_path: d.file_path ?? null };
+  });
 }

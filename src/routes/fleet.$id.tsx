@@ -1,7 +1,8 @@
 import { RecordActions } from "@/components/darb/RecordActions";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, FileText, Gauge, MapPin, Pencil, Plus, Truck, Wrench } from "lucide-react";
+import { ArrowRight, FileText, Gauge, MapPin, Pencil, Plus, Truck, Upload, Wrench } from "lucide-react";
+import { MOT_LICENSE } from "@/lib/doc-alerts";
 import { toast } from "sonner";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
@@ -117,7 +118,7 @@ function AssetProfile() {
         </Panel>
       </div>
 
-      <Panel title="المستندات" icon={<FileText />} className="mt-5" actions={canEdit && <Button size="sm" variant="gold" onClick={() => setDocEdit(null)}><Plus /> مستند</Button>}>
+      <Panel title="المستندات" icon={<FileText />} className="mt-5" actions={canEdit && <div className="flex gap-2">{!(docs.data ?? []).some((d) => d.doc_type === MOT_LICENSE && d.file_path && d.review_status !== "rejected") && <Button size="sm" variant="outline" onClick={() => setDocEdit({ doc_type: MOT_LICENSE })}><Upload /> رفع {MOT_LICENSE}</Button>}<Button size="sm" variant="gold" onClick={() => setDocEdit(null)}><Plus /> مستند</Button></div>}>
         <DataTable entityTable="documents" rows={docs.data} loading={docs.isLoading} onEdit={canEdit ? (r) => setDocEdit(r) : undefined} onRowClick={canEdit ? (r) => setDocEdit(r) : undefined}
           cols={[
             { key: "doc_type", label: "النوع" },

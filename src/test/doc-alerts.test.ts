@@ -36,3 +36,16 @@ describe("driver profile licence", () => {
     expect(res.map((r) => r.entity_id)).toEqual(["d2"]);
   });
 });
+
+import { MOT_LICENSE, motLicenseStatus, DEFAULT_REQUIRED_ASSET } from "@/lib/doc-alerts";
+describe("Ministry of Transport licence", () => {
+  const doc = (o: Record<string, unknown>) => ({ id: "x", entity_type: "asset", entity_id: "a1", doc_type: MOT_LICENSE, review_status: "approved", expiry_date: "2027-06-01", file_path: "f.pdf", ...o });
+  it("is required for every vehicle", () => expect(DEFAULT_REQUIRED_ASSET).toContain("ترخيص وزارة النقل"));
+  it("vehicle without the licence is missing", () => expect(motLicenseStatus([{ id: "a1" }], [], "2026-11-20")[0].state).toBe("missing"));
+  it("recorded without an uploaded file is not complete", () => expect(motLicenseStatus([{ id: "a1" }], [doc({ file_path: null })], "2026-11-20")[0].state).toBe("no_file"));
+  it("past expiry is expired, uploaded and current is valid", () => {
+    expect(motLicenseStatus([{ id: "a1" }], [doc({ expiry_date: "2026-11-19" })], "2026-11-20")[0].state).toBe("expired");
+    expect(motLicenseStatus([{ id: "a1" }], [doc({})], "2026-11-20")[0].state).toBe("valid");
+  });
+  it("a rejected licence does not count", () => expect(motLicenseStatus([{ id: "a1" }], [doc({ review_status: "rejected" })], "2026-11-20")[0].state).toBe("missing"));
+});
