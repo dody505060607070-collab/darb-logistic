@@ -13,13 +13,18 @@ import { Label } from "@/components/ui/label";
 import { db, uploadFile, type Row } from "@/lib/db";
 import { errMsg, fromLocalInput, toLocalInput } from "@/lib/format";
 import { tryNormalizePhone } from "@/lib/phone";
+import { optionsAreText } from "@/lib/choice";
+import { ChoiceInput } from "./ChoiceInput";
 
 export type Field = {
   name: string;
   label: string;
   type?: "text" | "number" | "date" | "datetime" | "textarea" | "select" | "ref" | "checkbox" | "file" | "tel";
   options?: [string, string][];
-  ref?: { table: string; label: string | ((r: Row) => string); select?: string; filter?: (q: any) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** `create` lets a typed name that is not in the list be added as a new record on save. */
+  ref?: { table: string; label: string | ((r: Row) => string); select?: string; filter?: (q: any) => any; create?: (text: string) => Row; createdNoun?: string }; // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** Allow saving typed text that is not one of `options` (defaults to true when option values equal their labels). */
+  custom?: boolean;
   required?: boolean;
   default?: unknown;
   full?: boolean;
@@ -36,6 +41,9 @@ function PhoneHint({ value }: { value: string }) {
     : <p className="mt-1 text-xs text-danger">رقم غير مفهوم بعد — مثال: 0501234567</p>;
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const allowsCustom = (f: Field) => f.custom ?? optionsAreText(f.options ?? []);
+
 function RefSelect({ f, value, onChange }: { f: Field; value: string; onChange: (v: string) => void }) {
   const r = f.ref!;
   const { data } = useQuery({
@@ -48,21 +56,22 @@ function RefSelect({ f, value, onChange }: { f: Field; value: string; onChange: 
       return data as Row[];
     },
   });
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="h-9 w-full rounded-md border border-input bg-card px-3 text-sm"
-      required={f.required}
-    >
-      <option value="">— اختر —</option>
-      {(data ?? []).map((row) => (
-        <option key={row["id"]} value={row["id"]}>
-          {typeof r.label === "function" ? r.label(row) : row[r.label]}
-        </option>
-      ))}
-    </select>
-  );
+  const options: [string, string][] = (data ?? []).map((row) => [String(row["id"]), String((typeof r.label === "function" ? r.label(row) : row[r.label]) ?? "")]);
+  return <ChoiceInput value={value} onChange={onChange} options={options} required={f.required} />;
+}
+
+/** Plain-language note under a choice field when the typed text is not one of the listed values. */
+function ChoiceNote({ f, value }: { f: Field; value: string }) {
+  if (!value) return null;
+  if (f.type === "ref" && !UUID.test(value))
+    return f.ref?.create
+      ? <p className="mt-1 text-xs text-info">سيُضاف «{value}» {f.ref.createdNoun ?? "كخيار جديد"} عند الحفظ</p>
+      : <p className="mt-1 text-xs text-danger">«{value}» غير موجود في القائمة؛ اختره منها أو أضفه أولًا من صفحته</p>;
+  if (f.type === "select" && !f.options?.some(([o]) => o === value))
+    return allowsCustom(f)
+      ? <p className="mt-1 text-xs text-info">سيُحفظ كما كتبته: «{value}»</p>
+      : <p className="mt-1 text-xs text-danger">هذه الخانة يعتمد عليها النظام؛ اكتب أو اختر أحد الاختيارات: {f.options?.map(([, l]) => l).join("، ")}</p>;
+  return null;
 }
 
 export function EntityDialog({
@@ -118,6 +127,18 @@ export function EntityDialog({
         if (f.type === "number") v = v === "" || v === null ? null : Number(v);
         else if (f.type === "datetime") v = v ? fromLocalInput(v as string) : null;
         else if (f.type !== "checkbox" && v === "") v = null;
+        if (f.required && (v === null || v === undefined)) throw new Error(`${f.label}: هذه الخانة مطلوبة`);
+        if (f.type === "select" && v && !f.options?.some(([o]) => o === v) && !allowsCustom(f))
+          throw new Error(`${f.label}: «${v}» ليست من الاختيارات المتاحة. اكتب أو اختر: ${f.options?.map(([, l]) => l).join("، ")}`);
+        if (f.type === "ref" && v && !UUID.test(String(v))) {
+          const create = f.ref?.create;
+          if (!create) throw new Error(`${f.label}: «${v}» غير موجود في القائمة؛ اختره منها أو أضفه أولًا من صفحته`);
+          const { data: made, error: makeError } = await db.from(f.ref!.table).insert(create(String(v))).select("id").single();
+          if (makeError) throw new Error(`${f.label}: تعذر إضافة «${v}» — ${errMsg(makeError)}`);
+          v = made["id"];
+          qc.invalidateQueries({ queryKey: ["ref", f.ref!.table] });
+          qc.invalidateQueries({ queryKey: [f.ref!.table] });
+        }
         if (isPhoneField(f) && v) {
           const phone = tryNormalizePhone(String(v));
           if (!phone) throw new Error(`${f.label}: رقم الجوال غير صحيح. اكتبه مثل 0501234567 أو 966501234567`);
@@ -169,21 +190,7 @@ export function EntityDialog({
             if (f.type === "textarea")
               input = <Textarea value={v} onChange={(e) => set(f.name, e.target.value)} required={f.required} rows={3} />;
             else if (f.type === "select")
-              input = (
-                <select
-                  value={v}
-                  onChange={(e) => set(f.name, e.target.value)}
-                  required={f.required}
-                  className="h-9 w-full rounded-md border border-input bg-card px-3 text-sm"
-                >
-                  <option value="">— اختر —</option>
-                  {f.options?.map(([o, l]) => (
-                    <option key={o} value={o}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              );
+              input = <ChoiceInput value={String(v)} onChange={(x) => set(f.name, x)} options={f.options ?? []} required={f.required} />;
             else if (f.type === "ref") input = <RefSelect f={f} value={v} onChange={(x) => set(f.name, x)} />;
             else if (f.type === "checkbox")
               input = (
@@ -213,6 +220,7 @@ export function EntityDialog({
                 {input}
                 {f.hint && <p className="mt-1 text-xs text-muted-foreground">{f.hint}</p>}
                 {isPhoneField(f) && v ? <PhoneHint value={String(v)} /> : null}
+                {f.type === "select" || f.type === "ref" ? <ChoiceNote f={f} value={String(v)} /> : null}
               </div>
             );
           })}

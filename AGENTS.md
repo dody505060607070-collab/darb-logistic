@@ -49,3 +49,4 @@
 - Driver WhatsApp uses `driver_wa_phone` (login phone first) — why: stale file numbers lost messages.
 - Trip alerts: outbox job runs `trip-monitor.server.ts`; one episode per alert — why: no repeats.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
+- Form choice fields use `ChoiceInput` (pick or type) with `src/lib/choice.ts`; typed text maps to a listed value, "لا يوجد…" means empty, new text is saved only for text-valued lists or refs with `ref.create` (branches) — coded values stay list-only — why: manual entry without breaking DB value checks.

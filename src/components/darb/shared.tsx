@@ -4,6 +4,9 @@ import type { Field } from "./EntityDialog";
 import { signedUrl } from "@/lib/db";
 import { ASSET_KIND, daysUntil, errMsg, fmtDate, STATUS } from "@/lib/format";
 
+/** Branch picker: a typed name that is not listed is added as a new branch (city left «غير محدد»). */
+export const BRANCH_REF: NonNullable<Field["ref"]> = { table: "branches", label: "name", create: (name) => ({ name, city: "غير محدد" }), createdNoun: "كفرع جديد" };
+
 export const ASSET_FIELDS: Field[] = [
   { name: "code", label: "رقم الأصل", required: true },
   { name: "kind", label: "النوع", type: "select", required: true, options: Object.entries(ASSET_KIND) },
@@ -16,7 +19,7 @@ export const ASSET_FIELDS: Field[] = [
   { name: "status", label: "الحالة التشغيلية", type: "select", required: true, default: "available", options: Object.entries(STATUS["asset"]!).map(([k, v]) => [k, v[0]]) },
   { name: "odometer_km", label: "العداد (كم)", type: "number" },
   { name: "location_text", label: "الموقع الحالي" },
-  { name: "branch_id", label: "الفرع", type: "ref", ref: { table: "branches", label: "name" } },
+  { name: "branch_id", label: "الفرع", type: "ref", ref: BRANCH_REF, hint: "اختر الفرع أو اكتب اسمه، أو اكتب «لا يوجد فرع»" },
   { name: "notes", label: "ملاحظات", type: "textarea" },
 ];
 
@@ -30,7 +33,7 @@ export const DRIVER_FIELDS: Field[] = [
   { name: "license_no", label: "رقم الرخصة" },
   { name: "license_expiry", label: "انتهاء الرخصة", type: "date" },
   { name: "status", label: "الحالة", type: "select", default: "available", options: Object.entries(STATUS["driver"]!).map(([k, v]) => [k, v[0]]) },
-  { name: "branch_id", label: "الفرع", type: "ref", ref: { table: "branches", label: "name" } },
+  { name: "branch_id", label: "الفرع", type: "ref", ref: BRANCH_REF, hint: "اختر الفرع أو اكتب اسمه، أو اكتب «لا يوجد فرع»" },
 ];
 
 export const DOC_FIELDS: Field[] = [

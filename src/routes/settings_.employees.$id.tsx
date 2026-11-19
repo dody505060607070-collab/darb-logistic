@@ -13,6 +13,7 @@ import { db, useOne, useRows } from '@/lib/db';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, useAuth, type AppRole } from '@/lib/auth';
 import { updateEmployee, deleteEmployee } from '@/lib/employees.functions';
 import { DeleteConfirmation } from '@/components/darb/DeleteConfirmation';
+import { ChoiceInput } from '@/components/darb/ChoiceInput';
 import { canRemoveEmployeeRole } from '@/lib/employees';
 import { errMsg, fmtDateTime } from '@/lib/format';
 
@@ -53,7 +54,14 @@ function EmployeePage() {
   const employeeRoles = (roles.data ?? []).filter(r => r.user_id === id);
   async function saveProfile() {
     setBusy(true);
-    try { await save({ data: { id, fullName: name, phone, branchId: branch || null } }); await Promise.all([qc.invalidateQueries({ queryKey: ['employee', id] }), qc.invalidateQueries({ queryKey: ['profiles'] }), auth.refresh()]); toast.success('تم حفظ بيانات الموظف'); }
+    try {
+      let branchId: string | null = branch || null;
+      if (branchId && !(branches.data ?? []).some(b => b.id === branchId)) {
+        const { data: made, error } = await db.from('branches').insert({ name: branchId, city: 'غير محدد' }).select('id').single();
+        if (error) throw error;
+        branchId = made.id; await qc.invalidateQueries({ queryKey: ['branches'] });
+      }
+      await save({ data: { id, fullName: name, phone, branchId } }); await Promise.all([qc.invalidateQueries({ queryKey: ['employee', id] }), qc.invalidateQueries({ queryKey: ['profiles'] }), auth.refresh()]); toast.success('تم حفظ بيانات الموظف'); }
     catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   }
   async function grantRole() {
@@ -93,7 +101,7 @@ function EmployeePage() {
       <section className="space-y-4"><h2 className="text-lg font-bold">بيانات الموظف</h2>
         <div><Label htmlFor="employee-name">الاسم</Label><Input id="employee-name" value={name} onChange={e => setName(e.target.value)} /></div>
         <div><Label htmlFor="employee-phone">رقم الجوال</Label><Input id="employee-phone" type="tel" dir="ltr" placeholder="+966" value={phone} onChange={e => setPhone(e.target.value)} /></div>
-        <div><Label htmlFor="employee-branch">الفرع</Label><select id="employee-branch" className="h-10 w-full rounded-md border bg-card px-3" value={branch} onChange={e => setBranch(e.target.value)}><option value="">بدون فرع</option>{(branches.data ?? []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+        <div><Label htmlFor="employee-branch">الفرع</Label><ChoiceInput id="employee-branch" value={branch} onChange={setBranch} options={(branches.data ?? []).map(b => [b.id, b.name] as [string, string])} placeholder="اختر الفرع أو اكتب اسمه" /><p className="mt-1 text-xs text-muted-foreground">{branch && !(branches.data ?? []).some(b => b.id === branch) ? `سيُضاف «${branch}» كفرع جديد عند الحفظ` : 'اكتب «لا يوجد فرع» إذا لم يكن له فرع'}</p></div>
         <Button variant="gold" disabled={busy} onClick={() => void saveProfile()}><Save /> حفظ البيانات</Button>
       </section>
       <section className="space-y-4"><h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="text-info" /> الصلاحيات</h2>
