@@ -576,6 +576,7 @@ export type Database = {
           odometer_out: number | null
           opened_at: string
           previous_custody_id: string | null
+          source: string | null
         }
         Insert: {
           accessories?: string | null
@@ -593,6 +594,7 @@ export type Database = {
           odometer_out?: number | null
           opened_at?: string
           previous_custody_id?: string | null
+          source?: string | null
         }
         Update: {
           accessories?: string | null
@@ -610,6 +612,7 @@ export type Database = {
           odometer_out?: number | null
           opened_at?: string
           previous_custody_id?: string | null
+          source?: string | null
         }
         Relationships: [
           {
@@ -890,6 +893,7 @@ export type Database = {
           national_id: string | null
           nationality: string | null
           phone: string | null
+          source: string | null
           status: string
           user_id: string | null
         }
@@ -905,6 +909,7 @@ export type Database = {
           national_id?: string | null
           nationality?: string | null
           phone?: string | null
+          source?: string | null
           status?: string
           user_id?: string | null
         }
@@ -920,6 +925,7 @@ export type Database = {
           national_id?: string | null
           nationality?: string | null
           phone?: string | null
+          source?: string | null
           status?: string
           user_id?: string | null
         }
@@ -3539,6 +3545,7 @@ export type Database = {
         Returns: string
       }
       gps_auto_add_trucks: { Args: { p_provider: string }; Returns: number }
+      gps_link_drivers: { Args: { p_provider: string }; Returns: number }
       gps_link_vehicle: {
         Args: { p_asset_id: string; p_id: string }
         Returns: undefined

@@ -351,6 +351,13 @@
       "when": 1795016417849,
       "tag": "0049_daman_gps_details_trucks_signal_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1795048505146,
+      "tag": "0050_daman_driver_custody_and_go_live_cleanup",
+      "breakpoints": true
     }
   ]
 }

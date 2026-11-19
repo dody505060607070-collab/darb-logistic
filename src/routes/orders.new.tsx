@@ -16,7 +16,7 @@ import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
 import { LocationPicker } from "@/components/darb/LocationPicker";
 import { flushWa } from "@/lib/wa-flush";
-import { assignmentProblem, vehicleNotReady } from "@/lib/trip-assignment";
+import { assignmentProblem, pairFromCustody, vehicleNotReady, type OpenCustody } from "@/lib/trip-assignment";
 import { CITY_COORDS, errMsg, fmtSAR, fromLocalInput, toLocalInput } from "@/lib/format";
 
 export const Route = createFileRoute("/orders/new")({
@@ -60,6 +60,11 @@ function Wizard() {
   const contracts = useRows(["contracts"], () => db.from("contracts").select("*").eq("status", "active"));
   const assets = useRows(["assets"], fetchAssets);
   const drivers = useRows(["drivers"], fetchDrivers);
+  const custody = useRows(["custody", "open"], () => db.from("custody").select("asset_id, driver_id").is("closed_at", null));
+  const openCustody = (custody.data ?? []) as OpenCustody[];
+  const custodyDriver = (assetId: string) => (drivers.data ?? []).find((d) => d.id === openCustody.find((c) => c.asset_id === assetId)?.driver_id);
+  // A truck and the driver holding its custody fill each other in when the other choice is still empty.
+  const choose = (k: "driver_id" | "tractor_id", x: string) => setV((s) => ({ ...s, [k]: x, ...pairFromCustody(openCustody, s, k, x) }));
   const [v, setV] = useState<Row>({ unit: "طرد", cargo_type: "بضائع عامة" });
   const [busy, setBusy] = useState(false);
   const [extra, setExtra] = useState<string[]>([]);
@@ -244,15 +249,15 @@ function Wizard() {
             <Panel title="3. تخصيص السائق والمركبة (اختياري)" icon={<Truck />}>
               <div className="grid gap-3">
                 <F label="السائق">
-                  <select className={sel} value={v.driver_id ?? ""} onChange={(e) => set("driver_id", e.target.value)}>
+                  <select className={sel} value={v.driver_id ?? ""} onChange={(e) => choose("driver_id", e.target.value)}>
                     <option value="">لاحقًا</option>
                     {(drivers.data ?? []).filter((d) => d.status !== "suspended").map((d) => <option key={d.id} value={d.id}>{d.full_name}</option>)}
                   </select>
                 </F>
                 <F label="رأس القاطرة">
-                  <select className={sel} value={v.tractor_id ?? ""} onChange={(e) => set("tractor_id", e.target.value)}>
+                  <select className={sel} value={v.tractor_id ?? ""} onChange={(e) => choose("tractor_id", e.target.value)}>
                     <option value="">لاحقًا</option>
-                    {(assets.data ?? []).filter((a) => a.kind !== "trailer").map((a) => <option key={a.id} value={a.id} disabled={!!vehicleNotReady(a)}>{a.code}{a.make_model ? ` — ${a.make_model}` : ""}{vehicleNotReady(a) ? " (متوقفة — صيانة)" : ""}</option>)}
+                    {(assets.data ?? []).filter((a) => a.kind !== "trailer").map((a) => <option key={a.id} value={a.id} disabled={!!vehicleNotReady(a)}>{a.code}{a.make_model ? ` — ${a.make_model}` : ""}{custodyDriver(a.id) ? ` — سائقها: ${custodyDriver(a.id)!.full_name}` : ""}{vehicleNotReady(a) ? " (متوقفة — صيانة)" : ""}</option>)}
                   </select>
                 </F>
                 <F label="المقطورة">

@@ -6,7 +6,7 @@ const DETAILS_MAX_AGE_MS = 30 * 60000;
 
 type Admin = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-export type DamanSyncResult = { state: 'missing' | 'connected' | 'error'; vehicles: number; linked: number; newReadings: number; detail: string; trucksAdded?: number };
+export type DamanSyncResult = { state: 'missing' | 'connected' | 'error'; vehicles: number; linked: number; newReadings: number; detail: string; trucksAdded?: number; driversLinked?: number };
 
 /** Reads the fleet's latest positions from ضمان المهندس and stores them; linked vehicles also get history readings. */
 export async function syncDamanGps(db: Admin): Promise<DamanSyncResult> {
@@ -67,6 +67,10 @@ export async function syncDamanGps(db: Admin): Promise<DamanSyncResult> {
   let trucksAdded = 0;
   const { data: added, error: addErr } = await db.rpc('gps_auto_add_trucks', { p_provider: 'daman' });
   if (addErr) console.error('Daman GPS auto-add failed', addErr.message); else trucksAdded = added ?? 0;
+  // The driver registered on each truck's device gets a driver file and the truck's custody.
+  let driversLinked = 0;
+  const { data: linkedDrivers, error: drvErr } = await db.rpc('gps_link_drivers', { p_provider: 'daman' });
+  if (drvErr) console.error('Daman GPS driver link failed', drvErr.message); else driversLinked = linkedDrivers ?? 0;
   if (trucksAdded) {
     const { data: fresh } = await db.from('gps_provider_vehicles').select('id, plate_key, asset_id, lat, lng, gps_time, speed_kmh, provider_vehicle_id').eq('provider', 'daman');
     if (fresh) rows.splice(0, rows.length, ...fresh);
@@ -84,7 +88,7 @@ export async function syncDamanGps(db: Admin): Promise<DamanSyncResult> {
     if (error) console.error('Daman GPS readings failed', error.message); else newReadings = ins?.length ?? 0;
   }
   const linked = readings.length;
-  return { state: 'connected', vehicles: vehicles.length, linked, newReadings, trucksAdded, detail: `${vehicles.length} مركبة من ضمان المهندس، ${linked} منها مربوطة بمركبات شتاء${trucksAdded ? ` (أُضيفت ${trucksAdded} شاحنة جديدة للأسطول)` : ''}` };
+  return { state: 'connected', vehicles: vehicles.length, linked, newReadings, trucksAdded, driversLinked, detail: `${vehicles.length} مركبة من ضمان المهندس، ${linked} منها مربوطة بمركبات شتاء${trucksAdded ? ` (أُضيفت ${trucksAdded} شاحنة جديدة للأسطول)` : ''}` };
 }
 
 type Row = { provider_vehicle_id: string; asset_id: string | null; icon: string | null; vehicle_type: string | null; details_synced_at: string | null };

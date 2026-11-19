@@ -8,7 +8,7 @@ import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/compone
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { ASSET_FIELDS } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
-import { useRows, type Row } from "@/lib/db";
+import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchTrips } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { ASSET_KIND, fmtNum, fmtTime, STATUS } from "@/lib/format";
@@ -38,6 +38,8 @@ function FleetPage() {
   const { can } = useAuth();
   const assets = useRows(["assets"], fetchAssets);
   const trips = useRows(["trips"], fetchTrips);
+  const custody = useRows(["custody", "open", "drivers"], () => db.from("custody").select("asset_id, driver:drivers(full_name)").is("closed_at", null));
+  const holder = (id: string) => (custody.data ?? []).find((c) => c.asset_id === id)?.driver?.full_name as string | undefined;
   const [tab, setTab] = useState<"tractor" | "trailer">("tractor");
   const [status, setStatus] = useState("");
   const [sel, setSel] = useState<Row | null>(null);
@@ -109,6 +111,7 @@ function FleetPage() {
                     { key: "capacity_tons", label: "السعة", render: (r: Row) => <span className="num">{r.capacity_tons ? `${r.capacity_tons} طن` : "—"}</span> },
                   ]),
               { key: "status", label: "الحالة", render: (r) => <Status kind="asset" value={r.status} /> },
+              ...(tab === "tractor" ? [{ key: "holder", label: "السائق", render: (r: Row) => holder(r.id) ?? "—" }] : []),
               { key: "trip", label: "الرحلة الحالية", render: (r) => <span className="num">{activeTrip(r.id)?.number ?? "—"}</span> },
               { key: "loc", label: "الموقع", render: (r) => r.location_text ?? "—" },
               { key: "upd", label: "آخر تحديث", render: (r) => <span className="num">{fmtTime(r.last_position_at)}</span> },
@@ -133,7 +136,7 @@ function FleetPage() {
                 ["اللوحة", selected.plate],
                 ["رقم الهيكل (VIN)", <span className="num">{selected.vin ? `••••••••${String(selected.vin).slice(-4)}` : "—"}</span>],
                 ["العداد", selected.odometer_km != null ? `${fmtNum(selected.odometer_km)} كم` : "—"],
-                ["السائق الحالي", selTrip?.driver?.full_name ?? "—"],
+                ["السائق الحالي", selTrip?.driver?.full_name ?? holder(selected.id) ?? "—"],
                 ["الرحلة الحالية", selTrip?.number ?? "—"],
                 ["المسار", selTrip ? `${selTrip.origin_city} ← ${selTrip.dest_city}` : "—"],
               ]}

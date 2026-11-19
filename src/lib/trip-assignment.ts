@@ -28,3 +28,19 @@ export function vehicleNotReady(v: R): string | null {
   if (v.status === "maintenance") return `${v.code} في الصيانة حاليًا`;
   return null;
 }
+
+export type OpenCustody = { asset_id: string; driver_id: string };
+type Pair = { driver_id?: string; tractor_id?: string };
+
+/** Choosing a truck fills its custody driver (and vice versa) only when the other choice is still empty. */
+export function pairFromCustody(custody: OpenCustody[], current: Pair, changed: keyof Pair, value: string): Pair {
+  if (!value) return {};
+  if (changed === "tractor_id") {
+    if (current.driver_id) return {};
+    const c = custody.find((x) => x.asset_id === value);
+    return c ? { driver_id: c.driver_id } : {};
+  }
+  if (current.tractor_id) return {};
+  const held = custody.filter((x) => x.driver_id === value);
+  return held.length === 1 ? { tractor_id: held[0]!.asset_id } : {};
+}
