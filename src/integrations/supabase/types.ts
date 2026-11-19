@@ -3745,8 +3745,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"][]
       }
       wa_norm: { Args: { p: string }; Returns: string }
+      wa_owner_important: { Args: { p_event: string }; Returns: boolean }
       wa_phone_inline: { Args: { p: string }; Returns: string }
       wa_phone_line: { Args: { p: string; p_label: string }; Returns: string }
+      wa_recipient_active: { Args: { p_phone: string }; Returns: boolean }
       wa_trip_status_label: { Args: { s: string }; Returns: string }
       wallet_balances: {
         Args: never

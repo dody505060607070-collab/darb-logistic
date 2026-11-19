@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { distanceToRouteM, googleMapsDirections, offRouteState, orderNearestFirst, stoppedMinutes } from '@/lib/route-plan';
+import { distanceToRouteM, googleMapsDirections, offRouteState, orderNearestFirst, stoppedMinutes, tripStopMinutes } from '@/lib/route-plan';
 import { withWhatsAppLinks } from '@/lib/wa-links';
 
 const riyadh = { lat: 24.7136, lng: 46.6753 };
@@ -40,6 +40,18 @@ describe('stopped vehicle alert', () => {
   it('10 minutes still is not yet an alert', () => {
     const pts = [{ lat: 25, lng: 46, at: at(0) }, { lat: 25, lng: 46, at: at(10) }, { lat: 25.1, lng: 46, at: at(12) }];
     expect(stoppedMinutes(pts, now)).toBe(0);
+  });
+  it('a truck parked 44 minutes before the trip started is not a 44-minute trip stop', () => {
+    expect(tripStopMinutes(44, [at(1)], now)).toBe(1);
+  });
+  it('the stop counts from the latest of trip start and the last driver update', () => {
+    expect(tripStopMinutes(60, [at(50), at(25)], now)).toBe(25);
+  });
+  it('a long stop well after the start still counts fully', () => {
+    expect(tripStopMinutes(30, [at(120)], now)).toBe(30);
+  });
+  it('a trip with no start or driver update is not judged', () => {
+    expect(tripStopMinutes(44, [null, undefined], now)).toBeNull();
   });
 });
 

@@ -1,4 +1,4 @@
-import { distanceToRouteM, nearAny, offRouteState, stoppedMinutes, thinLine, trackerLost, withProviderFix, FRESH_MINUTES, STOP_MINUTES, type GpsPoint, type LatLng, type ProviderFix } from '@/lib/route-plan';
+import { distanceToRouteM, nearAny, offRouteState, stoppedMinutes, thinLine, tripStopMinutes, trackerLost, withProviderFix, FRESH_MINUTES, STOP_MINUTES, type GpsPoint, type LatLng, type ProviderFix } from '@/lib/route-plan';
 
 type Admin = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -56,7 +56,7 @@ export async function computeTripRoute(db: Admin, tripId: string) {
 export async function monitorRunningTrips(now = Date.now()) {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const db = supabaseAdmin as Admin;
-  const { data: trips, error } = await db.from('trips').select('id, tractor_id, stage').eq('status', 'in_progress').not('tractor_id', 'is', null).limit(200);
+  const { data: trips, error } = await db.from('trips').select('id, tractor_id, stage, actual_start').eq('status', 'in_progress').not('tractor_id', 'is', null).limit(200);
   if (error) throw new Error(error.message);
   const running = new Set<string>((trips ?? []).map((t: { id: string }) => t.id));
 
@@ -75,6 +75,10 @@ export async function monitorRunningTrips(now = Date.now()) {
   // Live tracker state of each trip's truck (ضمان المهندس), so parked or offline trucks are still judged.
   const { data: fixes } = await db.from('gps_provider_vehicles').select('asset_id, lat, lng, speed_kmh, vehicle_state, synced_at').in('asset_id', (trips ?? []).map((t: { tractor_id: string }) => t.tractor_id));
   const fixOf = new Map<string, ProviderFix>((fixes ?? []).map((f: ProviderFix & { asset_id: string }) => [f.asset_id, f]));
+  // Latest driver update per trip: a stop is only counted after the trip got going.
+  const { data: events } = await db.from('trip_events').select('trip_id, occurred_at').in('trip_id', ids).order('occurred_at', { ascending: false }).limit(1000);
+  const lastEventOf = new Map<string, string>();
+  for (const e of events ?? []) if (!lastEventOf.has(e.trip_id)) lastEventOf.set(e.trip_id, e.occurred_at);
   let opened = 0;
   for (const t of trips ?? []) {
     const fix = fixOf.get(t.tractor_id);
@@ -98,7 +102,7 @@ export async function monitorRunningTrips(now = Date.now()) {
       else if (state === 'clear' && isOpen(t.id, 'off_route')) await db.rpc('clear_trip_alert', { p_trip_id: t.id, p_kind: 'off_route' });
     }
 
-    const minutes = stoppedMinutes(pts, now);
+    const minutes = tripStopMinutes(stoppedMinutes(pts, now), [t.actual_start, lastEventOf.get(t.id)], now);
     const expected = nearAny(latest, waypoints) || ['loading_start', 'unloading_start', 'arrived_pickup', 'arrived_delivery', 'fuel_stop', 'rest_stop', 'pending'].includes(t.stage);
     if (minutes && minutes >= STOP_MINUTES && !expected) {
       const { data } = await db.rpc('open_trip_alert', { p_trip_id: t.id, p_kind: 'stopped', p_lat: latest.lat, p_lng: latest.lng, p_distance_m: null, p_minutes: minutes });

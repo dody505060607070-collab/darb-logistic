@@ -38,7 +38,7 @@
 - Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
-- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, drained by several per-minute sender schedules plus immediate flush; scheduled runs claim only sends that fit the ~5s window (`outbox-budget.ts`); owners get department notices nobody else can receive — why: none dropped or cut off mid-send.
+- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, drained by several per-minute sender schedules plus immediate flush; scheduled runs claim only sends that fit the ~5s window (`outbox-budget.ts`); owners get only critical/important notices (`wa_owner_important`), also as fallback; recipients must still be a current employee-with-role or driver file at queue and claim time (`wa_recipient_active`, else `cancelled`); trip stop minutes count from the later of trip start and last driver update (`tripStopMinutes`) — why: none dropped or cut off mid-send, no owner flood, deleted numbers get nothing.
 - English/Urdu use post-hydration one-pass phrase boundaries; Urdu dictionary loads lazily — why: no mixed words, re-translation or hydration race.
 - Review decisions notify the sender via DB status triggers — why: reasons always reach them.
 - RecordActions shares explicit table identity and the deletion allowlist — why: safe adjacent controls.

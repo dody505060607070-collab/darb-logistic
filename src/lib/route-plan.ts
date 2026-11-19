@@ -83,6 +83,19 @@ export function stoppedMinutes(points: GpsPoint[], now = Date.now()): number | n
   return span >= STOP_MINUTES ? Math.round((now - Date.parse(oldestStill.at)) / 60000) : null;
 }
 
+/**
+ * A trip's stop can only be counted from when the trip actually got going: the later of its start
+ * and the driver's last update (arrived, loading, …). Time parked before that is not a trip stop.
+ * Without any start/update moment the stop can't be judged, so no alert.
+ */
+export function tripStopMinutes(stopped: number | null, since: (string | null | undefined)[], now = Date.now()): number | null {
+  if (stopped == null) return null;
+  const times = since.filter((t): t is string => !!t).map((t) => Date.parse(t)).filter((t) => Number.isFinite(t));
+  if (!times.length) return null;
+  const sinceMin = Math.max(0, Math.floor((now - Math.max(...times)) / 60000));
+  return Math.min(stopped, sinceMin);
+}
+
 export function nearAny(p: LatLng, places: LatLng[], within = EXPECTED_STOP_M): boolean {
   return places.some((x) => distanceM(p, x) <= within);
 }
