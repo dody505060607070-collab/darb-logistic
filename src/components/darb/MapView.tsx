@@ -225,9 +225,9 @@ export default function MapView({
     if (!f) { focused.current = null; return; }
     if (focused.current !== focusId) {
       focused.current = focusId!;
-      m.flyTo({ center: [f.lng, f.lat], zoom: Math.max(m.getZoom(), focusZoom), offset: focusOffset, duration: 1400, essential: true });
+      m.flyTo({ center: [f.lng, f.lat], zoom: Math.max(m.getZoom(), focusZoom), offset: offsetFor(m, focusOffset), duration: 1400, essential: true });
     } else if (follow) {
-      m.easeTo({ center: [f.lng, f.lat], offset: focusOffset, duration: 800 });
+      m.easeTo({ center: [f.lng, f.lat], offset: offsetFor(m, focusOffset), duration: 800 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusId, markers, ready, follow, focusZoom]);
@@ -298,6 +298,13 @@ export default function MapView({
       {children}
     </div>
   );
+}
+
+/** Side offsets only fit wide maps; narrow (phone) maps shift the target up above a bottom card instead. */
+function offsetFor(m: Ml, wide: [number, number]): [number, number] {
+  if (!wide[0] && !wide[1]) return wide;
+  const c = m.getContainer();
+  return c.clientWidth >= 640 ? wide : [0, -Math.round(Math.min(150, c.clientHeight * 0.22))];
 }
 
 function fitAll(ml: Ml, m: Ml, markers: MapMarker[], lines: MapLine[]) {

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Car, Crosshair, ExternalLink, Gauge, MapPin, Navigation, Radio, Route as RouteIcon, Search, Truck, User, X } from "lucide-react";
@@ -55,6 +55,7 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const i = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(i); }, []);
 
+  const mapBox = useRef<HTMLDivElement>(null);
   const [selLocal, setSelLocal] = useState<string | null>(null);
   const sel = selProp !== undefined ? selProp : selLocal;
   const select = (k: string | null) => { setSelLocal(k); onSelect?.(k); };
@@ -161,7 +162,7 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
 
   return (
     <div className="grid min-w-0 gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-      <div className="flex min-w-0 flex-col gap-3 rounded-[24px] border bg-card p-3" style={{ maxHeight: height }}>
+      <div className="order-2 flex min-w-0 flex-col gap-3 rounded-[24px] border bg-card p-3 xl:order-none" style={{ maxHeight: height }}>
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input aria-label="البحث عن مركبة" placeholder="رقم اللوحة أو السائق أو الرحلة…" value={q} onChange={(e) => setQ(e.target.value)} className="pr-9" />
@@ -194,7 +195,7 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
           {!loading && shown.length === 0 && <li className="p-3 text-center text-sm text-muted-foreground">لا توجد مركبات مطابقة.</li>}
           {shown.map((v) => (
             <li key={v.key}>
-              <button type="button" onClick={() => select(v.key === sel ? null : v.key)} aria-current={v.key === sel}
+              <button type="button" onClick={() => { select(v.key === sel ? null : v.key); if (window.innerWidth < 1280) mapBox.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }} aria-current={v.key === sel}
                 className={`flex w-full items-center gap-2.5 rounded-2xl border px-2.5 py-2 text-start transition-colors ${v.key === sel ? "border-gold bg-gold-soft" : "border-transparent hover:bg-muted"}`}>
                 <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
                   {v.truck ? <Truck className="size-4" /> : <Car className="size-4" />}
@@ -214,7 +215,7 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
         </ul>
         <p className="text-[10px] text-muted-foreground">اضغط على أي مكان في الخريطة لمعرفة أقرب المركبات إليه.</p>
       </div>
-      {map}
+      <div ref={mapBox} className="order-1 min-w-0 scroll-mt-20 xl:order-none">{map}</div>
     </div>
   );
 }
