@@ -1,5 +1,5 @@
 import { flushWa } from "@/lib/wa-flush";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Ban, CheckCircle2, ClipboardList, Coins, FileCheck2, Lock, MapPin, Package, Truck } from "lucide-react";
 import { toast } from "sonner";
@@ -57,6 +57,13 @@ function TripDetails() {
   const [cancelReason, setCancelReason] = useState("");
 
   const t = trip.data;
+  // Keep the truck's GPS position live on the trip map while it is moving.
+  const liveTrip = t?.status === "in_progress";
+  useEffect(() => {
+    if (!liveTrip) return;
+    const i = setInterval(() => void qc.invalidateQueries({ queryKey: ["trips", id] }), 60000);
+    return () => clearInterval(i);
+  }, [liveTrip, qc, id]);
   const lines = useMemo(() => {
     if (!t) return [];
     const o = CITY_COORDS[t.origin_city], d = CITY_COORDS[t.dest_city];
@@ -128,7 +135,7 @@ function TripDetails() {
             ["الحمولة", t.order ? `${t.order.cargo_type} • ${fmtNum(t.order.quantity)} ${t.order.unit}` : "—"],
           ]} />
         </Panel>
-        <Panel title="المسار ونقاط التنزيل" icon={<MapPin />} className="xl:col-span-2" actions={<span className="text-xs text-muted-foreground">آخر موقع للرأس: {fmtDateTime(t.tractor?.last_position_at)} ({t.tractor?.last_position_source ?? "—"})</span>}>
+        <Panel title="المسار ونقاط التنزيل" icon={<MapPin />} className="xl:col-span-2" actions={<span className="text-xs text-muted-foreground">آخر موقع للرأس: {fmtDateTime(t.tractor?.last_position_at)} ({t.tractor?.last_position_source === "gps_daman" ? "ضمان المهندس — مباشر" : t.tractor?.last_position_source ?? "—"})</span>}>
           {can("ops_manager", "dispatcher", "fleet_supervisor") ? (
             <TripRouteMap tripId={id} tripStatus={t.status} mode="staff" readOnly={!ops} locations={locations.data ?? []} height={330}
               truck={t.tractor?.last_lat ? { lat: t.tractor.last_lat, lng: t.tractor.last_lng, label: t.tractor.code } : null} />

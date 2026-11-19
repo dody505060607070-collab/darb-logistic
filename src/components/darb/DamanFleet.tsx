@@ -164,7 +164,7 @@ export function DamanFleet({ rows, assets, loading, canLink, onSelect }: { rows:
         ))}
       </div>
       <div className="hidden sm:block">
-      <DataTable rows={shown} loading={loading} searchKeys={["plate", "car_name", "driver_name"]} onRowClick={(r) => onSelect(r.asset_id ?? null, r.lat, r.lng)} cols={[
+      <DataTable rows={shown} loading={loading} searchKeys={["plate", "car_name", "driver_name"]} onRowClick={(r) => onSelect(r.asset_id ?? `gps:${r.id}`, r.lat, r.lng)} cols={[
         { key: "plate", label: "اللوحة", render: (r) => <span className="num font-semibold text-primary">{r.plate ?? "—"}</span> },
         { key: "car_name", label: "النوع", render: (r) => <span>{r.car_name ?? "—"}{r.vehicle_type && <span className="block text-xs text-muted-foreground">{DAMAN_TYPE_LABEL[r.vehicle_type] ?? r.vehicle_type}</span>}</span> },
         { key: "driver_name", label: "السائق في الجهاز", render: (r) => <span className="block max-w-28 truncate" title={r.driver_name ?? undefined}>{r.driver_name ?? "—"}</span> },

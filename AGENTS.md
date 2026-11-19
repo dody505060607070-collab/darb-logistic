@@ -15,7 +15,7 @@
 - Trip money lives in `trip_financials` (finance roles only), never on `trips` — why: drivers must not see revenue/margins.
 - Overlap prevention for drivers/tractors/trailers is the `no_overlapping_bookings` exclusion constraint on `resource_bookings` — why: correct under concurrent requests.
 - Shared form field configs and helpers live in `src/components/darb/*`, never exported from route files — why: route files must only export `Route`.
-- Leaflet is loaded only inside `MapView` via dynamic import and rendered behind `ClientOnly` + `lazy` — why: SSR runs on workerd without `window`.
+- The map library (MapLibre on keyless OpenFreeMap styles, Arabic shaping plugin served from `public/vendor`) is loaded only inside `MapView` via dynamic import behind `ClientOnly` + `lazy`; live vehicle maps use `FleetLiveMap` over `src/lib/fleet-map.ts` — why: SSR runs on workerd without `window`, and every map shares one GPS source.
 - tsconfig disables `noPropertyAccessFromIndexSignature`/`exactOptionalPropertyTypes` — why: loose dynamic selects.
 - Business-rule DB checks: `tests/sql/business_rules.sql` (rolls back).
 - Morning report saves plain figures before AI wording — why: cut-offs can't lose it.

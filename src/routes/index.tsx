@@ -1,20 +1,18 @@
 import truck3d from "@/assets/truck-3d.jpg";
-import { lazy, Suspense, useMemo } from "react";
+import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft, BarChart3, Coins, Gauge, Route as RouteIcon, Truck, Container } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
-import { Badge, DataTable, Kpi, Panel, Status, Loading } from "@/components/darb/ui";
+import { Badge, DataTable, Kpi, Panel, Status } from "@/components/darb/ui";
 import { useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchFinancials, fetchTrips } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
-import { CITY_COORDS, daysUntil, fmtNum, fmtSAR, fmtTime } from "@/lib/format";
+import { daysUntil, fmtNum, fmtSAR, fmtTime } from "@/lib/format";
 import { db } from "@/lib/db";
-import { ClientOnly } from "@tanstack/react-router";
+import { FleetLiveMap } from "@/components/darb/FleetLiveMap";
 import { dashboardFor, RoleDashboard } from "@/components/darb/RoleDashboards";
 import { CrmDashboard } from '@/components/darb/CrmDashboard';
 import { ApprovalCenter } from '@/components/darb/ApprovalCenter';
-
-const MapView = lazy(() => import("@/components/darb/MapView"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -75,32 +73,6 @@ function Dashboard() {
     const cost = rows.reduce((s, r) => s + Number(r.est_cost) + Number(r.carrier_cost), 0);
     return { rev, cost, margin: rev - cost, pct: rev ? ((rev - cost) / rev) * 100 : null };
   }, [fin.data, active]);
-
-  const markers = useMemo(
-    () =>
-      a
-        .filter((x) => x.kind !== "trailer" && x.last_lat && x.last_lng)
-        .map((x) => ({
-          id: x.id,
-          lat: x.last_lat,
-          lng: x.last_lng,
-          label: x.code,
-          color: (x.status === "active" ? "green" : x.status === "maintenance" ? "gold" : x.status === "stopped" ? "red" : "blue") as "green",
-          popup: `${x.code} — ${x.location_text ?? ""}`,
-        })),
-    [a],
-  );
-  const lines = useMemo(
-    () =>
-      active
-        .map((x) => {
-          const o = CITY_COORDS[x.origin_city];
-          const d = CITY_COORDS[x.dest_city];
-          return o && d ? { id: x.id, points: [o, d] as [number, number][], dashed: true } : null;
-        })
-        .filter(Boolean) as { id: string; points: [number, number][]; dashed: boolean }[],
-    [active],
-  );
 
   const alerts: { tone: "danger" | "warning" | "info"; tag: string; text: string }[] = [
     ...late.map((x) => ({ tone: "warning" as const, tag: "تأخير", text: `الرحلة ${x.number} تجاوزت موعد الوصول المخطط` })),
@@ -199,13 +171,9 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-3">
-        <Panel title="الخريطة — مواقع الرؤوس الأخيرة" icon={<RouteIcon />} className="xl:col-span-2"
-          actions={<span className="text-xs text-muted-foreground">المصدر: آخر موقع مسجل (GPS غير مربوط)</span>}>
-          <ClientOnly fallback={<Loading />}>
-            <Suspense fallback={<Loading />}>
-              <MapView markers={markers} lines={lines} height={380} onMarkerClick={(id) => void nav({ to: "/fleet/$id", params: { id } })} />
-            </Suspense>
-          </ClientOnly>
+        <Panel title="الخريطة المباشرة — كل المركبات" icon={<RouteIcon />} className="xl:col-span-2" bodyClass="p-0"
+          actions={<Link to="/tracking" className="text-xs font-semibold text-gold">فتح التتبع الكامل</Link>}>
+          <FleetLiveMap compact height={420} />
         </Panel>
         <Panel title="تفاصيل الرحلة الحالية" icon={<Truck />} actions={current && <Status kind="trip" value={current.status} />}>
           {current ? (

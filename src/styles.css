@@ -80,8 +80,27 @@ html:not(.light) .company-logo { background: var(--logo-surface); border-radius:
 .card-grip:active { cursor: grabbing; }
 .card-dragging { box-shadow: var(--glass-shadow); opacity: .92; outline: 2px solid var(--gold); }
 .card-drop-target { outline: 2px dashed var(--gold); outline-offset: 3px; }
-.leaflet-container { font-family: var(--font-sans); background: var(--muted); max-width: 100%; border-radius: 6px; }
-.leaflet-tile-pane { filter: none; }
+.darb-map { background: var(--muted); max-width: 100%; }
+.darb-map .maplibregl-ctrl-group { border-radius: 14px; overflow: hidden; }
+.darb-map .maplibregl-ctrl-attrib { font-size: 10px; }
+.darb-mk { display: flex; flex-direction: column; align-items: center; cursor: pointer; font-family: var(--font-sans); }
+.darb-mk-pill { display: flex; align-items: center; gap: 5px; background: var(--card); color: var(--foreground); border: 2px solid var(--mk); border-radius: 9999px; padding: 2px 8px 2px 6px; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--foreground) 35%, transparent); transition: transform .15s; direction: rtl; }
+.darb-mk:hover .darb-mk-pill { transform: translateY(-2px) scale(1.05); }
+.darb-mk-state { width: 8px; height: 8px; border-radius: 9999px; background: var(--mk); flex-shrink: 0; }
+.darb-mk-sub { font-weight: 500; font-size: 10px; color: var(--muted-foreground); }
+.darb-mk-pin { width: 12px; height: 12px; margin-top: 2px; border-radius: 9999px; background: var(--mk); border: 2px solid var(--card); box-shadow: 0 2px 6px -1px color-mix(in srgb, var(--foreground) 40%, transparent); position: relative; }
+.darb-mk.is-moving .darb-mk-pin::after { content: ""; position: absolute; inset: -6px; border-radius: 9999px; border: 2px solid var(--mk); animation: darb-pulse 1.6s ease-out infinite; }
+.darb-mk.is-selected .darb-mk-pill { background: var(--mk); color: var(--card); transform: scale(1.12); border-color: var(--gold); }
+.darb-mk.is-selected .darb-mk-sub { color: var(--card); }
+.darb-mk.is-selected .darb-mk-state { background: var(--card); }
+.darb-mk.is-dot { width: 14px; height: 14px; }
+.darb-mk-dot { width: 14px; height: 14px; border-radius: 9999px; background: var(--mk); border: 3px solid var(--card); box-shadow: 0 0 0 2px var(--mk); }
+.darb-popup { font-family: var(--font-sans); font-size: 12px; line-height: 1.6; }
+.darb-map .maplibregl-popup-content { background: var(--popover); color: var(--popover-foreground); border-radius: 14px; box-shadow: var(--shadow-card); }
+.darb-cluster { width: 38px; height: 38px; border-radius: 9999px; background: var(--primary); color: var(--primary-foreground); font: 700 13px var(--font-sans); border: 3px solid var(--card); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 30%, transparent), var(--shadow-card); cursor: pointer; transition: transform .15s; }
+.darb-cluster:hover { transform: scale(1.1); }
+@keyframes darb-pulse { from { transform: scale(.6); opacity: .9; } to { transform: scale(1.8); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .darb-mk.is-moving .darb-mk-pin::after { animation: none; } }
 .internal-ui {
  --internal-surface: color-mix(in srgb, var(--card) 72%, var(--background));
  --internal-edge: color-mix(in srgb, var(--border) 78%, var(--gold));
@@ -283,7 +302,6 @@ textarea { border-radius: 22px; }
 [role="dialog"], [role="alertdialog"], [data-slot="popover-content"] { border-radius: 28px; }
 [data-radix-menu-content], [data-slot="select-content"] { border-radius: 22px; }
 [data-radix-menu-content] [role="menuitem"], [data-slot="select-item"] { border-radius: 9999px; }
-.leaflet-container { border-radius: 20px; }
 .company-logo, html:not(.light) .company-logo { border-radius: 18px; }
 .internal-ui .page-heading h1 > span { border-radius: 9999px; }
 .app-sidebar a { border-radius: 9999px; }

@@ -1,5 +1,5 @@
-import { lazy, Suspense, useMemo, useState } from "react";
-import { ClientOnly, createFileRoute } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { Clock, PauseCircle, MapPin, Radio, Truck, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -7,19 +7,19 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { integrationHealth } from "@/lib/integration-health.functions";
 import { AppShell } from "@/components/darb/AppShell";
-import { Badge, DataTable, KV, Kpi, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
+import { Badge, DataTable, KV, Kpi, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { db, useRows, type Row } from "@/lib/db";
 import { fetchAssets, fetchTrips } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
-import { CITY_COORDS, errMsg, fmtDateTime } from "@/lib/format";
+import { errMsg, fmtDateTime } from "@/lib/format";
 import { DamanFleet, DamanStateBadge } from "@/components/darb/DamanFleet";
 import { isDamanTruck } from "@/lib/daman-gps";
-
-const MapView = lazy(() => import("@/components/darb/MapView"));
+import { FleetLiveMap } from "@/components/darb/FleetLiveMap";
 
 export const Route = createFileRoute("/tracking")({
+  validateSearch: (s: Record<string, unknown>): { v?: string } => (typeof s.v === "string" && s.v ? { v: s.v } : {}),
   head: () => ({
     meta: [
       { title: "التتبع وآخر المواقع | Shata" },
@@ -52,38 +52,20 @@ function Tracking() {
   const health = useQuery({ queryKey: ['integration-health'], queryFn: () => checkHealth(), enabled: can('owner'), staleTime: 60000 });
   const assets = useRows(["assets"], fetchAssets);
   const trips = useRows(["trips"], fetchTrips);
-  const [sel, setSel] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const { v } = Route.useSearch();
+  const [sel, setSel] = useState<string | null>(v ?? null);
+  const mapBox = useRef<HTMLDivElement>(null);
+  const pick = (id: string | null) => { setSel(id); if (id) mapBox.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const provider = useRows(["gps-provider"], () => db.from("gps_provider_vehicles").select("*").order("plate"), can("ops_manager", "dispatcher", "fleet_supervisor"));
   const providerRows = provider.data ?? [];
   const providerOf = (assetId: string) => providerRows.find((p) => p.asset_id === assetId);
   const gpsLive = providerRows.length > 0;
-  const history = useRows(["gps", sel], () => db.from("gps_readings").select("*").eq("asset_id", sel).order("event_time", { ascending: false }).limit(50), !!sel);
+  const history = useRows(["gps", sel], () => db.from("gps_readings").select("*").eq("asset_id", sel).order("event_time", { ascending: false }).limit(50), !!sel && !sel.startsWith("gps:"));
 
   const tractors = (assets.data ?? []).filter((a) => a.kind !== "trailer");
   const tripOf = (id: string) => (trips.data ?? []).find((t) => t.tractor_id === id && t.status === "in_progress");
-  const markers = useMemo(() => [
-    ...tractors.filter((a) => a.last_lat).map((a) => ({
-      id: a.id, lat: a.last_lat, lng: a.last_lng, label: a.code,
-      color: (a.id === sel ? "gold" : a.status === "active" ? "green" : a.status === "stopped" ? "red" : "blue") as "green",
-    })),
-    // Tracked vehicles not yet linked to a Shata vehicle still show on the map.
-    ...providerRows.filter((p) => !p.asset_id && p.lat != null).map((p) => ({
-      id: `gps:${p.id}`, lat: p.lat, lng: p.lng, label: p.plate ?? "GPS",
-      color: (p.vehicle_state === "moving" ? "green" : p.vehicle_state === "disconnected" ? "red" : "blue") as "green",
-    })),
-  ], [tractors, providerRows, sel]);
-  const lines = useMemo(() => {
-    const out: { id: string; points: [number, number][]; color?: string; dashed?: boolean }[] = [];
-    (trips.data ?? []).filter((t) => t.status === "in_progress").forEach((t) => {
-      const o = CITY_COORDS[t.origin_city], d = CITY_COORDS[t.dest_city];
-      if (o && d) out.push({ id: t.id, points: [o, d], dashed: true });
-    });
-    if (sel && history.data?.length) out.push({ id: "h", points: [...history.data].reverse().map((h) => [h.lat, h.lng] as [number, number]), color: "#C5A574" });
-    return out;
-  }, [trips.data, history.data, sel]);
   const s: Row | undefined = tractors.find((a) => a.id === sel);
   const st = s ? tripOf(s.id) : null;
 
@@ -129,29 +111,12 @@ function Tracking() {
           </div>
         </div>
       )}
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.85fr)]">
-        <Panel title={`قائمة المركبات (${tractors.length})`} icon={<Truck />} className="min-w-0" bodyClass="space-y-3">
-          <Input aria-label="البحث في المركبات" placeholder="البحث برقم المركبة أو الموقع…" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <div className="max-h-[520px] overflow-auto">
-            <DataTable rows={tractors.filter((a) => `${a.code} ${a.location_text ?? ''}`.toLowerCase().includes(search.toLowerCase()))} loading={assets.isLoading} error={assets.error} selectedId={sel} onRowClick={(r) => setSel(r.id)} cols={[
-              { key: "code", label: "المركبة", render: (r) => <span className="num font-semibold text-primary">{r.code}</span> },
-              { key: "status", label: "الحالة", render: (r) => <Status kind="asset" value={r.status} /> },
-              { key: "updated", label: "آخر تحديث", render: (r) => <span className="num text-xs">{fmtDateTime(r.last_position_at)}</span> },
-              { key: "connection", label: "الاتصال", render: (r) => providerOf(r.id) ? <DamanStateBadge state={providerOf(r.id)?.vehicle_state} /> : <span className="inline-flex items-center gap-1 text-warning"><WifiOff className="size-4" /> غير مربوط</span> },
-            ]} />
-          </div>
-        </Panel>
-        <Panel title="خريطة المملكة" icon={<Radio />} className="min-w-0 overflow-hidden" bodyClass="p-0">
-          <ClientOnly fallback={<Loading />}>
-            <Suspense fallback={<Loading />}>
-              <MapView markers={markers} lines={lines} height={520} onMarkerClick={(id: string) => { if (!id.startsWith("gps:")) setSel(id); }} />
-            </Suspense>
-          </ClientOnly>
-        </Panel>
+      <div ref={mapBox} className="scroll-mt-4">
+        <FleetLiveMap height="max(600px, calc(100vh - 160px))" selected={sel} onSelect={setSel} />
       </div>
       <div className="mt-4">
-        <Panel title={s ? `الرأس ${s.code}` : "اختر رأسًا"} icon={<Truck />} actions={s && <Status kind="asset" value={s.status} />}>
-          {!s ? <p className="text-sm text-muted-foreground">اضغط على رأس في الخريطة أو الجدول.</p> : (
+        <Panel title={s ? `المركبة ${s.code}` : "تفاصيل المركبة"} icon={<Truck />} actions={s && <Status kind="asset" value={s.status} />}>
+          {!s ? <p className="text-sm text-muted-foreground">{sel?.startsWith("gps:") ? "هذه المركبة من أجهزة ضمان المهندس وغير مربوطة بأسطول شتاء — اربطها من جدول ضمان المهندس بالأسفل." : "اضغط على مركبة في الخريطة أو القائمة."}</p> : (
             <>
               <KV items={[
                 ["الرأس", s.code],
@@ -188,10 +153,10 @@ function Tracking() {
         </Panel>
       </div>
       {(gpsLive || can("owner")) && (
-        <DamanFleet rows={providerRows} assets={assets.data ?? []} loading={provider.isLoading} canLink={can("ops_manager", "fleet_supervisor")} onSelect={(id) => { if (id) setSel(id); }} />
+        <DamanFleet rows={providerRows} assets={assets.data ?? []} loading={provider.isLoading} canLink={can("ops_manager", "fleet_supervisor")} onSelect={(id) => { if (id) pick(id); }} />
       )}
       <Panel title="حالة الرؤوس" icon={<Truck />} className="mt-5">
-        <DataTable rows={tractors} loading={assets.isLoading} onRowClick={(r) => setSel(r.id)} selectedId={sel} searchKeys={["code", "location_text"]} cols={[
+        <DataTable rows={tractors} loading={assets.isLoading} onRowClick={(r) => pick(r.id)} selectedId={sel} searchKeys={["code", "location_text"]} cols={[
           { key: "code", label: "الرأس", render: (r) => <span className="num font-semibold text-primary">{r.code}</span> },
           { key: "status", label: "الحالة", render: (r) => <Status kind="asset" value={r.status} /> },
           { key: "trip", label: "الرحلة", render: (r) => tripOf(r.id)?.number ?? "—" },
