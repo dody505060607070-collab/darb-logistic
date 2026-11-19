@@ -162,5 +162,5 @@ export const flushWhatsApp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const { processWhatsAppOutbox } = await import('./whatsapp-outbox.server');
-    return processWhatsAppOutbox(10);
+    return processWhatsAppOutbox({ limit: 15, deadlineAt: Date.now() + 15000 });
   });

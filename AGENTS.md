@@ -38,7 +38,7 @@
 - Service worker registers only via the guarded PWA wrapper outside dev/preview/frames — why: no stale preview caches.
 - Route errors use an eager fallback with one session-scoped reload for lazy-import failures — why: no blank screens or reload loops.
 - Trip/POD/expense invariants are DB triggers (`*_guard`); anon runs no function; `src/start.ts` adds security/noindex headers — why: no bypass.
-- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, sent per minute plus immediate flush; owners get department notices nobody else can receive — why: none dropped.
+- Operational WhatsApp notices are DB-trigger-queued in `whatsapp_outbox`, drained by several per-minute sender schedules plus immediate flush; scheduled runs claim only sends that fit the ~5s window (`outbox-budget.ts`); owners get department notices nobody else can receive — why: none dropped or cut off mid-send.
 - English/Urdu use post-hydration one-pass phrase boundaries; Urdu dictionary loads lazily — why: no mixed words, re-translation or hydration race.
 - Review decisions notify the sender via DB status triggers — why: reasons always reach them.
 - RecordActions shares explicit table identity and the deletion allowlist — why: safe adjacent controls.
@@ -50,3 +50,4 @@
 - Trip alerts: outbox job runs `trip-monitor.server.ts`; one episode per alert — why: no repeats.
 - Excel downloads are real xlsx built in the browser by `src/lib/excel.ts` from rows the user's RLS allows — why: one safe export path.
 - Form choice fields use `ChoiceInput` (pick or type) with `src/lib/choice.ts`; typed text maps to a listed value, "لا يوجد…" means empty, new text is saved only for text-valued lists or refs with `ref.create` (branches) — coded values stay list-only — why: manual entry without breaking DB value checks.
+- Finance automation is opt-in in `company_settings` (`auto_invoice`, `auto_allocate`) and reuses the manual RPCs; finance edits/deletes go through role-checked RPCs and guards (`invoice_save/_set_status/_delete`, `expense_reopen`, `advance_reopen`), only provider-sent invoices are undeletable and deletes stay in `audit_log` — why: automatic and manual paths share one rule set.

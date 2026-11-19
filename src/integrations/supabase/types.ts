@@ -372,6 +372,8 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          auto_allocate: boolean
+          auto_invoice: string
           company_name: string
           cr_number: string | null
           doc_alert_days: number[]
@@ -385,6 +387,8 @@ export type Database = {
           vat_rate: number
         }
         Insert: {
+          auto_allocate?: boolean
+          auto_invoice?: string
           company_name?: string
           cr_number?: string | null
           doc_alert_days?: number[]
@@ -398,6 +402,8 @@ export type Database = {
           vat_rate?: number
         }
         Update: {
+          auto_allocate?: boolean
+          auto_invoice?: string
           company_name?: string
           cr_number?: string | null
           doc_alert_days?: number[]
@@ -3302,6 +3308,7 @@ export type Database = {
         Args: { p_id: string; p_reply: string }
         Returns: undefined
       }
+      advance_reopen: { Args: { p_id: string }; Returns: undefined }
       allocate_payment: {
         Args: { p_amount: number; p_invoice_id: string; p_payment_id: string }
         Returns: undefined
@@ -3421,6 +3428,10 @@ export type Database = {
         }
         Returns: string
       }
+      customer_allocate_fifo: {
+        Args: { p_customer_id: string }
+        Returns: number
+      }
       driver_explain_alert: {
         Args: { p_alert_id: string; p_reason: string }
         Returns: undefined
@@ -3539,6 +3550,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      expense_in_settled_advance: {
+        Args: {
+          p_driver: string
+          p_method: string
+          p_spent: string
+          p_trip: string
+        }
+        Returns: boolean
+      }
+      expense_reopen: { Args: { p_id: string }; Returns: undefined }
+      finance_settings_update: {
+        Args: { p_auto_allocate: boolean; p_auto_invoice: string }
+        Returns: undefined
+      }
       generate_critical_alerts: { Args: never; Returns: number }
       gps_add_vehicle_to_fleet: {
         Args: { p_id: string; p_kind: string }
@@ -3569,6 +3594,31 @@ export type Database = {
         }
         Returns: boolean
       }
+      invoice_build_from_trips: {
+        Args: {
+          p_customer_id: string
+          p_discount?: number
+          p_trip_ids: string[]
+        }
+        Returns: string
+      }
+      invoice_delete: { Args: { p_id: string }; Returns: undefined }
+      invoice_recalc: { Args: { p_id: string }; Returns: undefined }
+      invoice_save: {
+        Args: {
+          p_customer_id: string
+          p_discount: number
+          p_due_at: string
+          p_id: string
+          p_lines: Json
+        }
+        Returns: string
+      }
+      invoice_set_status: {
+        Args: { p_id: string; p_status: string }
+        Returns: undefined
+      }
+      invoice_unbilled_now: { Args: never; Returns: number }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       maintenance_details: {
         Args: {
@@ -3611,6 +3661,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      payment_allocate_fifo: { Args: { p_payment_id: string }; Returns: number }
+      payment_auto_allocate: { Args: { p_payment_id: string }; Returns: number }
       record_trip_event: {
         Args: {
           p_client_event_id?: string

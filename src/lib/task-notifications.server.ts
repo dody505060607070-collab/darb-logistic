@@ -1,5 +1,6 @@
 import { taskMessage } from './task-notifications';
 import { whatsappNumber } from './phone';
+import { SEND_TIMEOUT_MS } from './outbox-budget';
 import type { TaskEvent } from './task-notifications';
 
 /** Acceptance is not recipient delivery; uncertain outcomes stay visible, never blindly resent. */
@@ -42,7 +43,7 @@ export async function processTaskNotifications(taskId?: string, event?: TaskEven
       const response = await fetch(`${url}/message/${media ? 'sendMedia' : 'sendText'}/${encodeURIComponent(instance)}`, {
         method: 'POST', headers: { apikey: key, 'Content-Type': 'application/json' },
         body: JSON.stringify(media ? { number, mediatype: 'image', media, caption: text } : { number, text }),
-        signal: AbortSignal.timeout(1800),
+        signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
       });
       const body = await response.text();
       if (!response.ok) { state = response.status >= 500 ? 'unresolved' : 'failed'; error = `خادم واتساب [${response.status}]: ${body.slice(0, 400)}`; }
