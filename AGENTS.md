@@ -24,7 +24,7 @@
 
 - WhatsApp goes through the company's self-hosted Evolution-style gateway via owner-only server functions in `src/lib/whatsapp.functions.ts`; credentials are server secrets only — why: keys never reach the browser.
 - WhatsApp number management matches the configured instance, verifies disconnection server-side and needs in-app confirmation — why: no wrong number or accidental outage.
-- Phone login requires exactly one employee profile with a role before OTP and after it; login never creates accounts; owner-only employee creation provisions identity/role/link with rollback — why: unlisted numbers get no access.
+- Phone login requires exactly one employee profile with a role, or exactly one unlinked driver file (drivers page) with that phone, checked before and after OTP; the only account login creates is driver-only for that file (`driver-access.server.ts`); owner-only employee creation provisions identity/role/link with rollback — why: only numbers administration listed get access.
 - CRM is a home-page component with role-restricted tables; pipeline uses integer cents and is a forecast, not revenue — why: keeps finance boundaries.
 - Employee profile edits use an owner-checked server function and a unique profile phone index; profile phone is the WhatsApp identity lookup — why: prevents ambiguous account matching while retaining roles in user_roles.
 - Integration checks are owner-only read-only server functions and distinguish provider connectivity from ingestion — why: configured credentials do not establish live vehicle tracking.

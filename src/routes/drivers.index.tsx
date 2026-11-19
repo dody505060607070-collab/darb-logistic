@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CalendarDays, CircleCheck, Plus, TriangleAlert, Truck, User, Users } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
-import { DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
+import { Badge, DataTable, Kpi, KV, PageHeader, Panel, Select, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { DocExpiry, DRIVER_FIELDS } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useRows } from "@/lib/db";
 import { fetchDrivers } from "@/lib/queries";
 import { PersonIntake } from "@/components/darb/PersonIntake";
 import { DriverMissingBadge, DriverMissingBox } from "@/components/darb/DriverMissing";
+import { DriverLoginStatus, useActivateDriverLogin } from "@/components/darb/DriverLoginAccess";
 import { driverMissing } from "@/lib/driver-completeness";
 import { useAuth } from "@/lib/auth";
 import { daysUntil, STATUS } from "@/lib/format";
@@ -40,6 +41,7 @@ function DriversPage() {
   const drivers = useRows(["drivers"], fetchDrivers);
   const [status, setStatus] = useState("");
   const [open, setOpen] = useState(false);
+  const activateLogin = useActivateDriverLogin();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const all = drivers.data ?? [];
   const list = all.filter(d => !status || d.status === status);
@@ -71,13 +73,13 @@ function DriversPage() {
             { key: "phone", label: "الجوال", render: (r) => <span className="num">{r.phone ?? "—"}</span> },
             { key: "license_expiry", label: "انتهاء الرخصة", render: (r) => <DocExpiry d={r.license_expiry} /> },
             { key: "status", label: "الحالة", render: (r) => <Status kind="driver" value={r.status} /> },
-            { key: "app", label: "حساب التطبيق", render: (r) => (r.user_id ? "مرتبط" : "غير مرتبط") },
+            { key: "app", label: "دخول النظام", render: (r) => r.user_id ? <Badge tone="success">مفعّل</Badge> : r.phone ? <Badge tone="warning">غير مفعّل</Badge> : <Badge tone="danger">بدون جوال</Badge> },
             { key: "missing", label: "النواقص", render: (r) => <DriverMissingBadge driver={r} /> },
           ]} />
       </Panel>
       {selected && <Panel className="record-preview side-detail" title={selected.full_name} icon={<User />} actions={<Status kind="driver" value={selected.status} />}>
         <div className="mb-4 grid size-14 place-items-center rounded-full bg-accent text-primary"><User className="size-7" /></div>
-        <KV items={[["رقم السائق", <span className="num">{selected.code}</span>], ["الجوال", <span className="num">{selected.phone ?? "—"}</span>], ["انتهاء الرخصة", <DocExpiry d={selected.license_expiry} />], ["حساب التطبيق", selected.user_id ? "مرتبط" : "غير مرتبط"]]} />
+        <KV items={[["رقم السائق", <span className="num">{selected.code}</span>], ["الجوال", <span className="num">{selected.phone ?? "—"}</span>], ["انتهاء الرخصة", <DocExpiry d={selected.license_expiry} />], ["دخول النظام", <DriverLoginStatus driver={selected as { id: string }} canActivate={can("ops_manager", "fleet_supervisor")} />]]} />
         <DriverMissingBox driver={selected} className="mt-4" onComplete={can("ops_manager", "fleet_supervisor") ? () => { void nav({ to: "/drivers/$id", params: { id: selected.id } }); } : undefined} />
         <div className={licenseDays == null ? "mt-4 rounded-xl border bg-muted p-3" : licenseDays < 0 ? "mt-4 rounded-xl border bg-danger-soft p-3 text-danger" : licenseDays <= 30 ? "mt-4 rounded-xl border bg-gold-soft p-3 text-gold" : "mt-4 rounded-xl border bg-success-soft p-3 text-primary"}>
           <div className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" /> صلاحية الرخصة</div>
@@ -87,7 +89,8 @@ function DriversPage() {
         <Button variant="outline" className="mt-4 w-full" onClick={() => void nav({ to: "/drivers/$id", params: { id: selected.id } })}>ملف السائق</Button>
       </Panel>}
       </div>
-      <EntityDialog open={open} onOpenChange={setOpen} title="سائق جديد" table="drivers" fields={DRIVER_FIELDS} invalidate={["drivers"]} />
+      <EntityDialog open={open} onOpenChange={setOpen} title="سائق جديد" table="drivers" fields={DRIVER_FIELDS} invalidate={["drivers"]}
+        onSaved={(saved) => { if (saved["phone"]) void activateLogin(String(saved["id"]), true); }} />
     </>
   );
 }

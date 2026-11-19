@@ -39,7 +39,10 @@ export const requestLoginCode = createServerFn({ method: "POST" })
     const { data: allowed, error: accessError } = await supabaseAdmin.from('profiles').select('id').in('phone', phoneIdentityVariants(data.phone));
     const { count, error: rolesError } = allowed?.length === 1 ? await supabaseAdmin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', allowed[0]!.id) : { count: 0, error: null };
     if (accessError || rolesError) throw new Error('تعذر التحقق من صلاحية الدخول');
-    assertApprovedPhone(allowed?.length ?? 0, count ?? 0);
+    // A driver file added by administration in the drivers page also approves its phone.
+    const { findUnlinkedDriverByPhone } = await import('./driver-access.server');
+    const driverFile = !allowed?.length ? await findUnlinkedDriverByPhone(supabaseAdmin, data.phone) : null;
+    if (!driverFile) assertApprovedPhone(allowed?.length ?? 0, count ?? 0);
     const g = gateway();
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recent, error } = await supabaseAdmin.from("login_codes").select("created_at").eq("phone", data.phone).gte("created_at", since).order("created_at", { ascending: false });
@@ -89,10 +92,26 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
     if (lookupError) throw new Error('تعذر البحث عن حساب الموظف، حاول مجددًا');
     if (prof && prof.length > 1) throw new Error("هذا الرقم مرتبط بأكثر من حساب. تواصل مع المدير.");
     userId = prof?.[0]?.id ?? null;
-    const { count, error: rolesError } = userId ? await supabaseAdmin.from('user_roles').select('id', { count: 'exact', head: true }).eq('user_id', userId) : { count: 0, error: null };
+    const { ensureDriverLogin, findUnlinkedDriverByPhone } = await import('./driver-access.server');
+    let profileCount = prof?.length ?? 0;
+    if (!userId) {
+      // Only a driver file administration added in the drivers page may become a (driver-only) account here.
+      const driverFile = await findUnlinkedDriverByPhone(supabaseAdmin, data.phone);
+      if (driverFile) {
+        const r = await ensureDriverLogin(supabaseAdmin, driverFile, 'login');
+        if (r.status !== 'refused') { userId = r.userId; profileCount = 1; }
+      }
+    }
+    const { data: roleRows, error: rolesError } = userId ? await supabaseAdmin.from('user_roles').select('role').eq('user_id', userId) : { data: [], error: null };
     if (rolesError) throw new Error('تعذر التحقق من صلاحيات الموظف');
-    // Only numbers already added by administration with a job may enter; login never creates accounts or grants roles.
-    assertApprovedPhone(prof?.length ?? 0, count ?? 0);
+    // Only numbers added by administration (employee with a job, or a driver file) may enter.
+    assertApprovedPhone(profileCount, roleRows?.length ?? 0);
+    if (userId && roleRows?.some((r: { role: string }) => r.role === 'driver')) {
+      // Repair a driver account left without its file (e.g. the file was made separately in the drivers page).
+      const { data: own } = await supabaseAdmin.from('drivers').select('id').eq('user_id', userId).maybeSingle();
+      const orphan = own ? null : await findUnlinkedDriverByPhone(supabaseAdmin, data.phone);
+      if (orphan) await ensureDriverLogin(supabaseAdmin, orphan, 'login').catch(() => null);
+    }
     const digits = data.phone.replace(/^\+/, "");
     let email: string | null = null;
     if (userId) {

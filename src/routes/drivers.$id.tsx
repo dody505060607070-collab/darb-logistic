@@ -7,6 +7,7 @@ import { AppShell } from "@/components/darb/AppShell";
 import { DataTable, KV, Loading, PageHeader, Panel, Status } from "@/components/darb/ui";
 import { EntityDialog } from "@/components/darb/EntityDialog";
 import { DriverMissingBox } from "@/components/darb/DriverMissing";
+import { DriverLoginStatus, useActivateDriverLogin } from "@/components/darb/DriverLoginAccess";
 import { Button } from "@/components/ui/button";
 import { db, useOne, useRows, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
@@ -43,6 +44,7 @@ function DriverProfile() {
   const adv = useRows(["advances", "driver", id], () => db.from("advances").select("*").eq("driver_id", id).order("issued_at", { ascending: false }));
   const [edit, setEdit] = useState(false);
   const [docEdit, setDocEdit] = useState<Row | null | undefined>(undefined);
+  const activateLogin = useActivateDriverLogin();
 
   if (d.isLoading) return <Loading />;
   const r = d.data;
@@ -74,7 +76,7 @@ function DriverProfile() {
             ["انتهاء الرخصة", <DocExpiry d={r.license_expiry} />],
             ["الفرع", r.branch?.name],
             ["البريد", r.email],
-            ["حساب التطبيق", r.user_id ? "مرتبط" : "غير مرتبط"],
+            ["دخول النظام", <DriverLoginStatus driver={r as { id: string }} canActivate={canEdit} />],
           ]} />
         </Panel>
         <Panel title="العهد" icon={<ClipboardCheck />} className="xl:col-span-2">
@@ -114,7 +116,8 @@ function DriverProfile() {
           ]} />
         </Panel>
       )}
-      <EntityDialog open={edit} onOpenChange={setEdit} title="تعديل السائق" table="drivers" fields={DRIVER_FIELDS} record={r} invalidate={["drivers"]} />
+      <EntityDialog open={edit} onOpenChange={setEdit} title="تعديل السائق" table="drivers" fields={DRIVER_FIELDS} record={r} invalidate={["drivers"]}
+        onSaved={(saved) => { if (!saved["user_id"] && saved["phone"]) void activateLogin(String(saved["id"]), true); }} />
       <EntityDialog open={docEdit !== undefined} onOpenChange={(o) => !o && setDocEdit(undefined)} title="مستند السائق" table="documents"
         fields={DOC_FIELDS} record={docEdit} extra={{ entity_type: "driver", entity_id: id }} invalidate={["documents"]} />
     </>

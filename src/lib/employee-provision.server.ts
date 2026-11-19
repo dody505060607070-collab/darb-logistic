@@ -24,13 +24,26 @@ export async function provisionEmployee(admin: SupabaseClient<any>, data: Provis
   const id = created.user.id;
   let createdWorkshopId: string | null = null;
   let driverId: string | null = null;
+  let reusedDriverId: string | null = null;
   try {
     const { error: profileError } = await admin.from('profiles').update({ full_name: data.fullName, phone: data.phone, branch_id: data.branchId }).eq('id', id);
     if (profileError) throw profileError;
     if (data.role === 'driver') {
-      const { data: driver, error: driverError } = await admin.from('drivers').insert({ code: `DRV-${id.slice(0, 8)}`, full_name: data.fullName, phone: data.phone, user_id: id, branch_id: data.branchId, ...(data.driver ?? {}) }).select('id').single();
-      if (driverError || !driver) throw driverError ?? new Error('تعذر حفظ ملف السائق');
-      driverId = driver.id;
+      // Reuse the driver file already made in the drivers page for this phone instead of a blank duplicate.
+      const { findUnlinkedDriverByPhone } = await import('./driver-access.server');
+      const existingFile = await findUnlinkedDriverByPhone(admin, data.phone);
+      if (existingFile) {
+        const { data: current } = await admin.from('drivers').select('national_id, nationality, license_no, license_expiry, branch_id').eq('id', existingFile).single();
+        const fill: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(data.driver ?? {})) if (v != null && current?.[k as keyof typeof current] == null) fill[k] = v;
+        const { data: linked, error: linkError } = await admin.from('drivers').update({ ...fill, user_id: id, phone: data.phone, branch_id: current?.branch_id ?? data.branchId }).eq('id', existingFile).is('user_id', null).select('id');
+        if (linkError || !linked?.length) throw linkError ?? new Error('تعذر ربط ملف السائق');
+        driverId = existingFile; reusedDriverId = existingFile;
+      } else {
+        const { data: driver, error: driverError } = await admin.from('drivers').insert({ code: `DRV-${id.slice(0, 8)}`, full_name: data.fullName, phone: data.phone, user_id: id, branch_id: data.branchId, ...(data.driver ?? {}) }).select('id').single();
+        if (driverError || !driver) throw driverError ?? new Error('تعذر حفظ ملف السائق');
+        driverId = driver.id;
+      }
     }
     if (data.role === 'workshop') {
       let workshopId = data.workshopId ?? null;
@@ -47,6 +60,8 @@ export async function provisionEmployee(admin: SupabaseClient<any>, data: Provis
     if (roleError) throw roleError;
     return { id, driverId };
   } catch {
+    // A pre-existing driver file is only unlinked, never deleted with the failed account.
+    if (reusedDriverId) await admin.from('drivers').update({ user_id: null }).eq('id', reusedDriverId);
     await rollbackEmployee(admin, id, createdWorkshopId);
     throw new Error('تعذر حفظ وظيفة الموظف؛ لم يتم تفعيل الدخول');
   }

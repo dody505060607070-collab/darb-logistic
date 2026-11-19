@@ -2316,5 +2316,21 @@
  "جيدة": "Good",
  "ضعيفة": "Weak",
  "لا توجد": "None",
- "سائقها:": "its driver:"
+ "سائقها:": "its driver:",
+ "دخول النظام": "System login",
+ "مفعّل — يدخل برقم جواله": "Active — signs in with phone",
+ "لا يوجد رقم جوال": "No phone number",
+ "غير مفعّل بعد": "Not activated yet",
+ "تفعيل الدخول": "Activate login",
+ "مفعّل": "Active",
+ "غير مفعّل": "Inactive",
+ "بدون جوال": "No phone",
+ "تم تفعيل دخول السائق برقم جواله": "Driver login activated with their phone",
+ "تم ربط ملف السائق بحساب الدخول": "Driver file linked to the login account",
+ "دخول السائق مفعّل": "Driver login is active",
+ "أضف رقم جوال صحيح للسائق ليتمكن من الدخول": "Add a valid phone for the driver to sign in",
+ "الرقم مسجل لأكثر من حساب؛ راجع صفحة الموظفين": "This number belongs to several accounts; check the employees page",
+ "الرقم مرتبط بملف سائق آخر": "This number is linked to another driver file",
+ "الرقم لموظف له وظيفة أخرى؛ يربطه المدير العام فقط": "This number belongs to an employee with another job; only the general manager can link it",
+ "الرقم لموظف بدون وظيفة سائق": "This number belongs to an employee without a driver job"
 }
