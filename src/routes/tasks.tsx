@@ -30,7 +30,7 @@ export const Route = createFileRoute("/tasks")({
     ],
   }),
   component: () => (
-    <AppShell>
+    <AppShell staffOnly={false}>
       <TasksPage />
     </AppShell>
   ),

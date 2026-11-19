@@ -21,7 +21,7 @@ export const Route = createFileRoute("/chat")({
     ],
   }),
   component: () => (
-    <AppShell>
+    <AppShell staffOnly={false}>
       <ChatPage />
     </AppShell>
   ),

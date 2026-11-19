@@ -300,10 +300,10 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
             <DisplayControls />
             <Notifications />
             <div className="hidden min-w-0 max-w-48 text-left sm:block">
-              <div className="text-sm font-semibold text-primary">{auth.fullName}</div>
-              <div className="text-xs text-muted-foreground">{roleLabel}</div>
+              <div className="truncate text-sm font-semibold text-primary">{auth.fullName}</div>
+              <div className="truncate text-xs text-muted-foreground">{roleLabel}</div>
             </div>
-            <div className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <User className="size-4" />
             </div>
             <Button size="icon" variant="ghost" onClick={() => void auth.signOut()} aria-label="تسجيل الخروج" title="تسجيل الخروج">

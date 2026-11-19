@@ -2,9 +2,9 @@
 DO $$
 DECLARE actor uuid; reviewer uuid; w uuid; a uuid; req uuid; prior text; ref uuid:=gen_random_uuid();
 BEGIN
- SELECT user_id INTO actor FROM public.user_roles WHERE role='workshop' LIMIT 1;
+ SELECT w.user_id INTO actor FROM public.user_roles w WHERE w.role='workshop' AND NOT EXISTS (SELECT 1 FROM public.user_roles o WHERE o.user_id=w.user_id AND o.role<>'workshop') LIMIT 1;  -- workshop-only account; a workshop user who is also a manager may legitimately see roles
  SELECT user_id INTO reviewer FROM public.user_roles WHERE role='owner' AND user_id IS DISTINCT FROM actor LIMIT 1;
- IF actor IS NULL OR reviewer IS NULL THEN RAISE EXCEPTION 'Workshop and reviewer test accounts required'; END IF;
+ IF actor IS NULL OR reviewer IS NULL THEN RAISE EXCEPTION 'A workshop-only account and a reviewer are required'; END IF;
  INSERT INTO public.workshops(name) VALUES('rollback-only security fixture') RETURNING id INTO w;
  INSERT INTO public.workshop_members(workshop_id,user_id) VALUES(w,actor);
  INSERT INTO public.assets(code,kind,plate) VALUES('SEC-'||substr(ref::text,1,8),'tractor','SEC-'||substr(ref::text,1,8)) RETURNING id INTO a;
