@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { BRAND } from '@/lib/brand';
-import logoAsset from '@/assets/shata-original.png.asset.json';
+const logoAsset = { url: '/shata-original.png' };
 
 /** Company logo; if the image briefly fails (e.g. while the server restarts) it retries once, then shows the name. */
 export function Logo({ className, light = false }: { className?: string; light?: boolean }) {
