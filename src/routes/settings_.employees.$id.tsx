@@ -106,6 +106,7 @@ function EmployeePage() {
       </section>
       <section className="space-y-4"><h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="text-info" /> الصلاحيات</h2>
         <div className="flex flex-wrap gap-2">{employeeRoles.map(r => <div key={r.id} className="flex items-center gap-1"><Badge tone="gold">{ROLE_LABELS[r.role as AppRole]}</Badge>{canRemoveEmployeeRole(auth.session?.user.id ?? '', id, r.role) && <Button size="icon" variant="ghost" aria-label={`إزالة ${ROLE_LABELS[r.role as AppRole]}`} title={`إزالة ${ROLE_LABELS[r.role as AppRole]}`} onClick={() => void revokeRole(r.id, r.role)}><Trash2 className="size-4 text-danger" /></Button>}</div>)}</div>
+        {(() => { const own = (drivers.data ?? []).find(d => d.user_id === id); return own ? <Button asChild variant="outline" size="sm"><Link to="/drivers/$id" params={{ id: own.id }}>ملف السائق المرتبط: {own.full_name}</Link></Button> : null; })()}
         {employeeRoles.some(r => ['driver'].includes(r.role)) && !drivers.isLoading && !(drivers.data ?? []).some(d => d.user_id === id) && <div role="alert" className="space-y-2 rounded-2xl border border-warning/40 bg-warning/10 p-3 text-sm">
           <p className="font-semibold">الحساب دوره سائق لكنه غير مربوط بملف سائق، فلن يرى رحلاته عند الدخول.</p>
           <p className="text-muted-foreground">الحل: اختر ملفه ثم اضغط «ربط الملف».</p>

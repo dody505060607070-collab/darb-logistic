@@ -188,7 +188,7 @@ export function EntityDialog({
             let input: ReactNode;
             const v = vals[f.name] ?? "";
             if (f.type === "textarea")
-              input = <Textarea value={v} onChange={(e) => set(f.name, e.target.value)} required={f.required} rows={3} />;
+              input = <Textarea aria-label={f.label} value={v} onChange={(e) => set(f.name, e.target.value)} required={f.required} rows={3} />;
             else if (f.type === "select")
               input = <ChoiceInput value={String(v)} onChange={(x) => set(f.name, x)} options={f.options ?? []} required={f.required} />;
             else if (f.type === "ref") input = <RefSelect f={f} value={v} onChange={(x) => set(f.name, x)} />;
@@ -203,6 +203,7 @@ export function EntityDialog({
             else
               input = (
                 <Input
+                  aria-label={f.label}
                   type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "datetime" ? "datetime-local" : isPhoneField(f) ? "tel" : "text"}
                   dir={isPhoneField(f) ? "ltr" : undefined}
                   inputMode={isPhoneField(f) ? "tel" : undefined}

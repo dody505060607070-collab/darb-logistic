@@ -386,6 +386,13 @@
       "when": 1795092308538,
       "tag": "0054_revoke_public_execute_wa_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1795446083406,
+      "tag": "0055_sync_employee_driver_identity",
+      "breakpoints": true
     }
   ]
 }

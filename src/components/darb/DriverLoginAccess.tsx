@@ -19,7 +19,7 @@ export function useActivateDriverLogin() {
       const key = r.status === "refused" ? (r.reason ?? "no_phone") : r.status;
       if (r.status === "refused") toast.warning(DRIVER_LOGIN_MESSAGE[key] ?? "لم يُفعّل الدخول");
       else if (!quiet || r.status !== "already") toast.success(DRIVER_LOGIN_MESSAGE[key] ?? "تم");
-      await qc.invalidateQueries({ queryKey: ["drivers"] });
+      await Promise.all([qc.invalidateQueries({ queryKey: ["drivers"] }), qc.invalidateQueries({ queryKey: ["profiles"] }), qc.invalidateQueries({ queryKey: ["user_roles"] })]);
       return r;
     } catch (e) {
       toast.error(errMsg(e));
