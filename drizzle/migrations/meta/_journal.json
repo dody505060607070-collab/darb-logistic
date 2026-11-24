@@ -400,6 +400,13 @@
       "when": 1795447130475,
       "tag": "0056_lock_settled_advance_check",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1795527796835,
+      "tag": "0057_permanent_super_admin",
+      "breakpoints": true
     }
   ]
 }

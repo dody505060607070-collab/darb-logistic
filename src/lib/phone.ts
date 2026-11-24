@@ -32,7 +32,9 @@ export function normalizePhone(countryCode: string, raw: string): string {
   const fixTrunk = (s: string) => (s.startsWith(`${cc}0`) ? `${cc}${s.slice(cc.length + 1)}` : s);
   const tries = intl != null
     ? [`+${fixTrunk(intl)}`, `+${intl}`]
-    : [`+${cc}${body.replace(/^0+/, '')}`, `+${fixTrunk(body)}`, `+${body}`];
+    : [`+${cc}${body.replace(/^0+/, '')}`, `+${fixTrunk(body)}`, `+${body}`,
+       // Egyptian mobile written locally (01XXXXXXXXX); Saudi local numbers start with 05 so they never reach here.
+       ...(/^01[0125]\d{8}$/.test(body) ? [`+20${body.slice(1)}`] : [])];
   for (const t of tries) {
     const n = valid(t);
     if (n) return n;

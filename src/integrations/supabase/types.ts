@@ -3619,6 +3619,7 @@ export type Database = {
         Returns: undefined
       }
       invoice_unbilled_now: { Args: never; Returns: number }
+      is_permanent_admin: { Args: { _uid: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       maintenance_details: {
         Args: {
