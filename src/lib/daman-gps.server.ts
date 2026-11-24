@@ -1,8 +1,5 @@
-import { DAMAN_API_BASE, isDamanTruck, parseDamanDetails, parseDamanVehicles, plateKey, type DamanDetails } from '@/lib/daman-gps';
+import { DAMAN_API_BASE, parseDamanDetails, parseDamanVehicles, plateKey, type DamanDetails, type DamanVehicle } from '@/lib/daman-gps';
 
-/** Device details (driver, odometer, battery…) change slowly: refresh a few devices per run, trucks first. */
-const DETAILS_PER_RUN = 8;
-const DETAILS_MAX_AGE_MS = 30 * 60000;
 
 type Admin = any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -13,7 +10,7 @@ export async function syncDamanGps(db: Admin): Promise<DamanSyncResult> {
   const fleet = process.env.DAMAN_GPS_FLEET_ID?.trim();
   const key = process.env.DAMAN_GPS_API_KEY?.trim();
   if (!fleet || !key) return { state: 'missing', vehicles: 0, linked: 0, newReadings: 0, detail: 'لم يتم الربط' };
-  let vehicles;
+  let vehicles: DamanVehicle[];
   try {
     const url = `${DAMAN_API_BASE}/api/v1/vehicles/report/last-online-history-state?fleetId=${encodeURIComponent(fleet)}&isEnglish=true`;
     const res = await fetch(url, { headers: { 'X-Api-Key': key, ApiKey: key, Accept: 'application/json' }, redirect: 'manual', signal: AbortSignal.timeout(20000) });
@@ -25,6 +22,12 @@ export async function syncDamanGps(db: Admin): Promise<DamanSyncResult> {
   }
   if (vehicles.length === 0) return { state: 'error', vehicles: 0, linked: 0, newReadings: 0, detail: 'الخادم متصل لكن لم يُرجع أي مركبة لرقم الأسطول' };
 
+  // The fleet list always reports speed 0 / ignition off; each device's own record has the live values.
+  const raw = await Promise.all(vehicles.map((v) => fetchVehicle(v.provider_vehicle_id, key)));
+  vehicles = vehicles.map((v, i) => {
+    const live = raw[i] ? parseDamanVehicles({ data: [raw[i]] })[0] : null;
+    return live ? { ...v, ...live, plate: live.plate ?? v.plate, plate_key: live.plate_key ?? v.plate_key, lat: live.lat ?? v.lat, lng: live.lng ?? v.lng } : v;
+  });
   const now = new Date().toISOString();
   const { error: upErr } = await db.from('gps_provider_vehicles').upsert(
     vehicles.map((v) => ({ provider: 'daman', ...v, synced_at: now })),
@@ -54,11 +57,7 @@ export async function syncDamanGps(db: Admin): Promise<DamanSyncResult> {
   }
 
   // Driver name, vehicle type, odometer, battery… for the stalest devices (unlinked trucks first).
-  const due = [...(rows ?? [])]
-    .filter((r: { details_synced_at: string | null }) => !r.details_synced_at || Date.now() - Date.parse(r.details_synced_at) > DETAILS_MAX_AGE_MS)
-    .sort((a: Row, b: Row) => rank(a) - rank(b) || (a.details_synced_at ?? '').localeCompare(b.details_synced_at ?? ''))
-    .slice(0, DETAILS_PER_RUN);
-  const details = (await Promise.all(due.map((r: Row) => fetchDetails(r.provider_vehicle_id, key)))).filter((d): d is DamanDetails => !!d);
+  const details = raw.map((x) => (x ? parseDamanDetails({ data: x }) : null)).filter((d): d is DamanDetails => !!d);
   if (details.length) {
     const { error } = await db.rpc('gps_store_details', { p_provider: 'daman', p_rows: details });
     if (error) console.error('Daman GPS details store failed', error.message);
@@ -91,13 +90,12 @@ export async function syncDamanGps(db: Admin): Promise<DamanSyncResult> {
   return { state: 'connected', vehicles: vehicles.length, linked, newReadings, trucksAdded, driversLinked, detail: `${vehicles.length} مركبة من ضمان المهندس، ${linked} منها مربوطة بمركبات شتاء${trucksAdded ? ` (أُضيفت ${trucksAdded} شاحنة جديدة للأسطول)` : ''}` };
 }
 
-type Row = { provider_vehicle_id: string; asset_id: string | null; icon: string | null; vehicle_type: string | null; details_synced_at: string | null };
-const rank = (r: Row) => (isDamanTruck(r) && !r.asset_id ? 0 : r.asset_id ? 1 : 2);
 
-async function fetchDetails(vehicleId: string, key: string): Promise<DamanDetails | null> {
+async function fetchVehicle(vehicleId: string, key: string): Promise<Record<string, unknown> | null> {
   try {
-    const res = await fetch(`${DAMAN_API_BASE}/api/v1/online-history/vehicle/${encodeURIComponent(vehicleId)}?isEnglish=true`, { headers: { 'X-Api-Key': key, ApiKey: key, Accept: 'application/json' }, redirect: 'manual', signal: AbortSignal.timeout(12000) });
+    const res = await fetch(`${DAMAN_API_BASE}/api/v1/online-history/vehicle/${encodeURIComponent(vehicleId)}?isEnglish=true`, { headers: { 'X-Api-Key': key, ApiKey: key, Accept: 'application/json' }, redirect: 'manual', signal: AbortSignal.timeout(6000) });
     if (!res.ok) return null;
-    return parseDamanDetails(await res.json());
+    const b = await res.json() as { isSuccess?: boolean; data?: Record<string, unknown> | null };
+    return b?.isSuccess !== false && b?.data?.vehicleId != null ? b.data : null;
   } catch { return null; }
 }
