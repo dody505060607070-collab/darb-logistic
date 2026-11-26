@@ -185,6 +185,7 @@ function DriverApp() {
           </span>
           <DisplayControls />
           <Link to="/chat" aria-label="المحادثة مع الإدارة" className="flex items-center gap-1 rounded-full border px-2 py-1 font-semibold"><MessageCircle className="size-4" /> المحادثة</Link>
+          <Link to="/my-account" aria-label="حسابي" className="flex items-center gap-1 rounded-full border px-2 py-1 font-semibold">حسابي</Link>
           <Bell className="size-5" />
           <Button variant="ghost" size="icon" onClick={() => (demo ? demoToast() : void auth.signOut())} aria-label="خروج"><LogOut className="size-5" /></Button>
         </div>

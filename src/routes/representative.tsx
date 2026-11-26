@@ -58,12 +58,13 @@ function RepresentativeApp() {
 
   return (
     <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20">
-      {auth.isStaff && <div className="flex justify-end border-b px-4 py-2"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>لوحة الإدارة</Button></div>}
+      {(auth.isStaff || auth.viewAs) && <div className="flex justify-end border-b px-4 py-2"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>{auth.viewAs ? "رجوع لـ Super Admin" : "لوحة الإدارة"}</Button></div>}
       <header className="driver-toolbar flex flex-wrap items-center justify-between gap-2 px-4 py-3">
         <Logo light />
         <div className="flex shrink-0 items-center gap-2 text-xs">
           <DisplayControls />
           <Link to="/chat" aria-label="المحادثة مع الإدارة" className="flex items-center gap-1 rounded-full border px-2 py-1 font-semibold"><MessageCircle className="size-4" /> المحادثة</Link>
+          <Link to="/my-account" aria-label="حسابي" className="flex items-center gap-1 rounded-full border px-2 py-1 font-semibold">حسابي</Link>
           <Button variant="ghost" size="icon" onClick={() => void auth.signOut()} aria-label="خروج"><LogOut className="size-5" /></Button>
         </div>
       </header>

@@ -25,6 +25,7 @@ import { Route as IncidentsRouteImport } from './routes/incidents'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as MaintenanceWalletRouteImport } from './routes/maintenance-wallet'
+import { Route as MyAccountRouteImport } from './routes/my-account'
 import { Route as MyDocumentsRouteImport } from './routes/my-documents'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -128,6 +129,11 @@ const MaintenanceRoute = MaintenanceRouteImport.update({
 const MaintenanceWalletRoute = MaintenanceWalletRouteImport.update({
   id: '/maintenance-wallet',
   path: '/maintenance-wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyAccountRoute = MyAccountRouteImport.update({
+  id: '/my-account',
+  path: '/my-account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyDocumentsRoute = MyDocumentsRouteImport.update({
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/maintenance-wallet': typeof MaintenanceWalletRoute
+  '/my-account': typeof MyAccountRoute
   '/my-documents': typeof MyDocumentsRoute
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/maintenance-wallet': typeof MaintenanceWalletRoute
+  '/my-account': typeof MyAccountRoute
   '/my-documents': typeof MyDocumentsRoute
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/maintenance': typeof MaintenanceRoute
   '/maintenance-wallet': typeof MaintenanceWalletRoute
+  '/my-account': typeof MyAccountRoute
   '/my-documents': typeof MyDocumentsRoute
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/maintenance'
     | '/maintenance-wallet'
+    | '/my-account'
     | '/my-documents'
     | '/operations'
     | '/privacy'
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/maintenance'
     | '/maintenance-wallet'
+    | '/my-account'
     | '/my-documents'
     | '/operations'
     | '/privacy'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/maintenance'
     | '/maintenance-wallet'
+    | '/my-account'
     | '/my-documents'
     | '/operations'
     | '/privacy'
@@ -528,6 +540,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MaintenanceRoute: typeof MaintenanceRoute
   MaintenanceWalletRoute: typeof MaintenanceWalletRoute
+  MyAccountRoute: typeof MyAccountRoute
   MyDocumentsRoute: typeof MyDocumentsRoute
   OperationsRoute: typeof OperationsRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -666,6 +679,13 @@ declare module '@tanstack/react-router' {
       path: '/maintenance-wallet'
       fullPath: '/maintenance-wallet'
       preLoaderRoute: typeof MaintenanceWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-account': {
+      id: '/my-account'
+      path: '/my-account'
+      fullPath: '/my-account'
+      preLoaderRoute: typeof MyAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-documents': {
@@ -856,6 +876,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MaintenanceRoute: MaintenanceRoute,
   MaintenanceWalletRoute: MaintenanceWalletRoute,
+  MyAccountRoute: MyAccountRoute,
   MyDocumentsRoute: MyDocumentsRoute,
   OperationsRoute: OperationsRoute,
   PrivacyRoute: PrivacyRoute,

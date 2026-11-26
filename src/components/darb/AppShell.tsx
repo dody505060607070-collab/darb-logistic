@@ -72,6 +72,7 @@ export const NAV: NavItem[] = [
   { to: "/incidents", label: "الحوادث والبلاغات", icon: ShieldAlert, roles: ["ops_manager", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
   { to: "/tasks", label: "المهام", icon: ListChecks , group: NAV_GROUPS[4]! },
   { to: "/chat", label: "المحادثات", icon: MessageCircle , group: NAV_GROUPS[4]! },
+  { to: "/my-account", label: "حسابي", icon: User , group: NAV_GROUPS[4]! },
   { to: "/my-documents", label: "مستنداتي", icon: FolderOpen , group: NAV_GROUPS[4]! },
   { to: "/activity", label: "متابعة النشاط", icon: Activity, roles: [] , group: NAV_GROUPS[5]! },
   { to: "/reports", label: "التقارير", icon: BarChart3, roles: ["ops_manager", "accountant"] , group: NAV_GROUPS[5]! },
