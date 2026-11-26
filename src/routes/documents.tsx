@@ -9,6 +9,7 @@ import { DOC_FIELDS, DocExpiry, openFile } from "@/components/darb/shared";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db, useOne, useRows, type Row } from "@/lib/db";
+import { PendingDocsReview } from "@/components/darb/PendingDocsReview";
 import { DEFAULT_ALERT_DAYS, DEFAULT_REQUIRED_ASSET, DEFAULT_REQUIRED_DRIVER, MOT_LICENSE, docStage, driverProfileDocs, missingDocs, motLicenseStatus } from "@/lib/doc-alerts";
 import { fetchAssets, fetchDrivers } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
@@ -73,6 +74,7 @@ function DocsPage() {
     <>
       <PageHeader title="التفويضات وانتهاء المستندات" subtitle="تسجيل التفويض داخليًا لا يعني إصداره رسميًا" icon={<FolderOpen />}
         actions={canEdit && <Button variant="gold" onClick={() => setAuthEdit(null)}><Plus /> تفويض جديد</Button>} />
+      {canEdit && <div className="mb-5"><PendingDocsReview /></div>}
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
         <Kpi label="إجمالي المستندات" value={all.length} icon={<FileText />} />
         <Kpi label="منتهية" value={all.filter((d) => bucket(d) === "expired").length} tone="danger" icon={<TriangleAlert />} />

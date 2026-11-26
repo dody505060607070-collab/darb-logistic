@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { db, useOne, useRows } from '@/lib/db';
 import { ASSIGNABLE_ROLES, ROLE_LABELS, useAuth, type AppRole } from '@/lib/auth';
 import { updateEmployee, deleteEmployee } from '@/lib/employees.functions';
+import { PendingDocsReview } from '@/components/darb/PendingDocsReview';
 import { DeleteConfirmation } from '@/components/darb/DeleteConfirmation';
 import { ChoiceInput } from '@/components/darb/ChoiceInput';
 import { canRemoveEmployeeRole } from '@/lib/employees';
@@ -118,6 +119,7 @@ function EmployeePage() {
         <h3 className="text-sm font-semibold">الصفحات المتاحة</h3><div className="flex flex-wrap gap-2">{NAV.filter(n => !n.roles || employeeRoles.some(r => r.role === 'owner' || n.roles?.includes(r.role))).map(n => <Badge key={n.to} tone="info">{n.label}</Badge>)}</div>
       </section>
     </div>
+    <div className="mt-8"><PendingDocsReview title="مستندات رفعها الموظف بانتظار موافقتك" entityIds={[id, ...(drivers.data ?? []).filter(d => d.user_id === id).map(d => d.id)]} /></div>
     <div className="mt-8 grid gap-8 xl:grid-cols-2"><section><h2 className="mb-3 text-lg font-bold">المهام</h2><DataTable rows={tasks.data} loading={tasks.isLoading} cols={[{ key: 'title', label: 'المهمة' }, { key: 'status', label: 'الحالة' }, { key: 'due_at', label: 'الموعد', render: r => fmtDateTime(r.due_at) }]} /></section><section><h2 className="mb-3 text-lg font-bold">آخر النشاطات</h2><DataTable rows={activity.data} loading={activity.isLoading} cols={[{ key: 'kind', label: 'النشاط' }, { key: 'detail', label: 'التفاصيل' }, { key: 'at', label: 'الوقت', render: r => fmtDateTime(r.at) }]} /></section></div>
   </>;
 }
