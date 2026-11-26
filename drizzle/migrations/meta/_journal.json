@@ -421,6 +421,13 @@
       "when": 1795726725283,
       "tag": "0059_documents_allow_employee",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1795729194518,
+      "tag": "0060_approved_driver_license_and_customer_terms",
+      "breakpoints": true
     }
   ]
 }
