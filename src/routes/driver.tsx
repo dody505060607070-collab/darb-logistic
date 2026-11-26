@@ -296,8 +296,8 @@ function HomeView({ t, custody, online, go, demo }: { t: Row; custody: Row[]; on
   return (
     <>
       {unack.map((c) => (
-        <div key={c.id} className="panel flex items-center justify-between p-3 text-sm">
-          <span>عهدة جديدة: <b className="num">{c.asset?.code}</b></span>
+        <div key={c.id} className="panel flex flex-wrap items-center justify-between gap-3 border-2 border-gold p-4 text-sm">
+          <span className="space-y-1"><b className="block text-base text-primary">📦 تم تسليمك عهدة جديدة: <span className="num">{c.asset?.code}</span></b><span className="block text-muted-foreground">راجع المركبة ثم اضغط «إقرار الاستلام» لتأكيد أنك استلمتها.</span></span>
           <Button size="sm" onClick={async () => { const { error } = await db.from("custody").update({ acknowledged: true }).eq("id", c.id); if (error) toast.error(errMsg(error)); else { toast.success("تم الإقرار باستلام العهدة"); void qc.invalidateQueries(); } }}>إقرار الاستلام</Button>
         </div>
       ))}

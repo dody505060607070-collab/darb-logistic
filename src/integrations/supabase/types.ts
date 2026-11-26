@@ -857,6 +857,7 @@ export type Database = {
           notes: string | null
           number: string | null
           review_status: string
+          uploaded_by: string | null
         }
         Insert: {
           created_at?: string
@@ -870,6 +871,7 @@ export type Database = {
           notes?: string | null
           number?: string | null
           review_status?: string
+          uploaded_by?: string | null
         }
         Update: {
           created_at?: string
@@ -883,6 +885,7 @@ export type Database = {
           notes?: string | null
           number?: string | null
           review_status?: string
+          uploaded_by?: string | null
         }
         Relationships: []
       }

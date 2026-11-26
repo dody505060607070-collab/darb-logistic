@@ -97,7 +97,7 @@ function DocsPage() {
             <DataTable entityTable="documents" rows={list} loading={docs.isLoading} error={docs.error} searchKeys={["doc_type", "number"]} onEdit={canEdit ? (r) => setEdit(r) : undefined} selectedId={selected?.id} onRowClick={(r) => setSelectedId(r.id)}
               filters={<div className="flex flex-wrap gap-2">{([["", "الكل"], ["expired", "منتهية"], ["soon", "قريبة الانتهاء"], ["valid", "سارية"]] as const).map(([value, label]) => <Button key={value} size="sm" variant={filter === value ? "default" : "outline"} className="rounded-full" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</Button>)}</div>}
               cols={[
-                { key: "entity", label: "الجهة", render: (r) => <span><Badge dot={false}>{r.entity_type === "asset" ? "أصل" : r.entity_type === "driver" ? "سائق" : "شركة"}</Badge> {names.get(r.entity_id) ?? "—"}</span> },
+                { key: "entity", label: "الجهة", render: (r) => <span><Badge dot={false}>{r.entity_type === "asset" ? "أصل" : r.entity_type === "driver" ? "سائق" : r.entity_type === "employee" ? "موظف" : "شركة"}</Badge> {names.get(r.entity_id) ?? "—"}</span> },
                 { key: "doc_type", label: "النوع" },
                 { key: "number", label: "الرقم", render: (r) => <span className="num">{r.number ?? "—"}</span> },
                 { key: "issue", label: "الإصدار", render: (r) => <span className="num">{fmtDate(r.issue_date)}</span> },

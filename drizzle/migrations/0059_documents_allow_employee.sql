@@ -1,0 +1,2 @@
+ALTER TABLE public.documents DROP CONSTRAINT documents_entity_type_check;
+ALTER TABLE public.documents ADD CONSTRAINT documents_entity_type_check CHECK (entity_type = ANY (ARRAY['asset','driver','company','carrier','employee']));

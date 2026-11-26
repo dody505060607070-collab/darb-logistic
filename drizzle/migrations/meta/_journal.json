@@ -407,6 +407,20 @@
       "when": 1795527796835,
       "tag": "0057_permanent_super_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1795726605950,
+      "tag": "0058_self_documents_custody_notice_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1795726725283,
+      "tag": "0059_documents_allow_employee",
+      "breakpoints": true
     }
   ]
 }

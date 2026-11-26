@@ -4,6 +4,7 @@ import { PageGuide } from "@/components/darb/PageGuide";
 import { alertLink } from "@/lib/alert-links";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   MessageCircle,
@@ -71,6 +72,7 @@ export const NAV: NavItem[] = [
   { to: "/incidents", label: "الحوادث والبلاغات", icon: ShieldAlert, roles: ["ops_manager", "fleet_supervisor"] , group: NAV_GROUPS[2]! },
   { to: "/tasks", label: "المهام", icon: ListChecks , group: NAV_GROUPS[4]! },
   { to: "/chat", label: "المحادثات", icon: MessageCircle , group: NAV_GROUPS[4]! },
+  { to: "/my-documents", label: "مستنداتي", icon: FolderOpen , group: NAV_GROUPS[4]! },
   { to: "/activity", label: "متابعة النشاط", icon: Activity, roles: [] , group: NAV_GROUPS[5]! },
   { to: "/reports", label: "التقارير", icon: BarChart3, roles: ["ops_manager", "accountant"] , group: NAV_GROUPS[5]! },
   { to: "/settings", label: "الإعدادات", icon: Settings, roles: [] , group: NAV_GROUPS[5]! },
@@ -95,6 +97,20 @@ function useClock() {
   return now;
 }
 
+/** Shows a system notification for alerts that arrive while the app is open (after the user allows it). */
+function useBrowserAlerts(rows: { id: string; title: string; body: string }[] | undefined) {
+  const [seen] = useState(() => new Set<string>());
+  const [primed, setPrimed] = useState(false);
+  useEffect(() => {
+    if (!rows) return;
+    if (!primed) { rows.forEach((r) => seen.add(r.id)); setPrimed(true); return; }
+    const fresh = rows.filter((r) => !seen.has(r.id));
+    fresh.forEach((r) => seen.add(r.id));
+    if (!fresh.length || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    fresh.slice(0, 3).forEach((r) => { try { new Notification(r.title, { body: r.body ?? "", icon: "/shata-original.png", tag: r.id }); } catch { /* ignore */ } });
+  }, [rows, primed, seen]);
+}
+
 function Notifications() {
   const nav = useNavigate();
   const [openPop, setOpenPop] = useState(false);
@@ -106,6 +122,7 @@ function Notifications() {
     },
   });
   const n = data?.length ?? 0;
+  useBrowserAlerts(data);
   return (
     <Popover open={openPop} onOpenChange={setOpenPop}>
       <PopoverTrigger asChild>
@@ -119,7 +136,9 @@ function Notifications() {
         </Button>
       </PopoverTrigger>
       <PopoverContent dir="rtl" align="end" className="w-80 p-0">
-        <div className="border-b px-4 py-2 text-sm font-bold text-primary">التنبيهات المفتوحة</div>
+        <div className="flex items-center justify-between border-b px-4 py-2 text-sm font-bold text-primary"><span>التنبيهات المفتوحة</span>
+          {typeof Notification !== "undefined" && Notification.permission === "default" && <button type="button" className="text-xs font-semibold text-gold underline" onClick={() => { if (window.top !== window.self) { toast.info("افتح النظام في نافذة مستقلة لتفعيل التنبيهات"); return; } void Notification.requestPermission().then((p) => toast[p === "granted" ? "success" : "info"](p === "granted" ? "تم تفعيل تنبيهات الجهاز" : "لم يتم السماح بالتنبيهات من المتصفح")); }}>تفعيل تنبيهات الجهاز</button>}
+        </div>
         <div className="max-h-80 divide-y overflow-y-auto">
           {n === 0 && <p className="p-4 text-sm text-muted-foreground">لا توجد تنبيهات</p>}
           {data?.map((x) => (

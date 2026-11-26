@@ -136,10 +136,10 @@ export function ApprovalCenter() {
         <Card who={r.driver?.full_name} title={<>الشاحنة {r.asset?.code}</>} at={r.created_at}
           actions={<Link to="/maintenance" className="text-xs font-semibold text-gold underline">افتح الصيانة</Link>}><Line k="ملاحظات" v={r.notes} /></Card>)} />
 
-      <Section title="عهد لم يؤكدها السائق" rows={custody.data} render={(r) => (
+      <Section title="عهد بانتظار إقرار السائق باستلامها" rows={custody.data} render={(r) => (
         <Card who={r.driver?.full_name} title={<>الشاحنة {r.asset?.code}</>} at={r.opened_at}
           actions={<Link to="/custody" className="text-xs font-semibold text-gold underline">افتح العهد</Link>}>
-          <Line k="العداد" v={r.odometer_out && <span className="num">{r.odometer_out} كم</span>} /><Line k="الوقود" v={r.fuel_level_out} /><Line k="الأضرار" v={r.damages} />
+          <Line k="المطلوب" v="ينتظر أن يدخل السائق للتطبيق ويضغط «إقرار الاستلام» — وصلته رسالة واتساب" /><Line k="العداد" v={r.odometer_out && <span className="num">{r.odometer_out} كم</span>} /><Line k="الوقود" v={r.fuel_level_out} /><Line k="الأضرار" v={r.damages} />
         </Card>)} />
     </section>
   );

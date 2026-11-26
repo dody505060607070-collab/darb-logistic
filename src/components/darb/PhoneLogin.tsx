@@ -30,7 +30,7 @@ export function PhoneLogin() {
       } else {
         const phone = normalizePhone(country, number);
         await requestCode({ data: { phone } });
-        setSentTo(phone); toast.success('أرسلنا رمز الدخول إلى واتساب');
+        setSentTo(phone); toast.success('إذا كان رقمك مسجلًا لدى الإدارة سيصلك رمز الدخول على واتساب');
       }
     } catch (err) {
       setError(errMsg(err));

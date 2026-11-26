@@ -42,7 +42,8 @@ export const requestLoginCode = createServerFn({ method: "POST" })
     // A driver file added by administration in the drivers page also approves its phone.
     const { findUnlinkedDriverByPhone } = await import('./driver-access.server');
     const driverFile = !allowed?.length ? await findUnlinkedDriverByPhone(supabaseAdmin, data.phone) : null;
-    if (!driverFile) assertApprovedPhone(allowed?.length ?? 0, count ?? 0);
+    // Unlisted numbers get the same reply as listed ones, so sign-in cannot reveal who has an account.
+    if (!driverFile) { try { assertApprovedPhone(allowed?.length ?? 0, count ?? 0); } catch { return { sent: true, phone: data.phone }; } }
     const g = gateway();
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recent, error } = await supabaseAdmin.from("login_codes").select("created_at").eq("phone", data.phone).gte("created_at", since).order("created_at", { ascending: false });
