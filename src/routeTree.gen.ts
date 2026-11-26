@@ -16,6 +16,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CustodyRouteImport } from './routes/custody'
 import { Route as CustomerRequestsRouteImport } from './routes/customer-requests'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DriverRouteImport } from './routes/driver'
 import { Route as ExpensesRouteImport } from './routes/expenses'
@@ -82,6 +83,11 @@ const CustomerRequestsRoute = CustomerRequestsRouteImport.update({
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/custody': typeof CustodyRoute
   '/customer-requests': typeof CustomerRequestsRoute
   '/customers': typeof CustomersRoute
+  '/demo': typeof DemoRoute
   '/documents': typeof DocumentsRoute
   '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/custody': typeof CustodyRoute
   '/customer-requests': typeof CustomerRequestsRoute
   '/customers': typeof CustomersRoute
+  '/demo': typeof DemoRoute
   '/documents': typeof DocumentsRoute
   '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/custody': typeof CustodyRoute
   '/customer-requests': typeof CustomerRequestsRoute
   '/customers': typeof CustomersRoute
+  '/demo': typeof DemoRoute
   '/documents': typeof DocumentsRoute
   '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/custody'
     | '/customer-requests'
     | '/customers'
+    | '/demo'
     | '/documents'
     | '/driver'
     | '/expenses'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/custody'
     | '/customer-requests'
     | '/customers'
+    | '/demo'
     | '/documents'
     | '/driver'
     | '/expenses'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/custody'
     | '/customer-requests'
     | '/customers'
+    | '/demo'
     | '/documents'
     | '/driver'
     | '/expenses'
@@ -507,6 +519,7 @@ export interface RootRouteChildren {
   CustodyRoute: typeof CustodyRoute
   CustomerRequestsRoute: typeof CustomerRequestsRoute
   CustomersRoute: typeof CustomersRoute
+  DemoRoute: typeof DemoRoute
   DocumentsRoute: typeof DocumentsRoute
   DriverRoute: typeof DriverRoute
   ExpensesRoute: typeof ExpensesRoute
@@ -590,6 +603,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -827,6 +847,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustodyRoute: CustodyRoute,
   CustomerRequestsRoute: CustomerRequestsRoute,
   CustomersRoute: CustomersRoute,
+  DemoRoute: DemoRoute,
   DocumentsRoute: DocumentsRoute,
   DriverRoute: DriverRoute,
   ExpensesRoute: ExpensesRoute,
