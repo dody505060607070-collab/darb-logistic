@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getDarbAIConfig } from "./ai-provider.server";
 
 /** Translate user-written text (e.g. a task) between Arabic and English on demand. */
 export const translateText = createServerFn({ method: "POST" })
@@ -10,13 +11,13 @@ export const translateText = createServerFn({ method: "POST" })
     return { text, to: d.to === "ar" ? "ar" as const : "en" as const };
   })
   .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("خدمة الترجمة غير مهيأة");
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    const aiConfig = getDarbAIConfig();
+    if (!aiConfig) throw new Error("خدمة الترجمة غير مهيأة");
+    const res = await fetch(`${aiConfig.baseURL}/responses`, {
       method: "POST",
-      headers: { "Lovable-API-Key": key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
+      headers: { ...aiConfig.headers, Authorization: `Bearer ${aiConfig.apiKey}`, "Content-Type": "application/json", ...(aiConfig.lovableGateway ? { "X-Lovable-AIG-SDK": "fetch" } : {}) },
       body: JSON.stringify({
-        model: "openai/gpt-6-astra", stream: true, store: false, reasoning: { effort: "low" },
+        model: aiConfig.model, stream: true, ...(aiConfig.lovableGateway ? { store: false, reasoning: { effort: "low" } } : {}),
         instructions: `Translate the user's text into ${data.to === "en" ? "English" : "Arabic"} for a Saudi logistics company. Output only the translation.`,
         input: data.text,
       }),
