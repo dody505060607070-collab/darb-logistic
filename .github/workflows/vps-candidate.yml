@@ -27,6 +27,17 @@ jobs:
         run: bun run build
       - name: Verify Node server artifact
         run: test -f .output/server/index.mjs && test -d .output/public
+      - name: Build production Docker image
+        run: docker build --tag darb-candidate:ci .
+      - name: Smoke test production container
+        run: |
+          docker run --detach --name darb-candidate -p 3000:3000 -e PORT=3000 -e HOST=0.0.0.0 darb-candidate:ci
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs darb-candidate
+          exit 1
   petroapp-bridge:
     runs-on: ubuntu-latest
     steps:
