@@ -1,74 +1,90 @@
-# جرد نقل درب إلى Hostinger VPS (قراءة فقط) — 27 نوفمبر 2026
+# جرد درب وخطة النقل الكامل — قراءة فقط
 
-النطاق: درب فقط. لا فحص ولا لمس لـ n8n أو أي موقع آخر. لم تُغيَّر بيانات أو أسرار أو DNS، ولم يُرسل أي واتساب.
+27 نوفمبر 2026. **هذا جرد لا إذن بالتنفيذ.** الهدف KVM 4 / Ubuntu 24.04 بحسب المالك؛ لم يُفحص VPS. n8n وكل خدمة أخرى خارج النطاق. لا تعديل تشغيل أوإرسال/pairing أوtests/build/fixtures؛وثيقةالخطة فقط.
+**حي**=قراءة مجمعة؛**كود**≠تشغيل؛**مجهول**=غير متحقق. لا طلب PetroApp.
 
-## 1) واتساب من البداية للنهاية
-- المزود: بوابة ذاتية الاستضافة على نمط Evolution API، **خارج هذا المستودع وخارج Lovable Cloud**. المضيف: نطاق فرعي تحت `tradex1.cloud` (الاسم الكامل محجوب). الإرسال: `POST {WHATSAPP_SERVER_URL}/message/sendText/{WHATSAPP_INSTANCE}` (`src/lib/whatsapp-outbox.server.ts:37`). ليس WhatsApp Cloud API من Meta ولا موصّل Lovable.
-- الهوية: اسم instance في السر `WHATSAPP_INSTANCE`، ورقم المرسل مرتبط بجلسة QR داخل البوابة. لا يوجد WABA.
-- الجلسة/QR: تُحفظ داخل خادم البوابة الخارجي، لا في قاعدة درب. يدير التطبيق الاتصال وQR وقطع الاتصال عبر دوال owner فقط في `src/lib/whatsapp.functions.ts`.
-- الوارد: لا يوجد webhook وارد في المستودع؛ النظام يرسل فقط. المسارات العامة كلها مهام مجدولة: `src/routes/api/public/jobs/{whatsapp-outbox,whatsapp-send,task-reminders,daily-report}.ts`.
-- الطابور: triggers تكتب في `whatsapp_outbox` (الأعمدة: event, entity_id, phone, body, state, provider_id, attempts, error, claimed_at, accepted_at)، وكذلك `task_notifications`. الحجز ذري؛ النتيجة الغامضة تصبح `unresolved` ولا يُعاد إرسالها (السطور 20 و42 و46)؛ أخطاء 4xx تصبح `failed`. لا dead-letter منفصل؛ `unresolved` هي قائمة المراجعة اليدوية.
-- الجدولة: 6 جداول HTTP نشطة: daily-report `0 5 * * *` (08:00 الرياض)، task-reminders كل ساعة، whatsapp-outbox كل دقيقة، وثلاثة مسارات إرسال a/b/c كل دقيقة. التوثيق بـ `LOVABLE_CRON_SECRET` (`src/integrations/supabase/cron-auth.ts`)، وهو سر مُدار من Lovable.
-- لا قوالب ولا وسائط؛ نص فقط.
-- النقل: إذا بقيت البوابة مكانها فلا حاجة لإعادة الربط، ويكفي نقل الأسرار الثلاثة. إذا نُقلت البوابة إلى الـ VPS، فقد يمكن نسخ مجلد تخزين instances في Evolution لكن ذلك غير مؤكد؛ **الافتراض الآمن: إعادة مسح QR.**
-- منع التكرار: لا يعمل مُرسِلان معًا أبدًا؛ أوقف جداول الإرسال في المصدر قبل تفعيلها في الهدف، وانقل الطابور بحالته. صفوف `unresolved` لا تُعاد تلقائيًا.
+## المصدر والتشغيل
+- main الحالي `82c7244`؛ آخر تغيير فعلي للتطبيق/الجسر `0786a45`. origin/main المحلي `a07e2f4`؛لايفحصGitHub. edit/ast-* تختلفبالخطط فقط.
+- **Draft 1 مفتوح بتحديثات وقاعدةtest مستقلة**؛لميُفتح/يُقبل؛محتواه مجهول،المرجع main. repo `dody505060607070/darb-logistic` منالمالك؛الربط/sync branch يحتاج Project settings→Git؛remotes داخلية.
+- React19/TanStack Start/Vite8؛vite.config.ts:Lovable config؛src/server.ts:fetch. dist/nitro.json الموجود(22:38UTC):**cloudflare-module**،Nitro3.0.260603-beta،server/index.mjs،nodeCompat:true.
+- package.json:build=vite build؛لاstart/Dockerfile/Compose للتطبيق. preview ليس إنتاجًا. bridge Docker:Python3.12/non-root/PORT أو8080/no-access-log.
+- createServerFn/JWT ثم RLS/RPC/triggers؛ `src/start.ts` يحفظ bearer/CSRF/security headers. لاagent مستقل؛HTTP jobs وبوابة خارجية.
 
-### حالة الصفوف العالقة (تم التحقق الآن)
-- 89 `accepted` (19–24 نوفمبر، آخر قبول 24 نوفمبر 05:01 UTC)، و38 `unresolved` كلها بتاريخ 19 نوفمبر، محاولة واحدة، محجوزة، بلا provider_id:
-  - 21 «انقطع تأكيد الإرسال»: بقيت في `sending` أكثر من 60 ثانية.
-  - 16 «aborted due to timeout» و1 «timed out»: مهلة على البوابة.
-- الخلاصة: الـ 38 **نتيجتها غامضة**، لا معلّقة ولا فاشلة مؤكدًا؛ ربما وصل بعضها. لا يوجد أي صف جديد بعد 24 نوفمبر، فلا شيء ينتظر الإرسال. القرار المطلوب: أرشفة أو تعليم يدوي، لا إعادة إرسال.
-- `task_notifications`: لا صفوف.
+## جدول النقل
+| المكوّن | المضيف/الحالة | البيانات | النقل | العائق/الاختبار |
+|---|---|---|---|---|
+| التطبيق | Lovable؛Worker build | UI/server functions | Node target موثّق أو workerd وصورة مستقلة | تشغيل إنتاج وSSR/auth/CSRF |
+| DB/REST/RPC | Lovable Cloud managed،Tiny/running؛PostgreSQL17.11؛نحو111MB | الأعمال/الصلاحيات/queue | export رسمي إلى backend متوافق | restore مستقل؛Postgres وحده لا يكفي |
+| Auth | Cloud؛10 مستخدمين | UUIDs/identities/password hashes | export بنفس UUIDs؛إعادة إعداد المزود | مفاتيح جديدة؛OTP لكل دور |
+| Storage | Cloud؛attachments private |6objects/4,858,514bytes؛حد10MiB | تنزيل/رفع بنفس المسارات | خارج DB export؛count/hash/signed URL |
+| Realtime | Cloud | chat publication | خدمة وpublication الهدف | رسالة بين جلستين |
+| HTTP jobs | Lovable؛6active | تقارير/GPS/إرسال/تذكيرات | scheduler للدرب فقط | جهة واحدة؛cron auth/dry-run |
+| Edge Functions | لا supabase/functions بالمصدر | نشر قديم محتمل | حفظ كوده وإعداداته إن وجد | العدد المنشور مجهول؛واجهة Edge functions |
+| WhatsApp | **evo.tradex1.cloud**؛open حيًا | session خارجrepo؛queue بالDB | إبقاء البوابة أو restore معتمد | المضيف/version/session storage مجهولة |
+| AI | ai.gateway.lovable.dev؛كود | تقارير؛مستندات/ترجمة للمزود | استمرارية أو بديل بموافقة | openai/gpt-6-astra؛نقل السر/workability منVPS غير مثبت |
+| Daman | **v20api.ewe4tech.net**؛ingestion حديث | gps_provider_vehicles/readings وروابط العهد | أسرار/جداول/job واحد | freshness/speed/idempotency |
+| Traccar | **demo.traccar.org**؛secrets set | فحص devices/positions بالكود | إعداداته إن لازمة | لا ingestion مثبت؛ليس بديل Daman |
+| ORS/HeiGIT | api.openrouteservice.org؛key set | trip_routes/fallback | الإعدادات والمنطق | DB:مسار straight واحد؛لا نجاح ORS/قيود شاحنات مثبتة |
+| PetroApp | bridge كود؛لاsecrets/runs | stateless؛staging بالDB | Docker وHTTPS | NOT COMPLETE؛payment_status غير مثبت |
 
-## 2) جدول المكوّنات
+الأدلة: src/lib/*،src/routes/settings.tsx،docs/petroapp-rae-bridge-contract.md؛التفاصيل في الأقسام أدناه.
 
-| المكوّن | المضيف الحالي | البيانات/الحالة | طريقة النقل | العوائق | اختبار التحقق |
-|---|---|---|---|---|---|
-| تطبيق الويب (SSR + server functions) | استضافة Lovable (Cloudflare Worker) | بلا حالة | بناء Node أو حاوية workerd | preset `cloudflare-module`، لا start script ولا Dockerfile | تطابق الصفحات لكل دور على staging |
-| قاعدة البيانات Postgres 17.11 | Lovable Cloud (ref kcccawepjomcggqxtjwx)، 111 MB | 66 جدولًا، 137 دالة، 65 trigger، 219 policy في public + 3 في storage | Export من Lovable (More → Database → Manage → Settings → Export data)؛ dump كامل بالأدوار والـ grants غير متاح لنا | لا استيراد في Lovable؛ كلمة مرور القاعدة غير متاحة | مقارنة العدادات وRLS و`tests/sql/business_rules.sql` |
-| Auth | Lovable Cloud | 10 مستخدمين؛ مزودات email وphone | نقل المستخدمين والهويات بنفس المعرّفات | تصدير auth غير مؤكد؛ الدخول OTP مخصص عبر واتساب ثم رابط magiclink من admin API | دخول OTP لكل دور |
-| Storage | Lovable Cloud | bucket `attachments` خاص؛ 6 ملفات (~4.7 MB) | تنزيل/رفع بنفس المسارات | أداة النسخ | فتح مرفق برابط موقّع |
-| Realtime | Lovable Cloud | publication على `chat_messages` | إعادة تعريفها في الهدف | يحتاج خادم realtime | رسالة دردشة حية |
-| المهام المجدولة | Lovable HTTP schedules | 6 جداول | cron على الـ VPS بسر جديد | `LOVABLE_CRON_SECRET` مُدار ولا يُنقل | تشغيل جاف والإرسال متوقف |
-| Edge Functions | — | لا يوجد `supabase/functions` | — | — | — |
-| واتساب | بوابة Evolution خارجية (tradex1.cloud) | الجلسة في البوابة؛ الطابور في القاعدة | نقل الأسرار؛ QR إن نُقلت البوابة | مكان البوابة ومالكها غير معروفين | رسالة لرقم اختبار بموافقة |
-| Lovable AI Gateway | ai.gateway.lovable.dev | لا شيء | يحتاج مزودًا بديلًا | `LOVABLE_API_KEY` لا يعمل خارج Lovable | التقرير اليومي والترجمة وقراءة المستندات |
-| ضمان المهندس GPS | مزود خارجي | 40,308 قراءة في `gps_readings` | نقل الأسرار | — | سرعة حية غير صفرية |
-| Traccar | demo.traccar.org | لا شيء | سر | خادم تجريبي عام | فحص التكامل |
-| OpenRouteService | api.openrouteservice.org | لا شيء | سر | — | حساب مسار |
-| PetroApp bridge | غير منشور | لا شيء | Docker على الـ VPS | التقاط RAE وأسرار `PETROAPP_*` غير موجودة | `/livez` ثم `/health` |
-| خريطة OpenFreeMap | عامة | لا شيء | بلا تغيير | — | عرض الخريطة |
-| بريد/SMS | لا يوجد | — | — | — | — |
+الخرائط/الخطوط: OpenFreeMap وGoogle Fonts؛Maps/wa.me روابط؛احفظ public/assets/vendor. ZATCA بطاقة وروابط وفواتيرداخلية،لاsender ظاهر.
 
-الأسرار (أسماء فقط، كلها مضبوطة): DAMAN_GPS_API_KEY, DAMAN_GPS_FLEET_ID, DAMAN_GPS_PASSWORD, DAMAN_GPS_USERNAME, LOVABLE_API_KEY (مُدار), LOVABLE_CRON_SECRET (مُدار), ORS_API_KEY, TRACCAR_EMAIL, TRACCAR_PASSWORD, TRACCAR_URL, WHATSAPP_INSTANCE, WHATSAPP_SERVER_KEY, WHATSAPP_SERVER_URL. الكود لا يقرأ DAMAN_GPS_USERNAME/PASSWORD.
+## واتساب
+**حي:** instance درب HTTP200/open و**WHATSAPP-BAILEYS**. الهوية «instance الشركة»؛لا عرضرقم/token. ليسMetaCloudAPI؛WABA خارجي ومضيف«Ubuntu الشركة» غيرمتحققين.
+QR/create/logout للمالك في whatsapp.functions.ts لم تُستدعَ. apikey منenv؛session بالبوابة،التخزين/export مجهولان؛restore معتمد **لدرب فقط** أوpairing بموافقة.
 
-الإضافات: plpgsql, pg_stat_statements, uuid-ossp, pgcrypto, supabase_vault, btree_gist (لازمة لقيد عدم التداخل), pg_cron, pg_net.
+**الصادر:** triggers/RPC→whatsapp_outbox→claim_whatsapp_message→gateway→provider_id/accepted. task_notifications طابور مستقل. OTP/test/notifyTripDriver مسارات مباشرة؛flushWhatsApp بعد أفعال المستخدم. إيقاف scheduler وحده لا يمنع كل الإرسال.
+**وسائط:** العام نص؛المهام تدعم sendMedia بصورة signed attachments لمدة ساعة (task-notifications.server.ts:38–46). لا Meta templates ظاهرة. **الوارد:** لا receiver/callback فيrepo؛لم يظهر webhook فيmetadata، وإعداد البوابة الخارجي غير متحقق. accepted≠delivered/read.
+**retry:** إرسال3ثوان/budget4.3ثوان/حتى5lanes لكلsender (outbox-budget.ts). العامة pending/failed ومحاولات<5؛4xx failed حتى السقف؛5xx/network/غيابID→unresolved بلاresend. لا backoff أُسّي عامة. المهام failed مؤجلة ساعة ولا سقف واضح فيclaim. sending أقدم من دقيقة→unresolved. enqueue dedupe دقيقتان؛الحجز الذري لا يمنع التكرار عبر قاعدتين.
 
-## 3) مراجعة أرقام التدقيق السابق
-- 66 جدولًا، 137 دالة، 65 trigger، 10 مستخدمين، 6 ملفات، 6 جداول، واتساب 89/38: **صحيحة**.
-- السياسات: **219** في public + 3 في storage (الرقم 222 السابق كان الإجمالي).
-- GPS: **40,308** (كانت 40,241؛ استيعاب حي مستمر).
+### الجداول الحية، UTC
+| الاسم | التوقيت | المسار |
+|---|---|---|
+| darb-daily-ai-report |0 5 * * *؛08:00 الرياض|/api/public/jobs/daily-report|
+| shata-task-reminders |0 * * * *|/api/public/jobs/task-reminders|
+| shata-whatsapp-outbox |* * * * *؛GPS→monitor→send|/api/public/jobs/whatsapp-outbox|
+| shata-whatsapp-send-a/b/c |كل دقيقة؛3jobs|/api/public/jobs/whatsapp-send|
+lane a/b/c لا تقسّم الصفوف؛claim ذري. عينة requests:74sender+24outbox+1reminders كلها200؛لا إثبات تسليم.
 
-## 4) التشغيل
-- البناء: `@lovable.dev/vite-tanstack-config` ← nitro `cloudflare-module`؛ المدخل `src/server.ts` (معالج fetch بنمط worker)؛ PWA عبر vite-plugin-pwa.
-- لا يوجد start script ولا Dockerfile ولا health route للتطبيق.
-- متغيرات العميل: VITE_SUPABASE_URL/PUBLISHABLE_KEY/PROJECT_ID. الخادم: الأسرار أعلاه + اتصال admin بالـ backend (`client.server.ts`).
-- Realtime يتصل من المتصفح مباشرة بالـ backend.
-- تغييرات التماثل المطلوبة: (أ) preset `node-server` أو workerd + start script؛ (ب) Dockerfile و`/livez`؛ (ج) مُجدول بديل بسر جديد؛ (د) بديل لـ AI؛ (هـ) عند نقل القاعدة: Supabase مستضاف ذاتيًا أو مُدار يشمل Auth وStorage وRealtime وREST.
+### الـ38 العالقة
+**89accepted+38unresolved؛لاpending/sending/failed/cancelled حاليًا.** accepted لهاIDs؛آخر قبول24نوفمبر05:01UTC. unresolved كلها19نوفمبر،محاولة واحدة،claimed،بلاprovider_id/accepted_at:21 interrupted confirmation،16 aborted timeout،1 timeout. نتائج غامضة مجمّدة؛ربما وصلت،لا انتظار أو فشل مؤكد. لا يمكن حسمها دون تاريخ البوابة/محادثة لم تُفحص. **تُنسخ unresolved بنفسIDs؛لا حذف/resend.** task_notifications فارغ. accepted لا يعاد إرسالها؛sender واحد وقاعدة واحدة أثناءcutover.
 
-## 5) المراحل
-0. **الآن:** قرار مكان القاعدة (إبقاؤها على Lovable Cloud ونقل الويب فقط أقل خطرًا، أو نقل كامل)؛ مزود AI؛ مصير الـ 38.
-1. **يحتاج SSH:** فحوص قراءة فقط (منافذ، موارد، Docker، الـ proxy) دون لمس n8n؛ شبكة Docker مستقلة، منفذ localhost مخصص، ملف env منفصل.
-2. **Build بموافقة:** التغييرات (أ–د) في draft أو فرع؛ `main` بلا تغيير.
-3. **Staging:** نطاق تجريبي، إرسال واتساب **معطل**، أسرار منفصلة، اختبارات تماثل (دخول كل دور، الطلب→الفوترة على بيانات وهمية، GPS، المرفقات، الدردشة، التقرير dry-run).
-4. **نقل القاعدة (إن اختير):** export/import بنفس المعرّفات، ثم مقارنة العدادات وRLS واختبار business_rules.
-5. **التحويل:** خفض TTL مسبقًا؛ إيقاف جداول Lovable؛ تحويل DNS لـ darb.website؛ تفعيل جداول الـ VPS؛ يبقى Lovable live للرجوع.
-6. **التراجع:** إعادة DNS وتفعيل جداول Lovable، مع ضمان ألا يعمل مُرسِلان معًا.
-7. **بعد التحويل:** مراقبة 48 ساعة للطابور والأخطاء وGPS.
+## القاعدة وإعادة التحقق
+-66public tables وكلهاRLS؛137routines منها120SECURITY DEFINER؛65public triggers+Auth trigger واحد handle_new_user.
+-219public policies+3storage=**222**؛ومع2cron=224. الرقم السابق يحتاج نطاقًا لا افتراض فقد سياسات.
+-94FK/91CHECK/29UNIQUE/66PK/exclusion1؛7sequences/enum1؛لاviews.
+-grants على66جدولًا لـanon/authenticated/service_role تشمل SELECT/INSERT/UPDATE/DELETE وغيرها؛EXECUTE:authenticated74/service_role137/PUBLIC4. احفظACL؛sandbox_exec دورأدوات لا يُنسخ تلقائيًا.
+-extensions:plpgsql،pg_stat_statements،uuid-ossp،pgcrypto،supabase_vault،btree_gist،pg_cron،pg_net.
+-10Auth users؛identities email/phone. GET settings:email/Google enabled،phone غيرenabled،signup غيرdisabled. ليست دلالة على signup بواجهة درب؛UI WhatsAppOTP ثمmagiclink verification والتحقق من موظف/سائق معتمد.
+-publication أعمال supabase_realtime علىpublic.chat_messages؛publication realtime.messages الأخرى نظامية.
+-آخرsnapshot **40,347GPS=40,336gps_daman+11driver_app**؛38provider records؛latest sync23:17UTC. كانت40,241 ثم40,308 أثناء القراءة؛العدد يتغير حيًا.10ai_reports وآخر تاريخ27نوفمبر لا يثبتAI wording؛يحفظ الكود النص العادي أولًا. PetroApp runs/staging صفر.
+-backend المعاينة والمنشور واحد؛هويته متطابقة بالأدوات/العميل،ومعرّفه/رابطه الداخلي لا يُعرضان. pooler metadata تشيرeu-west-1؛منطقة المضيف الأساسي تحتاج تأكيدًا.
 
-## 6) الفروع والمصدر المعتمد
-- `main` عند `a07e2f4` هو **المصدر المعتمد**؛ origin/main عند `2125f9d` (المنصة تدفع لاحقًا).
-- فروع `edit/ast-*` الثلاثة لا تحمل commits إضافية على `main`؛ يوجد `_bound-first/source` على origin. لم يُدمج أو يُقبل شيء. GitHub غير ظاهر من هنا.
+## أسرار ونسخ مدعوم
+13secrets configured: DAMAN_GPS_API_KEY/FLEET_ID/PASSWORD/USERNAME،ORS_API_KEY،TRACCAR_URL/EMAIL/PASSWORD،WHATSAPP_SERVER_URL/KEY/INSTANCE،LOVABLE_API_KEY،LOVABLE_CRON_SECRET (الأسماء المختصرة داخل كل مجموعة تحمل بادئتها نفسها). كودDaman يقرأAPI_KEY/FLEET_ID فقط.
+SUPABASE_URL/PUBLISHABLE_KEY/SERVICE_ROLE_KEY موجودةruntime؛المفتاح الخاص وكلمة مرورDB غير متاحين للمالك عبرCloud. الهدف يحتاج مفاتيحه الجديدة،لا استخراج القديم. build:VITE_SUPABASE_URL/PUBLISHABLE_KEY/PROJECT_ID. LOVABLE_CRON_SECRET_PREVIOUS absent؛PETROAPP_RAE_BRIDGE_URL/TOKEN absent. bridge يحتاجPETROAPP_BEARER_TOKEN/FINGERPRINT/PAYMENT_STATUS_MAP وPORT؛لا إدخال الآن.
 
-## نقاط غير معروفة
-مكان بوابة واتساب الفعلي ومن يديرها؛ قابلية تصدير جلستها؛ قابلية تصدير Auth بكلمات السر؛ منطقة القاعدة؛ بديل AI؛ موارد الـ VPS الحرة.
+Export: **More→Database→Manage→Settings→Export project data→Database→Export→Start export**؛تنزيل من البريد/Storage. يشملschema/data/Auth/password hashes؛لاstorage bytes/secrets/provider settings/Edge code. مرة/24ساعة/backend running؛لاdump يدوي. ملفاتStorage منفصلة. تحققbackup UTC؛لم يُفحص.
+تصحيحات:Auth hashes ضمنexport؛AI علىVPS غيرمتأكد وليس ممنوعًا مثبتًا؛PetroApp fuel capture موجود،الحاجزhosting/secrets/payment_status/live test؛المهام تدعم الصور. migrations ليستbackup.
+
+## runbook وبوابات السماح
+1. **قبل كتابة:** اعتمادSHA ومراجعةdraft؛backup وتحديدbackend/AI/gateway/secrets. نسخ مشفرة خارجVPS وrestore مستقل يشملmigrations/history/RPC/triggers/policies/ACL/sequences/extensions؛cron معطل.
+2. **الوصول:** SSH غيرمتاح هنا. تأكيد موارد إجمالية ومنافذ مرشحة فقط؛لاdocker ps/جردworkloads/قراءةCompose أوproxy أوn8n/مواقع أخرى. مجلد/env/network/volumes للدرب فقط وportslocalhost متاحة. أي إضافةDNS/proxy للدرب تحتاج موافقة منفصلة؛لاOS updates/restart عام.
+3. **كود لاحق بموافقة:** Node/workerd+start،Dockerfile/livez،scheduler auth بديل دونتعديلgenerated،backend وAI إنلزم. bridge:PORT/livez بلاtoken؛لاprobes PetroApp. container verification قبلادعاءالجاهزية.
+4. **Staging:** restore UUIDs/ACL/rules وobject paths؛Auth/providers/JWT/API/redirects/Realtime. حظر إرسالOTP/direct/jobs/triggers؛fixtures معزولة.
+5. **Cutover:** لاzero-downtime/CDC مثبت. إجراءfreeze لكلAPI/RPC/auth/jobs/GPS/browser writers؛المصدرrunning للتصدير. TTL لايكفي للـPWA/URLقديم. snapshot+Storage→restore/count/hash→DNS/app→jobset واحد؛export24ساعة يحكم النافذة،Lovable يبقىللرجوع.
+6. **Rollback:** قبلtarget writes:إيقافالهدف ثمrouting/jobs المصدر. بعدهاfreeze/reconcile بيانات/queue/objects؛لاDNS-only/backupقديم. اعتمادRPO/RTO قبلcutover.
+7. **قبول:**48ساعة مراقبةauth/GPS/queue/duplicates/TLS/resources وrestoretest؛Lovable يبقىحتىقبولالمالك.
+
+## اختبارات مطلوبة — لم تُنفذ هنا
+- unit/lint/TS/build/container وbridge pytest/mypy؛لا إثباتVPS سابق.
+- auth/OTP/10أدوار/RLS/RPC/ACL/owner؛SQL testDB فقط. tests/sql/business_rules.sql وshitaa_acceptance.sql إرشاد،لاsuite كاملة.
+- request→order→trip→POD→invoice/payment؛booking overlaps/duplicateclientIDs/selfreview/corrections. لاE2E كاملةمثبتة.
+- upload10MiB/signedlinks/media،دردشةجلستين،GPS/routefallback،تقرير08:00/AI fallback،cronbadsecret/claim/retry/unresolved وحفظالـ38.
+- PWA/IndexedDB delivery-drafts/localStorage outbox:بياناتمتصفح ليستDBexport؛حفظorigin/IDs،لاclearstorage أعمى.
+
+**العوائق:** SSH،gateway/session،EdgeFunctions،Auth/region/secrets/AI،freeze/RPO/RTO/ports/DNS/TLS؛لا نشر.
+
+SMTP/SMS التفصيلي مجهول؛الواجهة WhatsAppOTP وليست SMS.
