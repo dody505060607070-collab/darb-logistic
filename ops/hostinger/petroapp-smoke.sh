@@ -14,7 +14,7 @@ set -a
 . "$DARB_CONFIG_DIR/compose.env"
 set +a
 SUPABASE_DOCKER_DIR="$DARB_SUPABASE_DIR/docker"
-COMPOSE=(docker compose -p darb --env-file "$SUPABASE_DOCKER_DIR/.env" -f "$SUPABASE_DOCKER_DIR/docker-compose.yml" -f "$DARB_REPO_ROOT/ops/hostinger/compose.darb.yml")
+COMPOSE=(docker compose -p darb-logistic-prod --env-file "$SUPABASE_DOCKER_DIR/.env" -f "$SUPABASE_DOCKER_DIR/docker-compose.yml" -f "$DARB_REPO_ROOT/ops/hostinger/compose.darb.yml")
 
 # The token stays inside the app container environment; it is never printed or passed as a shell argument.
 "${COMPOSE[@]}" exec -T app node --input-type=module - <<'NODE'
