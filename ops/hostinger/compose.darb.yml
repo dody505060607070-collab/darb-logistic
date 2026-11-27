@@ -133,6 +133,20 @@ services:
         max-size: "10m"
         max-file: "5"
 
+  migrate:
+    profiles: ["migration"]
+    image: ${DARB_MIGRATION_IMAGE:?Set DARB_MIGRATION_IMAGE to an immutable GHCR migration image tag}
+    restart: "no"
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+    mem_limit: 512m
+    cpus: 0.5
+
   scheduler:
     profiles: ["scheduled"]
     build:
