@@ -19,6 +19,7 @@ case "$job" in
     path=/api/public/jobs/daily-report
     ;;
   task-reminders)
+    [ "${DARB_ENABLE_WHATSAPP_SENDING:-false}" = "true" ] || exit 0
     path=/api/public/jobs/task-reminders
     ;;
   whatsapp-outbox)
