@@ -1,7 +1,7 @@
 -- PetroApp staging/review regression. Everything is rolled back (Z0001); uses synthetic provider IDs only.
 DO $$
 DECLARE owner_id uuid; stranger uuid := gen_random_uuid(); a1 uuid; a2 uuid; run uuid; run2 uuid; tx uuid; res jsonb; blocked boolean;
-        fuel uuid; ref text := 'TEST-' || substr(gen_random_uuid()::text,1,8); odo numeric;
+        fuel uuid; manual uuid; n_manual int; n_expected int; ref text := 'TEST-' || substr(gen_random_uuid()::text,1,8); odo numeric;
 BEGIN
  SELECT user_id INTO owner_id FROM public.user_roles WHERE role='owner' LIMIT 1;
  SELECT id INTO a1 FROM public.assets ORDER BY created_at LIMIT 1;
@@ -46,7 +46,19 @@ BEGIN
   SELECT fuel_entry_id INTO fuel FROM public.petroapp_transactions WHERE id = tx;
   IF (SELECT status FROM public.fuel_entries WHERE id = fuel) <> 'pending' THEN RAISE EXCEPTION 'Import auto-approved'; END IF;
   SELECT odometer_km INTO odo FROM public.assets WHERE id = a1;
-  IF odo <> 500000 THEN RAISE EXCEPTION 'Older odometer replaced newer (%).', odo; END IF;
+  IF odo <> 500000 THEN RAISE EXCEPTION 'Asset odometer changed by import (%).', odo; END IF;
+  -- Odometer unit is unproven: raw value stays on the staged row only, never copied to fuel_entries.
+  IF (SELECT odometer FROM public.fuel_entries WHERE id = fuel) IS NOT NULL THEN RAISE EXCEPTION 'Raw odometer copied into fuel_entries'; END IF;
+  IF (SELECT odometer FROM public.petroapp_transactions WHERE id = tx) <> 1000 THEN RAISE EXCEPTION 'Staged raw odometer lost'; END IF;
+  -- No automatic WhatsApp for PetroApp imports.
+  IF EXISTS (SELECT 1 FROM public.whatsapp_outbox WHERE entity_id = fuel) THEN RAISE EXCEPTION 'PetroApp import queued WhatsApp'; END IF;
+  -- A manual fuel insert still follows the existing wa_admins path (same number of queued rows as a direct call).
+  INSERT INTO public.fuel_entries(asset_id, filled_at, liters, unit_price, amount, source, status) VALUES (a1, now(), 5, 2, 10, 'manual', 'pending') RETURNING id INTO manual;
+  SELECT count(*) INTO n_manual FROM public.whatsapp_outbox WHERE entity_id = manual;
+  PERFORM public.wa_admins('test', 'fuel', fuel);
+  SELECT count(*) INTO n_expected FROM public.whatsapp_outbox WHERE entity_id = fuel;
+  IF n_manual <> n_expected THEN RAISE EXCEPTION 'Manual fuel notice path changed (% vs %)', n_manual, n_expected; END IF;
+  DELETE FROM public.whatsapp_outbox WHERE entity_id IN (manual, fuel);
   -- Accountant-style approval of the fuel entry, then a provider correction must not overwrite it silently.
   UPDATE public.fuel_entries SET status = 'approved' WHERE id = fuel;
   PERFORM public.petroapp_run_finish(run, 'ok');
@@ -62,6 +74,10 @@ BEGIN
   IF (SELECT review_state FROM public.petroapp_transactions WHERE id = tx) <> 'cancellation_pending' THEN RAISE EXCEPTION 'Cancellation not flagged'; END IF;
   PERFORM public.petroapp_review(tx, 'apply_cancellation');
   IF (SELECT status FROM public.fuel_entries WHERE id = fuel) <> 'rejected' THEN RAISE EXCEPTION 'Cancellation not applied'; END IF;
+  -- Unknown provider state is rejected, not turned into completed.
+  blocked := false;
+  BEGIN PERFORM public.petroapp_stage(run2, jsonb_build_array(jsonb_build_object('provider_txn_id', ref||'-T9', 'occurred_at','2026-11-01T08:00:00Z', 'provider_state','reversed'))); EXCEPTION WHEN raise_exception THEN blocked := true; END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Unknown provider_state accepted'; END IF;
   -- 429 stop: after a rate-limited run no new run may start.
   PERFORM public.petroapp_run_finish(run2, 'rate_limited', '{}'::jsonb, 'HTTP 429');
   blocked := false;
@@ -70,5 +86,5 @@ BEGIN
   RAISE EXCEPTION USING ERRCODE='Z0001', MESSAGE='petroapp fixtures rollback';
  EXCEPTION WHEN SQLSTATE 'Z0001' THEN NULL;
  END;
- RAISE NOTICE 'PASS: role denial, no full card numbers, ambiguous blocked, duplicate idempotent, approval-gated pending import, odometer kept, correction/cancellation audited and explicit, 429 stop; rolled back';
+ RAISE NOTICE 'PASS: role denial, no full card numbers, ambiguous blocked, duplicate idempotent, approval-gated pending import, odometer staged-only, no PetroApp WhatsApp, manual notice path kept, unknown state rejected, correction/cancellation audited and explicit, 429 stop; rolled back';
 END $$;

@@ -1,12 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { classifyBridge, parsePage, safeSummary } from "@/lib/petroapp";
+import { classifyBridge, isPetroReviewer, normalizedTxnSchema, parsePage, PETRO_REVIEWER_ROLES, safeSummary } from "@/lib/petroapp";
 import { bridgeConfig, callBridge } from "@/lib/petroapp-bridge.server";
 
 const env = { PETROAPP_RAE_BRIDGE_URL: "https://bridge.example.test", PETROAPP_RAE_BRIDGE_TOKEN: "tok-SECRET-123" };
 const res = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
 const noWait = async () => {};
 const sql = readFileSync("drizzle/migrations/0061_petroapp_foundation.sql", "utf8");
+const safety = readFileSync("drizzle/migrations/0062_petroapp_safety_pass.sql", "utf8");
+const panel = readFileSync("src/components/darb/PetroAppPanel.tsx", "utf8");
 
 describe("PetroApp bridge client", () => {
   it("returns missing without calling anything when config is absent", async () => {
@@ -85,5 +87,37 @@ describe("PetroApp database rules (migration)", () => {
     expect(sql).toContain("FROM PUBLIC, anon");
     expect(sql).not.toMatch(/token|cookie|password/i);
     expect(sql).not.toMatch(/driver'|workshop'/);
+  });
+});
+
+describe("PetroApp safety pass", () => {
+  const canAs = (roles: string[]) => (...need: string[]) => need.some((r) => roles.includes(r));
+  it("authorizes the owner and the review roles, and nobody else", () => {
+    expect(isPetroReviewer(canAs(["owner"]))).toBe(true);
+    for (const r of ["ops_manager", "accountant", "fleet_supervisor"]) expect(isPetroReviewer(canAs([r]))).toBe(true);
+    for (const r of ["driver", "workshop", "dispatcher", "representative", "maintenance"]) expect(isPetroReviewer(canAs([r]))).toBe(false);
+    // Same set as the DB gate petroapp_can_review().
+    expect(sql).toContain(`'{${PETRO_REVIEWER_ROLES.join(",")}}'`);
+    expect(panel).toContain("isPetroReviewer(can)");
+  });
+  it("skips WhatsApp only for PetroApp fuel rows", () => {
+    expect(safety).toContain("IF TG_TABLE_NAME='fuel_entries' AND NEW.source='petroapp' THEN RETURN NEW; END IF;");
+    expect(safety).toContain("'fuel', NEW.id");
+    expect(safety).toContain("'expense', NEW.id");
+  });
+  it("never copies the unproven odometer into fuel entries or assets", () => {
+    const imp = safety.slice(safety.indexOf("FUNCTION public.petroapp_import"), safety.indexOf("FUNCTION public.petroapp_review"));
+    expect(imp).not.toMatch(/UPDATE assets|odometer_km|ex\.odometer/);
+    expect(safety.slice(safety.indexOf("FUNCTION public.petroapp_review"))).not.toContain("odometer = ex.odometer");
+  });
+  it("rejects unknown provider states; missing defaults to completed", () => {
+    expect(safety).toContain("IF v_state NOT IN ('completed','cancelled') THEN RAISE EXCEPTION");
+    const base = { provider_txn_id: "T1", occurred_at: "2026-11-01T08:00:00Z" };
+    expect(normalizedTxnSchema.safeParse({ ...base, provider_state: "reversed" }).success).toBe(false);
+    expect(normalizedTxnSchema.parse(base).provider_state).toBe("completed");
+  });
+  it("maps cards to drivers only explicitly and still requires a vehicle", () => {
+    expect(panel).toContain('aria-label="السائق"');
+    expect(panel).toContain('if (!f.provider_ref.trim() || !f.asset_id)');
   });
 });

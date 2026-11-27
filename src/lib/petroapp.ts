@@ -33,6 +33,10 @@ export const bridgePageSchema = z.object({
   unavailable_fields: z.array(z.string()).optional(),
 });
 
+/** Roles that may see and run the PetroApp panel; mirrors DB petroapp_can_review(). Owner included. */
+export const PETRO_REVIEWER_ROLES = ["owner", "ops_manager", "accountant", "fleet_supervisor"] as const;
+export const isPetroReviewer = (can: (...roles: any[]) => boolean) => can(...PETRO_REVIEWER_ROLES);
+
 export type PetroState = "missing" | "connected" | "rate_limited" | "auth_expired" | "error";
 
 /** Parses one bridge page; invalid rows are reported (by index only) and never staged. */

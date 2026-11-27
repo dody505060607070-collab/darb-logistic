@@ -52,3 +52,6 @@
 5. التسليم النهائي ينتظر إغلاق البنود أعلاه واختبارات قراءة النتائج من الشاشة بعد الحفظ.
 
 المراجع: `docs/production-readiness.md`، `docs/account-reset.md`، `docs/shitaa-coverage.md`، `roadmap.md`. تحتوي الملفات القديمة بنودًا تجاوزها تنفيذ لاحق؛ هذا التقرير يميز التنفيذ السابق عن تحقق اليوم ولا يستنتج نسبة اكتمال. تأكيد المستخدم سابقًا وصول رمز واتساب لا يثبت إعادة الدخول بعد تنظيف الحسابات، والموافقة متعددة المستويات والتفويض المؤقت لا تزال بحاجة لاستكمال وقبول موثق.
+## PetroApp safety pass (2026-11-27)
+- Done: owner can see/run the PetroApp panel; PetroApp fuel imports queue no WhatsApp; odometer kept staged-only (no fuel/asset odometer writes) until the unit is proven; explicit card→driver mapping in the UI; unknown provider states rejected.
+- Still not done: RAE capture/client, deployed bridge, server secrets. Live PetroApp sync is NOT connected or verified.

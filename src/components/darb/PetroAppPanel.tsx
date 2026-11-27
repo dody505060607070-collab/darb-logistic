@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { errMsg, fmtDateTime } from "@/lib/format";
-import { STATE_LABEL, type PetroState } from "@/lib/petroapp";
+import { STATE_LABEL, isPetroReviewer, type PetroState } from "@/lib/petroapp";
 import { petroappHealth, petroappImport, petroappOverview, petroappPreview, petroappSync } from "@/lib/petroapp.functions";
 
 const TONE: Record<PetroState, "success" | "warning" | "danger" | "neutral"> = { connected: "success", missing: "neutral", rate_limited: "warning", auth_expired: "danger", error: "danger" };
@@ -20,7 +20,7 @@ const day = (d: Date) => d.toISOString().slice(0, 10);
 /** PetroApp read-only card: truthful states only; success shows only after a real bridge health check. */
 export function PetroAppPanel() {
   const { can, viewAs } = useAuth();
-  const reviewer = can("ops_manager", "accountant", "fleet_supervisor");
+  const reviewer = isPetroReviewer(can);
   const owner = can("owner");
   const act = reviewer && !viewAs;
   const qc = useQueryClient();
@@ -150,8 +150,10 @@ function PetroMappings({ canEdit }: { canEdit: boolean }) {
   const qc = useQueryClient();
   const maps = useQuery({ queryKey: ["petroapp", "mappings"], queryFn: async () => { const { data, error } = await db.from("petroapp_mappings").select("id,kind,provider_ref,card_last4,label,asset_id,driver_id,active").eq("active", true).order("created_at"); if (error) throw error; return data ?? []; } });
   const assets = useQuery({ queryKey: ["petroapp", "assets"], queryFn: async () => { const { data, error } = await db.from("assets").select("id,code,plate").order("code"); if (error) throw error; return data ?? []; } });
-  const [f, setF] = useState({ kind: "vehicle", provider_ref: "", card_last4: "", asset_id: "" });
+  const drivers = useQuery({ queryKey: ["petroapp", "drivers"], queryFn: async () => { const { data, error } = await db.from("drivers").select("id,full_name").order("full_name"); if (error) throw error; return data ?? []; } });
+  const [f, setF] = useState({ kind: "vehicle", provider_ref: "", card_last4: "", asset_id: "", driver_id: "" });
   const [saving, setSaving] = useState(false);
+  const driverName = (id: string | null) => (id ? (drivers.data as any[] | undefined)?.find((d) => d.id === id)?.full_name ?? "—" : null);
   const code = (id: string) => (assets.data as any[] | undefined)?.find((a) => a.id === id)?.code ?? "—";
   async function add() {
     if (saving) return;
@@ -159,10 +161,10 @@ function PetroMappings({ canEdit }: { canEdit: boolean }) {
     if (/^\d{12,19}$/.test(f.provider_ref.replace(/[\s-]/g, ""))) return void toast.error("لا تُدخل رقم البطاقة الكامل؛ استخدم معرّف البطاقة لدى المزود");
     if (f.card_last4 && !/^\d{4}$/.test(f.card_last4)) return void toast.error("آخر 4 أرقام فقط");
     setSaving(true);
-    const { error } = await db.from("petroapp_mappings").insert({ kind: f.kind, provider_ref: f.provider_ref.trim(), card_last4: f.card_last4 || null, asset_id: f.asset_id });
+    const { error } = await db.from("petroapp_mappings").insert({ kind: f.kind, provider_ref: f.provider_ref.trim(), card_last4: f.card_last4 || null, asset_id: f.asset_id, driver_id: f.kind === "card" && f.driver_id ? f.driver_id : null });
     setSaving(false);
     if (error) return void toast.error(errMsg(error));
-    setF({ kind: f.kind, provider_ref: "", card_last4: "", asset_id: "" });
+    setF({ kind: f.kind, provider_ref: "", card_last4: "", asset_id: "", driver_id: "" });
     void qc.invalidateQueries({ queryKey: ["petroapp"] });
   }
   async function stop(id: string) {
@@ -173,16 +175,17 @@ function PetroMappings({ canEdit }: { canEdit: boolean }) {
   return (
     <div className="mt-3 border-t pt-3 text-xs">
       <b>ربط مركبات وبطاقات PetroApp (المدير العام)</b>
-      <p className="text-muted-foreground">يُطابق المرجع حرفيًا فقط؛ لا مطابقة تقريبية للوحات. أي تعارض بين ربط المركبة والبطاقة يبقى «غير محسوم» للمراجعة.</p>
+      <p className="text-muted-foreground">يُطابق المرجع حرفيًا فقط؛ لا مطابقة تقريبية للوحات، ولا يُستنتج سائق من البطاقة إلا بربط صريح. المركبة مطلوبة دائمًا قبل الاستيراد. أي تعارض بين ربط المركبة والبطاقة يبقى «غير محسوم» للمراجعة.</p>
       {canEdit && <div className="mt-2 flex flex-wrap items-end gap-2">
         <select aria-label="نوع الربط" className="h-9 rounded border bg-background px-2" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })}><option value="vehicle">مركبة</option><option value="card">بطاقة</option></select>
         <Input aria-label="مرجع المزود" placeholder="معرّف المزود" className="h-9 w-44" value={f.provider_ref} onChange={(e) => setF({ ...f, provider_ref: e.target.value })} />
         {f.kind === "card" && <Input aria-label="آخر 4 أرقام" placeholder="آخر 4 أرقام" inputMode="numeric" maxLength={4} className="h-9 w-28" value={f.card_last4} onChange={(e) => setF({ ...f, card_last4: e.target.value })} />}
         <select aria-label="المركبة" className="h-9 rounded border bg-background px-2" value={f.asset_id} onChange={(e) => setF({ ...f, asset_id: e.target.value })}><option value="">اختر المركبة…</option>{(assets.data as any[] | undefined)?.map((a) => <option key={a.id} value={a.id}>{a.code}{a.plate ? ` — ${a.plate}` : ""}</option>)}</select>
+        {f.kind === "card" && <select aria-label="السائق" className="h-9 rounded border bg-background px-2" value={f.driver_id} onChange={(e) => setF({ ...f, driver_id: e.target.value })}><option value="">بدون سائق (اختياري)</option>{(drivers.data as any[] | undefined)?.map((d) => <option key={d.id} value={d.id}>{d.full_name}</option>)}</select>}
         <Button size="sm" variant="gold" disabled={saving} onClick={() => void add()}>إضافة ربط</Button>
       </div>}
       {maps.isError ? <p className="mt-2 text-danger">تعذر تحميل الربط</p> : maps.isLoading ? <p className="mt-2">جارٍ التحميل…</p> : !(maps.data as any[]).length ? <p className="mt-2 text-muted-foreground">لا يوجد ربط بعد.</p> : (
-        <ul className="mt-2 space-y-1">{(maps.data as any[]).map((m) => <li key={m.id} className="flex flex-wrap items-center gap-2"><Badge tone="neutral" dot={false}>{m.kind === "card" ? "بطاقة" : "مركبة"}</Badge><span>{m.provider_ref}{m.card_last4 ? ` · ••${m.card_last4}` : ""} ← {code(m.asset_id)}</span>{canEdit && <Button size="sm" variant="ghost" onClick={() => void stop(m.id)}>إيقاف</Button>}</li>)}</ul>
+        <ul className="mt-2 space-y-1">{(maps.data as any[]).map((m) => <li key={m.id} className="flex flex-wrap items-center gap-2"><Badge tone="neutral" dot={false}>{m.kind === "card" ? "بطاقة" : "مركبة"}</Badge><span>{m.provider_ref}{m.card_last4 ? ` · ••${m.card_last4}` : ""} ← {code(m.asset_id)}{driverName(m.driver_id) ? ` · السائق: ${driverName(m.driver_id)}` : ""}</span>{canEdit && <Button size="sm" variant="ghost" onClick={() => void stop(m.id)}>إيقاف</Button>}</li>)}</ul>
       )}
     </div>
   );

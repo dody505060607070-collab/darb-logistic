@@ -435,6 +435,13 @@
       "when": 1795813568112,
       "tag": "0061_petroapp_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1795814173686,
+      "tag": "0062_petroapp_safety_pass",
+      "breakpoints": true
     }
   ]
 }
