@@ -68,6 +68,28 @@ for pair in ".env.darb.example:.env.darb" ".env.evolution.example:.env.evolution
   fi
 done
 
+# Persist the actual isolated paths in Compose interpolation config.
+python3 - "$DARB_CONFIG_DIR/compose.env" "$DARB_REPO_ROOT" "$DARB_SUPABASE_DIR" "$DARB_CONFIG_DIR" <<'PY'
+from pathlib import Path
+import sys
+path, repo, supabase, config = sys.argv[1:]
+p = Path(path)
+lines = p.read_text().splitlines()
+values = {"DARB_REPO_ROOT": repo, "DARB_SUPABASE_DIR": supabase, "DARB_CONFIG_DIR": config}
+for key, value in values.items():
+    found = False
+    out = []
+    for line in lines:
+        if line.startswith(key + "="):
+            out.append(f"{key}={value}"); found = True
+        else:
+            out.append(line)
+    if not found: out.append(f"{key}={value}")
+    lines = out
+p.write_text("\\n".join(lines) + "\\n")
+p.chmod(0o600)
+PY
+
 # Generate a new Evolution API key and matching Darb gateway key only if blank.
 python3 - "$DARB_CONFIG_DIR/.env.darb" "$DARB_CONFIG_DIR/.env.evolution" <<'PY'
 from pathlib import Path
