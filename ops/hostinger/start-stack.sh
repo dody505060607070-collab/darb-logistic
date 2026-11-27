@@ -41,18 +41,37 @@ grep -q '^PETROAPP_BEARER_TOKEN=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^PET
   echo "PetroApp source session credentials are incomplete."
   exit 2
 }
-grep -q '^PETROAPP_PAYMENT_STATUS_MAP=.{[^}]*' "$DARB_CONFIG_DIR/.env.darb" || {
-  echo "PETROAPP_PAYMENT_STATUS_MAP must contain exact observed source-state mappings."
-  exit 2
-}
+python3 - "$DARB_CONFIG_DIR/.env.darb" <<'PY'
+from pathlib import Path
+import json, sys
+lines = Path(sys.argv[1]).read_text().splitlines()
+raw = next((line.split("=",1)[1] for line in lines if line.startswith("PETROAPP_PAYMENT_STATUS_MAP=")), "{}")
+try:
+    mapping = json.loads(raw)
+except json.JSONDecodeError:
+    raise SystemExit("PETROAPP_PAYMENT_STATUS_MAP is not valid JSON")
+if not isinstance(mapping, dict) or not mapping:
+    raise SystemExit("PETROAPP_PAYMENT_STATUS_MAP must contain exact observed source-state mappings")
+if any(value not in {"completed", "cancelled"} for value in mapping.values()):
+    raise SystemExit("PETROAPP_PAYMENT_STATUS_MAP values must be completed or cancelled")
+PY
 grep -q '^SUPABASE_PUBLISHABLE_KEY=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^SUPABASE_SERVICE_ROLE_KEY=.' "$DARB_CONFIG_DIR/.env.darb" || {
   echo "Self-hosted Supabase API keys were not copied into Darb runtime config."
   exit 2
 }
-grep -q '^SUPABASE_PUBLIC_URL=https://' "$SUPABASE_DOCKER_DIR/.env" && ! grep -q 'localhost' "$SUPABASE_DOCKER_DIR/.env" || {
-  echo "Set SUPABASE_PUBLIC_URL, API_EXTERNAL_URL, and SITE_URL to the owner-confirmed HTTPS domains."
-  exit 2
-}
+python3 - "$SUPABASE_DOCKER_DIR/.env" <<'PY'
+from pathlib import Path
+import sys
+values = {}
+for line in Path(sys.argv[1]).read_text().splitlines():
+    if line and not line.startswith("#") and "=" in line:
+        key, value = line.split("=", 1)
+        values[key] = value.strip().strip('"').strip("'")
+for key in ("SUPABASE_PUBLIC_URL", "API_EXTERNAL_URL", "SITE_URL"):
+    value = values.get(key, "")
+    if not value.startswith("https://") or "localhost" in value or ".invalid" in value:
+        raise SystemExit(f"{key} must be set to the owner-confirmed HTTPS production URL")
+PY
 case "$EVOLUTION_API_IMAGE" in
   *:latest|latest) echo "EVOLUTION_API_IMAGE must be pinned to the exact current Evolution version, never latest."; exit 2 ;;
 esac
