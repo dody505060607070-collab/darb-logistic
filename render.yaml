@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: darb-petroapp-bridge
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    rootDir: petroapp-bridge
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /livez
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: PETROAPP_RAE_BRIDGE_TOKEN
+        sync: false
+      - key: PETROAPP_BEARER_TOKEN
+        sync: false
+      - key: PETROAPP_FINGERPRINT
+        sync: false
+      - key: PETROAPP_PAYMENT_STATUS_MAP
+        value: "{}"

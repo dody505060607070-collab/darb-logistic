@@ -60,6 +60,11 @@ def create_app(
             transport=request.app.state.source_transport,
         )
 
+    @app.get("/livez")
+    async def livez() -> dict[str, bool]:
+        # Platform liveness probes must never authenticate to or call PetroApp.
+        return {"ok": True}
+
     @app.get("/health", dependencies=[Depends(authorize)])
     async def health(request: Request) -> dict[str, bool]:
         await source_client(request).health()

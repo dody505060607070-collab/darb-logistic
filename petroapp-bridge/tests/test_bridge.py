@@ -13,6 +13,30 @@ from conftest import api_client, app_with_handler, bill
 
 
 @pytest.mark.asyncio
+async def test_livez_is_unauthenticated_and_never_calls_source() -> None:
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(200, json={"data": []})
+
+    unconfigured = Settings(
+        bridge_token="",
+        source_bearer_token="",
+        source_fingerprint="",
+        payment_status_map={},
+    )
+    app = create_app(unconfigured, transport=httpx.MockTransport(handler))
+    async with await api_client(app) as client:
+        response = await client.get("/livez")
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+    assert calls == 0
+
+
+@pytest.mark.asyncio
 async def test_bridge_auth_is_required_before_any_source_call(
     settings: Settings, window: dict[str, object]
 ) -> None:

@@ -25,11 +25,12 @@ There is deliberately no pagination, create, update, delete, or other provider m
 
 ## Bridge routes (ours, not PetroApp's)
 
-- `GET /health`: performs a real read-only source request for the latest one-day window and returns `{"ok":true}` only after a valid captured-schema response.
+- `GET /livez`: unauthenticated static liveness response `200 {"ok":true}`. It never creates a source client or calls PetroApp; Render's frequent health probes use this route.
+- `GET /health`: authenticated real upstream check. It performs a read-only source request for the latest one-day window and returns `{"ok":true}` only after a valid captured-schema response.
 - `POST /v1/petroapp/preview`: returns one normalized page; Darb stores nothing.
 - `POST /v1/petroapp/sync`: returns the same single page; Darb alone stages it for review.
 
-All routes require `Authorization: Bearer <PETROAPP_RAE_BRIDGE_TOKEN>`. Preview/sync accept the existing Darb body `{from,to,limit,cursor}`. Timestamps must include a timezone, `to` must be later than `from`, and the maximum window is 31 days. Dates in the source query are formatted in `Asia/Riyadh`.
+Every route except `/livez` requires `Authorization: Bearer <PETROAPP_RAE_BRIDGE_TOKEN>`. Preview/sync accept the existing Darb body `{from,to,limit,cursor}`. Timestamps must include a timezone, `to` must be later than `from`, and the maximum window is 31 days. Dates in the source query are formatted in `Asia/Riyadh`. Do not use `/health` as a platform health-check path: frequent probes would repeatedly call PetroApp.
 
 ## Environment
 
@@ -93,7 +94,23 @@ docker build -t darb-petroapp-bridge .
 docker run --rm -p 8080:8080 --env-file .env darb-petroapp-bridge
 ```
 
-Deploy behind HTTPS on an isolated host. Then set Darb's server secrets `PETROAPP_RAE_BRIDGE_URL` and `PETROAPP_RAE_BRIDGE_TOKEN`. Completion still requires an authorized live health check and a reviewed first sync; neither has happened.
+The container runs as non-root user `bridge`, disables access logs, and listens on the injected `PORT`, falling back to `8080` for local use. Deploy behind HTTPS on an isolated host.
+
+## Render Blueprint setup (manual review required)
+
+The repository root contains `render.yaml` for **only** `darb-petroapp-bridge`. It uses the Frankfurt region, Docker with `petroapp-bridge` as its root, `/livez` for health checks, and `autoDeployTrigger: checksPass`. See Render's [Blueprint reference](https://render.com/docs/blueprint-spec) and [compute plans](https://render.com/docs/compute-plans).
+
+No service is created by these files. To prepare it later:
+
+1. Push the reviewed commit to `dody505060607070/darb-logistic`. In the signed-in Render dashboard, choose **New → Blueprint** and select that repository and branch.
+2. Confirm that the Blueprint preview contains only `darb-petroapp-bridge`. Review the recurring charge before creating anything: the always-on **Starter** plan (legacy ID for `0.5c-512mb`) is **$7/month for 0.5 CPU and 512 MB RAM**, subject to Render's current billing and proration. Do not approve or create the paid service unless that charge is accepted.
+3. At Render's prompts, enter `PETROAPP_RAE_BRIDGE_TOKEN`, `PETROAPP_BEARER_TOKEN`, and `PETROAPP_FINGERPRINT`. Their values are deliberately absent from YAML and must never appear in logs or commits. Leave `PETROAPP_PAYMENT_STATUS_MAP` as `{}` until exact observed status semantics are established.
+4. After any separately approved deployment, set Darb's server secret `PETROAPP_RAE_BRIDGE_URL` to the bridge's HTTPS URL. Set Darb's `PETROAPP_RAE_BRIDGE_TOKEN` to **exactly the same value** as the Render bridge token; the source bearer token and fingerprint do not belong in Darb.
+5. Verify unauthenticated `GET /livez` without any upstream request. Only an explicitly authorized, authenticated `GET /health` may perform the real upstream check. A reviewed first sync remains a separate verification step.
+
+The path-filtered GitHub Actions workflow runs mocked pytest and strict mypy checks on Python 3.12 using pinned `requirements-dev.txt`. For subsequent commits, `checksPass` makes automatic deployment conditional on successful GitHub checks; keep the bridge workflow enabled and required. Creating the initial Blueprint service and accepting its recurring fee remain manual user actions.
+
+Completion still requires an authorized live health check and a reviewed first sync; neither has happened.
 
 ## Mocked verification
 

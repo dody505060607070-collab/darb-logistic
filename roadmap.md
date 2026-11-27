@@ -1,4 +1,5 @@
 ## PetroApp isolated bridge — 2026-11-27
+- [x] Deployment preparation only: unauthenticated `/livez`, authenticated upstream `/health`, Render `PORT`, one-service paid Blueprint, path-filtered GitHub checks, and documented manual billing approval; no deploy or credentials. Verified: 30 mocked tests, strict mypy (10 files), TypeScript, YAML and diff checks.
 - [x] FastAPI bridge source, Dockerfile, pinned requirements, README and environment template under `petroapp-bridge/`; no Darb UI/database/migration/review/import changes.
 - [x] Exact captured GET bills query, Asia/Riyadh dates, 31-day maximum, page 1 and 10-row hard cap; only observed fields mapped, with unknown payment states omitted for Darb rejection.
 - [x] Immediate 401/403/429/security stops; bounded network/502/503/504 retries; no raw-row or secret logging.

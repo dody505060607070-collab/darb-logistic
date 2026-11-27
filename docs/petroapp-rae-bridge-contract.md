@@ -30,11 +30,12 @@ Darb (TanStack server functions) --HTTPS + bearer--> OUR isolated FastAPI bridge
 
 ## Bridge routes (defined by us)
 
-All require `Authorization: Bearer <PETROAPP_RAE_BRIDGE_TOKEN>`.
+All routes except `/livez` require `Authorization: Bearer <PETROAPP_RAE_BRIDGE_TOKEN>`.
 
 | Route | Purpose |
 | --- | --- |
-| `GET /health` | Performs a real read-only source request for the latest one-day window; returns `200 {"ok":true}` only after a valid captured-schema response. |
+| `GET /livez` | Unauthenticated static `200 {"ok":true}` liveness response. It never calls PetroApp and is the only platform health-check path. |
+| `GET /health` | Authenticated real upstream check: performs a read-only source request for the latest one-day window and returns `200 {"ok":true}` only after a valid captured-schema response. |
 | `POST /v1/petroapp/preview` | Existing Darb body `{from,to,limit,cursor}`. Returns one page; Darb stores nothing. |
 | `POST /v1/petroapp/sync` | Same body and single page. Darb alone stages returned rows for explicit review. |
 
@@ -85,6 +86,15 @@ All other source fields are ignored. `provider_card_ref`, `card_last4`, and `ful
 - On 401/403/429, "too many attempts", rate-limit text, captcha, or security warning: stop immediately with no retry, no IP/account rotation, and no bypass.
 - Log no tokens, fingerprints, cookies, full card numbers, source rows, or raw payloads. Docker access logs are disabled.
 - Mocked tests only in `petroapp-bridge/tests/`; no live request is part of the test suite.
+- Docker listens on the host-injected `PORT` (fallback `8080`) as a non-root user. Render probes `/livez`, never the upstream-checking `/health`.
+
+## Deployment preparation (not deployed)
+
+The root `render.yaml` follows Render's [Blueprint specification](https://render.com/docs/blueprint-spec) and declares only the isolated `darb-petroapp-bridge` Docker web service in Frankfurt. Its health check is `/livez`; `rootDir` is `petroapp-bridge`, `dockerfilePath` is `./Dockerfile`, and `dockerContext` is `.`. `autoDeployTrigger: checksPass` conditions later automatic deploys on successful GitHub checks. `.github/workflows/petroapp-bridge.yml` runs the mocked pytest suite and strict mypy on Python 3.12 with pinned `requirements-dev.txt` for relevant push/pull-request paths.
+
+The Blueprint selects the always-on **Starter** plan: 0.5 CPU/512 MB RAM at **$7/month**, subject to Render's current billing/proration. Starter is the supported legacy ID for Render's current `0.5c-512mb` plan ([compute-plan reference](https://render.com/docs/compute-plans)). The user must review and approve this recurring charge in Render before creating the service; this preparation creates no service and accepts no charge.
+
+Manual later setup in the signed-in Render dashboard: open **New → Blueprint**, select `dody505060607070/darb-logistic`, review the single service and charge, and only then choose whether to create it. Render prompts separately for `PETROAPP_RAE_BRIDGE_TOKEN`, `PETROAPP_BEARER_TOKEN`, and `PETROAPP_FINGERPRINT` (`sync:false`); no secret value belongs in YAML or logs. `PETROAPP_PAYMENT_STATUS_MAP` stays `"{}"` until exact status semantics are verified. The bridge token must be identical in Render and Darb server secrets; Darb additionally needs the bridge HTTPS URL, but never the source bearer token or fingerprint.
 
 ## Darb side (unchanged)
 
