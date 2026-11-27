@@ -308,3 +308,4 @@
 - [x] «ترخيص وزارة النقل» مستند مطلوب لكل مركبة مع قسم رفع في صفحة المستندات وملف المركبة
 - [x] ملفات سائقين للمستخدمين الفعليين وتسليم كل دينا كعهدة
 - [ ] رفع صور ترخيص وزارة النقل للـ18 مركبة — تحتاج الملفات من الإدارة
+- [ ] PetroApp live sync — waits on: permitted RAE capture + generated client, deployed bridge, secrets PETROAPP_RAE_BRIDGE_URL/TOKEN (foundation done).

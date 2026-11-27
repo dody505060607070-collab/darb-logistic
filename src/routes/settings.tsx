@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth";
 import { EmployeeDirectory } from "@/components/darb/EmployeeDirectory";
 import { WorkshopDirectory } from '@/components/darb/WorkshopDirectory';
 import { SystemChecklist } from "@/components/darb/SystemChecklist";
+import { PetroAppPanel } from "@/components/darb/PetroAppPanel";
 import { errMsg, fmtDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/settings")({
@@ -48,7 +49,6 @@ const INTEGRATIONS: { name: string; desc: string; needs: string; free: FreeOptio
   { name: "مزود توجيه الشاحنات", desc: "مسارات تراعي قيود الشاحنات ووقت الوصول", needs: "مفتاح API", free: [
     { label: "OpenRouteService", url: "https://account.heigit.org/signup", note: "اتصال التوجيه السابق متاح للفحص؛ لم يتم اعتماد الأبعاد والحمولات كتوجيه شاحنات رسمي." },
   ] },
-  { name: 'PetroApp — الوقود', desc: 'عمليات التعبئة والبطاقات والمركبات', needs: 'التوثيق الرسمي وبيانات الوصول وعينة عمليات ومعرفات المركبات والبطاقات', free:[{label:'لم يتم الربط',url:'',note:'لا يوجد عنوان API مفترض؛ الاستيراد الرسمي بديل مستقل عند توفر الملف.'}] },
   { name: "الفوترة الإلكترونية (ZATCA)", desc: "إصدار الفواتير الإلكترونية واستلام حالتها", needs: "الرقم الضريبي وشهادة الربط من بوابة فاتورة", free: [
     { label: "بيئة مطوري فاتورة", url: "https://sandbox.zatca.gov.sa/", note: "بيئة تجربة مجانية من الهيئة قبل الربط الفعلي." },
     { label: "بوابة فاتورة", url: "https://fatoora.zatca.gov.sa/", note: "الربط الفعلي مجاني لكنه يتطلب سجل الشركة الضريبي." },
@@ -147,6 +147,7 @@ function SettingsPage() {
                   </ul>
                 </div>
               ))}
+              <PetroAppPanel />
               <div className="rounded-lg border border-success/40 p-4">
                 <div className="flex items-center justify-between"><b className="text-primary">قاعدة البيانات والملفات</b><Badge tone="success">متصل</Badge></div>
                 <p className="mt-1 text-sm text-muted-foreground">تخزين البيانات والمرفقات الخاصة بروابط مؤقتة.</p>

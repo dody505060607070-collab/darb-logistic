@@ -1,0 +1,89 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it, vi } from "vitest";
+import { classifyBridge, parsePage, safeSummary } from "@/lib/petroapp";
+import { bridgeConfig, callBridge } from "@/lib/petroapp-bridge.server";
+
+const env = { PETROAPP_RAE_BRIDGE_URL: "https://bridge.example.test", PETROAPP_RAE_BRIDGE_TOKEN: "tok-SECRET-123" };
+const res = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
+const noWait = async () => {};
+const sql = readFileSync("drizzle/migrations/0061_petroapp_foundation.sql", "utf8");
+
+describe("PetroApp bridge client", () => {
+  it("returns missing without calling anything when config is absent", async () => {
+    const fetcher = vi.fn();
+    const r = await callBridge("/health", { method: "GET" }, { env: {}, fetcher: fetcher as any });
+    expect(r.state).toBe("missing");
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(bridgeConfig({ PETROAPP_RAE_BRIDGE_URL: "http://plain", PETROAPP_RAE_BRIDGE_TOKEN: "x" }).ready).toBe(false);
+  });
+  it("stops immediately on HTTP 429 and on explicit security warning", async () => {
+    for (const [status, body] of [[429, {}], [200, { error: "security_warning" }], [503, { error: "rate_limited" }]] as const) {
+      const fetcher = vi.fn(async () => res(status, body));
+      const r = await callBridge("/v1/petroapp/sync", { method: "POST", body: {} }, { env, fetcher: fetcher as any, wait: noWait });
+      expect(r.state).toBe("rate_limited");
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    }
+  });
+  it("reports auth expiry without retrying", async () => {
+    const fetcher = vi.fn(async () => res(401, {}));
+    const r = await callBridge("/health", { method: "GET" }, { env, fetcher: fetcher as any, wait: noWait });
+    expect(r.state).toBe("auth_expired");
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+  it("retries only transient failures, bounded with exponential backoff", async () => {
+    const waits: number[] = [];
+    const fetcher = vi.fn(async () => res(503, {}));
+    const r = await callBridge("/health", { method: "GET" }, { env, fetcher: fetcher as any, wait: async (ms) => { waits.push(ms); } });
+    expect(r.state).toBe("error");
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(waits).toEqual([500, 1000]);
+    const once = vi.fn(async () => res(400, {}));
+    await callBridge("/health", { method: "GET" }, { env, fetcher: once as any, wait: noWait });
+    expect(once).toHaveBeenCalledTimes(1);
+  });
+  it("never leaks the token in results", async () => {
+    const fetcher = vi.fn(async () => res(500, { message: "failed with token tok-SECRET-123 card 4111111111111111" }));
+    const r = await callBridge("/health", { method: "GET" }, { env, fetcher: fetcher as any, wait: noWait });
+    expect(JSON.stringify(r)).not.toContain("tok-SECRET-123");
+    expect(JSON.stringify(r)).not.toContain("4111111111111111");
+    expect(safeSummary("Authorization: Bearer abc")).not.toContain("abc");
+  });
+  it("calls only the configured bridge, never a PetroApp host", async () => {
+    const fetcher = vi.fn(async () => res(200, { ok: true }));
+    await callBridge("/health", { method: "GET" }, { env, fetcher: fetcher as any });
+    expect(String((fetcher.mock.calls[0] as unknown[])[0])).toBe("https://bridge.example.test/health");
+    expect(classifyBridge(200, {}).state).toBe("connected");
+  });
+});
+
+describe("PetroApp normalized contract", () => {
+  it("rejects full card numbers, missing IDs and unknown fields; keeps unavailable fields as null", () => {
+    const p = parsePage({ transactions: [
+      { provider_txn_id: "A1", occurred_at: "2026-11-01T08:00:00Z", liters: "50", unit_price: 2.33, amount: 116.5, station: null },
+      { provider_txn_id: "A2", occurred_at: "2026-11-01T08:00:00Z", provider_card_ref: "4111 1111 1111 1111" },
+      { occurred_at: "2026-11-01T08:00:00Z" },
+      { provider_txn_id: "A4", occurred_at: "2026-11-01T08:00:00Z", guessed_field: 1 },
+    ], unavailable_fields: ["odometer", "not_a_field"] });
+    expect(p.rows.map((r) => r.provider_txn_id)).toEqual(["A1"]);
+    expect(p.rows[0]?.liters).toBe(50);
+    expect(p.rows[0]?.station).toBeNull();
+    expect(p.rejected).toBe(3);
+    expect(p.unavailable).toEqual(["odometer"]);
+    expect(parsePage({ nope: 1 }).ok).toBe(false);
+  });
+});
+
+describe("PetroApp database rules (migration)", () => {
+  it("keeps idempotency, review gating and role checks in the database", () => {
+    expect(sql).toContain("provider_txn_id text NOT NULL UNIQUE");
+    expect(sql).toContain("'petroapp:' || ex.provider_txn_id");
+    expect(sql).toContain("'petroapp', 'pending'");
+    expect(sql).toContain("coalesce(odometer_km, 0) < ex.odometer");
+    expect(sql).toContain("v_map := 'ambiguous'");
+    expect(sql).toContain("'correction_pending'");
+    expect(sql).toContain("status = 'rate_limited' AND started_at > now() - interval '30 minutes'");
+    expect(sql).toContain("FROM PUBLIC, anon");
+    expect(sql).not.toMatch(/token|cookie|password/i);
+    expect(sql).not.toMatch(/driver'|workshop'/);
+  });
+});

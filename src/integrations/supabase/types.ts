@@ -1978,6 +1978,291 @@ export type Database = {
         }
         Relationships: []
       }
+      petroapp_mappings: {
+        Row: {
+          active: boolean
+          asset_id: string | null
+          card_last4: string | null
+          created_at: string
+          created_by: string | null
+          driver_id: string | null
+          id: string
+          kind: string
+          label: string | null
+          provider_ref: string
+        }
+        Insert: {
+          active?: boolean
+          asset_id?: string | null
+          card_last4?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_id?: string | null
+          id?: string
+          kind: string
+          label?: string | null
+          provider_ref: string
+        }
+        Update: {
+          active?: boolean
+          asset_id?: string | null
+          card_last4?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_id?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          provider_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petroapp_mappings_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petroapp_mappings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petroapp_sync_runs: {
+        Row: {
+          cancellations: number
+          completed_at: string | null
+          corrections: number
+          cursor: string | null
+          duplicates: number
+          error_summary: string | null
+          fetched: number
+          id: string
+          mode: string
+          staged: number
+          started_at: string
+          status: string
+          triggered_by: string | null
+          unmatched: number
+          window_from: string | null
+          window_to: string | null
+        }
+        Insert: {
+          cancellations?: number
+          completed_at?: string | null
+          corrections?: number
+          cursor?: string | null
+          duplicates?: number
+          error_summary?: string | null
+          fetched?: number
+          id?: string
+          mode: string
+          staged?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+          unmatched?: number
+          window_from?: string | null
+          window_to?: string | null
+        }
+        Update: {
+          cancellations?: number
+          completed_at?: string | null
+          corrections?: number
+          cursor?: string | null
+          duplicates?: number
+          error_summary?: string | null
+          fetched?: number
+          id?: string
+          mode?: string
+          staged?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+          unmatched?: number
+          window_from?: string | null
+          window_to?: string | null
+        }
+        Relationships: []
+      }
+      petroapp_transaction_events: {
+        Row: {
+          actor: string | null
+          at: string
+          id: string
+          kind: string
+          next: Json | null
+          note: string | null
+          previous: Json | null
+          run_id: string | null
+          transaction_id: string
+        }
+        Insert: {
+          actor?: string | null
+          at?: string
+          id?: string
+          kind: string
+          next?: Json | null
+          note?: string | null
+          previous?: Json | null
+          run_id?: string | null
+          transaction_id: string
+        }
+        Update: {
+          actor?: string | null
+          at?: string
+          id?: string
+          kind?: string
+          next?: Json | null
+          note?: string | null
+          previous?: Json | null
+          run_id?: string | null
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petroapp_transaction_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "petroapp_sync_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petroapp_transaction_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "petroapp_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petroapp_transactions: {
+        Row: {
+          amount: number | null
+          asset_id: string | null
+          card_last4: string | null
+          content_hash: string
+          created_at: string
+          driver_id: string | null
+          first_run_id: string | null
+          fuel_entry_id: string | null
+          fuel_type: string | null
+          id: string
+          last_run_id: string | null
+          liters: number | null
+          mapping_status: string
+          occurred_at: string
+          odometer: number | null
+          provider_card_ref: string | null
+          provider_state: string
+          provider_txn_id: string
+          provider_vehicle_ref: string | null
+          review_note: string | null
+          review_state: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          station: string | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          asset_id?: string | null
+          card_last4?: string | null
+          content_hash: string
+          created_at?: string
+          driver_id?: string | null
+          first_run_id?: string | null
+          fuel_entry_id?: string | null
+          fuel_type?: string | null
+          id?: string
+          last_run_id?: string | null
+          liters?: number | null
+          mapping_status?: string
+          occurred_at: string
+          odometer?: number | null
+          provider_card_ref?: string | null
+          provider_state?: string
+          provider_txn_id: string
+          provider_vehicle_ref?: string | null
+          review_note?: string | null
+          review_state?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          station?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          asset_id?: string | null
+          card_last4?: string | null
+          content_hash?: string
+          created_at?: string
+          driver_id?: string | null
+          first_run_id?: string | null
+          fuel_entry_id?: string | null
+          fuel_type?: string | null
+          id?: string
+          last_run_id?: string | null
+          liters?: number | null
+          mapping_status?: string
+          occurred_at?: string
+          odometer?: number | null
+          provider_card_ref?: string | null
+          provider_state?: string
+          provider_txn_id?: string
+          provider_vehicle_ref?: string | null
+          review_note?: string | null
+          review_state?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          station?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petroapp_transactions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petroapp_transactions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petroapp_transactions_first_run_id_fkey"
+            columns: ["first_run_id"]
+            isOneToOne: false
+            referencedRelation: "petroapp_sync_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petroapp_transactions_fuel_entry_id_fkey"
+            columns: ["fuel_entry_id"]
+            isOneToOne: false
+            referencedRelation: "fuel_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petroapp_transactions_last_run_id_fkey"
+            columns: ["last_run_id"]
+            isOneToOne: false
+            referencedRelation: "petroapp_sync_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pods: {
         Row: {
           captured_at: string | null
@@ -3667,6 +3952,31 @@ export type Database = {
       }
       payment_allocate_fifo: { Args: { p_payment_id: string }; Returns: number }
       payment_auto_allocate: { Args: { p_payment_id: string }; Returns: number }
+      petroapp_assign: {
+        Args: { p_asset: string; p_driver?: string; p_tx: string }
+        Returns: undefined
+      }
+      petroapp_can_review: { Args: never; Returns: boolean }
+      petroapp_import: { Args: { p_ids: string[] }; Returns: Json }
+      petroapp_review: {
+        Args: { p_decision: string; p_note?: string; p_tx: string }
+        Returns: undefined
+      }
+      petroapp_run_begin: {
+        Args: { p_from?: string; p_mode: string; p_to?: string }
+        Returns: string
+      }
+      petroapp_run_finish: {
+        Args: {
+          p_counts?: Json
+          p_cursor?: string
+          p_error?: string
+          p_run: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      petroapp_stage: { Args: { p_rows: Json; p_run: string }; Returns: Json }
       record_trip_event: {
         Args: {
           p_client_event_id?: string
