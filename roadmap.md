@@ -1,3 +1,9 @@
+## PetroApp isolated bridge — 2026-11-27
+- [x] FastAPI bridge source, Dockerfile, pinned requirements, README and environment template under `petroapp-bridge/`; no Darb UI/database/migration/review/import changes.
+- [x] Exact captured GET bills query, Asia/Riyadh dates, 31-day maximum, page 1 and 10-row hard cap; only observed fields mapped, with unknown payment states omitted for Darb rejection.
+- [x] Immediate 401/403/429/security stops; bounded network/502/503/504 retries; no raw-row or secret logging.
+- [ ] Live integration remains NOT COMPLETE pending isolated HTTPS deployment, bridge/source secrets, exact verified payment-status mappings, and an authorized live health check plus reviewed first sync.
+
 ## Preview issues — 2026-11-27
 - [x] Custody and inspection pending/error/empty/refresh states, with retained valid data and retry.
 - [x] Accountant approvals before KPIs; retain existing grid identities and keyboard dragging/readback at 390.

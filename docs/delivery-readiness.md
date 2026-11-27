@@ -35,7 +35,7 @@
 | بيانات التشغيل | النظام خالٍ من بيانات التشغيل حسب الطلب | إدخال الموظفين والورش والفروع والأسطول والوثائق والعملاء والعقود والأرصدة الحقيقية المعتمدة |
 | تذكيرات المهام | صندوق إشعارات دائم وإرسال فوري ومجدول 12/24 ساعة وسجل نتائج؛ الاختبارات ناجحة | نشر النسخة الجديدة وتأكيد استلام موظف فعلي؛ لا تثبت الحالة accepted الوصول |
 | تقرير 08:00 والذكاء الاصطناعي | توليد تقرير وحفظه وجدول نشط | إثبات توليد مجدول ناجح من بيانات حقيقية وقبول المخرجات؛ ليس تنفيذًا لكل أتمتة ذُكرت سابقًا |
-| الوقود والتتبع | PetroApp: أساس التكامل للقراءة فقط منفّذ (ربط مركبات/بطاقات، سجل مزامنة، منطقة مراجعة، استيراد معلّق) لكن لا يوجد التقاط مسموح مُتحقق لعمليات الوقود ولا محوّل وقود (عميل RAE السابق يغطي لوحة/ملف/إعدادات فقط)، والجسر غير منشور والمزامنة الحقيقية غير متحقق منها — ليس مكتملًا؛ موصل Traccar السابق ليس بديلًا مثبتًا | التوثيق والوصول الرسمي ومعرفات الأجهزة والبطاقات، ثم تنفيذ المطابقة والمزامنة واختبار منع التكرار والأحداث القديمة |
+| الوقود والتتبع | PetroApp: أساس Darb للقراءة فقط منفّذ، ويوجد الآن جسر FastAPI معزول ومحوّل لطلب فواتير الوقود الذي وثقه تقرير الالتقاط المُنقّح (طلب GET واحد، صفحة 1 وحد 10) مع اختبارات وهمية؛ لكن الجسر غير منشور، وقيم payment_status ودلالتها غير معروفة، ولم يُتحقق من فحص صحة أو مزامنة حقيقية — ليس مكتملًا؛ موصل Traccar السابق ليس بديلًا مثبتًا | نشر الجسر وضبط أسراره وربط حالات الدفع فقط بقيم مثبتة، ثم فحص صحة حقيقي مصرح به وأول مزامنة تخضع للمراجعة |
 | الفوترة الإلكترونية | فواتير داخلية؛ ليست مطابقة ZATCA مثبتة | استكمال متطلبات الفوترة الرسمية والتحقق منها؛ لا حاجة لـ Zoho/Odoo أو بوابة دفع وفق طلب المستخدم |
 | الرحلات والفحص والعهد | حماية أساسية موجودة؛ التغطية لا تثبت جميع تفاصيل المحطات ومحاضر الفحص والتاريخ | قبول رحلة متعددة المحطات، الفحص الإلزامي والصور والتوقيع، نقل/إرجاع العهد وسجلها الكامل |
 | الصيانة والموافقات | أساس دورة الاعتماد والإسناد والتقدير والإغلاق موجود | استكمال الصور والموقع وتفاصيل القطع والمواعيد والموافقات المطلوبة؛ قبول الدورة كاملة بحسابات مستقلة دون اعتماد الذات |
@@ -52,8 +52,10 @@
 5. التسليم النهائي ينتظر إغلاق البنود أعلاه واختبارات قراءة النتائج من الشاشة بعد الحفظ.
 
 المراجع: `docs/production-readiness.md`، `docs/account-reset.md`، `docs/shitaa-coverage.md`، `roadmap.md`. تحتوي الملفات القديمة بنودًا تجاوزها تنفيذ لاحق؛ هذا التقرير يميز التنفيذ السابق عن تحقق اليوم ولا يستنتج نسبة اكتمال. تأكيد المستخدم سابقًا وصول رمز واتساب لا يثبت إعادة الدخول بعد تنظيف الحسابات، والموافقة متعددة المستويات والتفويض المؤقت لا تزال بحاجة لاستكمال وقبول موثق.
-## PetroApp safety pass (2026-11-27)
+## PetroApp safety pass and isolated bridge (2026-11-27)
 - Done: owner can see/run the PetroApp panel; PetroApp fuel imports queue no WhatsApp; odometer kept staged-only (no fuel/asset odometer writes) until the unit is proven; explicit card→driver mapping in the UI; unknown provider states rejected.
 - Data-integrity pass: provider state required (no assumed "completed"); full tank staged as unknown and set explicitly by a reviewer before approval/import/correction.
-- RAE status: a prior RAE `api_client.py` exists for dashboard/profile/config-related methods only; no verified fuel-transaction method/endpoint was captured, and the latest full audit produced no new capture and stopped on the rate-limit warning.
-- Exact remaining blocker: a permitted capture of the fuel-transaction page/traffic and a verified fuel adapter, then the deployed bridge and `PETROAPP_RAE_BRIDGE_URL`/`PETROAPP_RAE_BRIDGE_TOKEN` secrets. Live PetroApp sync is NOT connected or verified.
+- Captured facts: the supplied sanitized fuel-bills report establishes `GET /dashboard_api/bills`, its exact query keys, page 1/limit 10, the root `data` array, and the limited field mapping now implemented in `petroapp-bridge/`. Earlier RAE history is no longer the current fuel-capture status.
+- Implemented now: isolated FastAPI bridge source, Dockerfile, pinned dependencies, exact-value payment-state mapping, strict stop/retry behavior, documentation, and fully mocked tests. No live request was made.
+- Still unknown: payment-status values/semantics, further pagination, full-tank/card fields, odometer unit, and every other provider capability.
+- Exact remaining blockers: deploy the bridge on isolated HTTPS; configure bridge/source secrets and only verified exact payment-status mappings; set `PETROAPP_RAE_BRIDGE_URL`/`PETROAPP_RAE_BRIDGE_TOKEN`; then perform an authorized live health check and reviewed first sync. Live PetroApp sync is NOT connected or verified.
