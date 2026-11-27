@@ -26,7 +26,8 @@ const Trips = lazy(() => import('@/components/screens/TripsScreen'));
 const Fleet = lazy(() => import('@/components/screens/FleetScreen'));
 const Finance = lazy(() => import('@/components/screens/FinanceScreen'));
 const Requests = lazy(() => import('@/components/screens/CustomerRequestsScreen'));
-const SCREENS = { '/tracking': Tracking, '/trips': Trips, '/fleet': Fleet, '/finance': Finance, '/customer-requests': Requests, '/custody': Custody, '/expenses': Expenses, '/': Home, '/representative': Representative, '/driver': Driver, '/repair-center': Repair, '/tasks': Tasks, '/my-account': Account, '/my-documents': Documents, '/chat': Chat };
+const OperationalDocs = lazy(() => import('@/components/screens/DocumentsScreen'));
+const SCREENS = { '/documents': OperationalDocs, '/tracking': Tracking, '/trips': Trips, '/fleet': Fleet, '/finance': Finance, '/customer-requests': Requests, '/custody': Custody, '/expenses': Expenses, '/': Home, '/representative': Representative, '/driver': Driver, '/repair-center': Repair, '/tasks': Tasks, '/my-account': Account, '/my-documents': Documents, '/chat': Chat };
 
 export function PresentationDemo({ number, screen }: { number: string; screen: string }) {
   const role = findDemoRole(number);

@@ -1,3 +1,10 @@
+## Preview issues — 2026-11-27
+- [x] Custody and inspection pending/error/empty/refresh states, with retained valid data and retry.
+- [x] Accountant approvals before KPIs; retain existing grid identities and keyboard dragging/readback at 390.
+- [x] Early manager operational document expiry list with mapped identity, severity and filtered record links; shared document screen also available in isolated preview.
+- [x] 280 tests across 56 files; isolated preview at 390/800/1920 covers pending/error/retry/mixed/loaded/empty/refresh failures, document links and accountant placement; zero production requests or JS errors in main browser run.
+- [x] Inspected workflow fixtures; re-ran request persistence, demo trip transitions, invoice validation and accounting tests. No runnable isolated full request→order→trip→POD→billing suite exists; production SQL fixtures were not executed because they write production rows even when rolled back.
+
 ## تحسين الرئيسية والإجراءات والتتبع — 2026-11-27
 - [x] فصل مطلوب مني عن متابعة الآخرين؛ العهد الـ17 مجموعة مطوية، روابط العهد والمصروف بمعرفها وفلاترها، ومعاينة الإجراءات قراءة فقط.
 - [x] نطاق التتبع والجاهزية والرحلات، قراءات حديثة للحركة بلا رحلة، مؤشر الشهر بالبسط والمقام وقراءة كل صفحات الرحلات، تفاصيل المؤشرات.

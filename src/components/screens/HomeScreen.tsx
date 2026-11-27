@@ -17,6 +17,7 @@ import { FleetLiveMap } from "@/components/darb/FleetLiveMap";
 import { dashboardFor, RoleDashboard } from "@/components/darb/RoleDashboards";
 import { CrmDashboard } from '@/components/darb/CrmDashboard';
 import { ApprovalCenter } from '@/components/darb/ApprovalCenter';
+import { OperationalDocuments } from '@/components/darb/OperationalDocuments';
 
 function Home() {
   const { roles, fullName, can } = useAuth();
@@ -104,6 +105,7 @@ function Dashboard() {
         <Kpi onOpen={() => void nav({ to: "/trips", search: { status: 'in_progress' } })} label="المسافة المخططة النشطة" value={`${fmtNum(active.reduce((s, x) => s + Number(x.distance_km ?? 0), 0))} كم`} />
         <Kpi onOpen={() => void nav({ to: "/trips", search: { scope: 'late' } })} label="رحلات متأخرة" value={trips.isLoading || trips.error ? "—" : fmtNum(late.length)} tone={late.length ? "warning" : undefined} />
         <div className="col-span-2 md:col-span-5"><ApprovalCenter /></div>
+        {can('ops_manager') && <div className="order-first col-span-2 md:col-span-5"><OperationalDocuments /></div>}
       </section>
       <div className="grid gap-5 lg:grid-cols-4">
         <Panel tone="blue" title="مؤشرات التشغيل" icon={<BarChart3 />}>

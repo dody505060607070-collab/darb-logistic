@@ -119,7 +119,7 @@ function Accountant({ name }: { name: string }) {
         <Kpi onOpen={() => void nav({ to: "/finance", search: { tab: "pay" } })} label="تحصيلات اليوم" value={fmtSAR(sum((pay.data ?? []).filter((p) => companyDay(p.paid_at) === today())))} tone="success" />
         <Kpi onOpen={() => void nav({ to: "/expenses", search: { tab: "exp", status: "pending" } })} label="مصروفات تنتظر الاعتماد" value={fmtSAR(sum(exp.data))} tone="warning" />
         <Kpi onOpen={() => void nav({ to: "/expenses", search: { tab: "adv", status: "open" } })} label="سلف مفتوحة" value={fmtSAR(sum(adv.data))} tone="gold" />
-        <div className="col-span-2 md:col-span-4"><ApprovalCenter /></div>
+        <div className="order-first col-span-2 md:col-span-4"><ApprovalCenter /></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Action to="/finance" primary><Coins className="size-4" /> تسجيل تحصيل</Action>

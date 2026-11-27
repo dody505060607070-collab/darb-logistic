@@ -19,6 +19,8 @@ import { useAuth } from "@/lib/auth";
 import { errMsg, fmtDateTime, fmtNum } from "@/lib/format";
 
 import { useScreenSearch } from "@/lib/screen-navigation";
+import { queryState } from "@/lib/query-state";
+import { QueryNotice } from "@/components/darb/QueryNotice";
 const KINDS: [string, string][] = [["handover", "استلام"], ["pre_trip", "قبل الانطلاق"], ["loading", "التحميل والتثبيت"], ["unloading", "التفريغ"], ["return", "الإرجاع"], ["driver_change", "تغيير السائق"]];
 
 function CustodyPage() {
@@ -51,6 +53,8 @@ function CustodyPage() {
 
   const open = (custody.data ?? []).filter((c) => !c.closed_at);
   const critical = (insp.data ?? []).filter((i) => i.has_critical && !i.resolved);
+  const custodyState = queryState(custody);
+  const inspectionState = queryState(insp);
 
   async function closeCustody(transferTo?: string) {
     if (!ret) return;
@@ -89,16 +93,18 @@ function CustodyPage() {
           <Button variant="gold" onClick={() => setOpenC(true)}><Plus /> محضر استلام عهدة</Button>
         </>} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="عهد مفتوحة" value={open.length} tone="info" icon={<Layers />} />
-        <Kpi label="بانتظار إقرار السائق" value={open.filter((c) => !c.acknowledged).length} tone="warning" icon={<User />} />
-        <Kpi label="فحوصات (آخر 200)" value={insp.data?.length ?? 0} icon={<ClipboardCheck />} />
-        <Kpi label="عيوب حرجة مفتوحة" value={critical.length} tone={critical.length ? "danger" : undefined} icon={<TriangleAlert />} />
+        <Kpi label="عهد مفتوحة" value={custodyState.loaded ? String(open.length) : "—"} tone="info" icon={<Layers />} />
+        <Kpi label="بانتظار إقرار السائق" value={custodyState.loaded ? String(open.filter((c) => !c.acknowledged).length) : "—"} tone="warning" icon={<User />} />
+        <Kpi label="فحوصات (آخر 200)" value={inspectionState.loaded ? String(insp.data?.length ?? 0) : "—"} icon={<ClipboardCheck />} />
+        <Kpi label="عيوب حرجة مفتوحة" value={inspectionState.loaded ? String(critical.length) : "—"} tone={critical.length ? "danger" : undefined} icon={<TriangleAlert />} />
       </div>
+      <QueryNotice query={custody} label="العهد" />
+      <QueryNotice query={insp} label="الفحوصات" />
       <Tabs defaultValue={search.tab === "insp" ? "insp" : "custody"} dir="rtl">
         <TabsList><TabsTrigger value="custody">العهد</TabsTrigger><TabsTrigger value="insp">الفحوصات</TabsTrigger></TabsList>
         <TabsContent value="custody">
-          <Panel title={search.filter === "unacknowledged" ? `بانتظار إقرار السائقين — ${visibleCustody.length} عهدة` : "سجل العهد"} icon={<ClipboardCheck />}>
-            <DataTable rows={visibleCustody} loading={custody.isLoading} error={custody.error} selectedId={selectedCustody?.id} onRowClick={(r) => setSelectedId(r.id)} searchKeys={["asset.code", "driver.full_name"]} cols={[
+          <Panel title={search.filter === "unacknowledged" ? `بانتظار إقرار السائقين${custodyState.loaded ? ` — ${visibleCustody.length} عهدة` : ""}` : "سجل العهد"} icon={<ClipboardCheck />}>
+            <DataTable rows={visibleCustody} loading={custodyState.pending} error={!custodyState.loaded ? custody.error : null} empty={search.filter === "unacknowledged" ? "لا توجد عهد بانتظار إقرار السائقين" : "لا توجد عهد مسجلة"} selectedId={selectedCustody?.id} onRowClick={(r) => setSelectedId(r.id)} searchKeys={["asset.code", "driver.full_name"]} cols={[
               { key: "asset", label: "الأصل", render: (r) => <span className="num font-semibold text-primary">{r.asset?.code}</span> },
               { key: "driver", label: "السائق", render: (r) => r.driver?.full_name },
               { key: "opened_at", label: "الاستلام", render: (r) => <span className="num">{fmtDateTime(r.opened_at)}</span> },
@@ -111,7 +117,7 @@ function CustodyPage() {
           </Panel>
           <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-2">
             <Panel title="ملخص الفحص" icon={<ClipboardCheck />}>
-              {selectedCustody ? (
+              {!custodyState.loaded ? <QueryNotice query={custody} label="ملخص العهدة" /> : selectedCustody ? (
                 <div className="grid items-center gap-4 sm:grid-cols-2">
                   <div className="space-y-3">
                     <div className="rounded-xl border bg-muted p-3"><p className="text-sm text-muted-foreground">الأصل</p><p className="num mt-1 font-semibold text-primary">{selectedAsset?.code ?? selectedCustody.asset?.code ?? "—"}</p></div>
@@ -119,17 +125,20 @@ function CustodyPage() {
                     <p className="text-sm">الإقرار: {selectedCustody.acknowledged ? 'أقرّ السائق' : 'بانتظار إقرار السائق'}</p>
                     <p className="text-sm">صاحب الخطوة التالية: {selectedCustody.acknowledged ? 'مشرف الأسطول عند الإرجاع' : selectedCustody.driver?.full_name ?? 'السائق المكلّف'}</p>
                     <p className="text-xs">وقت الطلب: {fmtDateTime(selectedCustody.opened_at)}</p>
-                    <p className="text-xs text-muted-foreground">الرسالة: {can('ops_manager') ? messages.error ? 'تعذر قراءة حالة الإرسال' : custodyMessageState(messages.data?.[0]) : 'حالة الإرسال غير متاحة لهذا الدور'}</p>
+                    {can('ops_manager') && <QueryNotice query={messages} label="حالة الرسالة" />}
+                    <p className="text-xs text-muted-foreground">الرسالة: {can('ops_manager') ? messages.data !== undefined ? custodyMessageState(messages.data[0]) : 'غير متاحة بعد' : 'حالة الإرسال غير متاحة لهذا الدور'}</p>
                     {messages.data?.[0] && <p className="text-xs text-muted-foreground">آخر محاولة: {fmtDateTime(messages.data[0].claimed_at ?? messages.data[0].created_at)} · محاولات {messages.data[0].attempts}</p>}
                     {latestInspection && <p className="num text-xs text-muted-foreground">آخر فحص: {fmtDateTime(latestInspection.created_at)}</p>}
                   </div>
                   <img src={truck} alt="" loading="lazy" width={720} height={450} className="h-auto w-full object-contain" />
                 </div>
-              ) : <p className="text-sm text-muted-foreground">لا توجد عهد مسجلة</p>}
+              ) : <p className="text-sm text-muted-foreground">{search.filter === "unacknowledged" ? "لا توجد عهد بانتظار إقرار السائقين" : "لا توجد عهد مسجلة"}</p>}
             </Panel>
             <Panel title="تفاصيل آخر فحص للعهدة" icon={<ShieldCheck />}>
-              {insp.isLoading ? <p className="text-sm text-muted-foreground">جارٍ تحميل الفحوصات…</p>
-                : insp.error ? <p className="text-sm text-danger">تعذر تحميل تفاصيل الفحص</p>
+              <QueryNotice query={insp} label="تفاصيل الفحص" />
+              {!custodyState.loaded ? <QueryNotice query={custody} label="العهدة المرتبطة بالفحص" />
+                : !inspectionState.loaded ? null
+                : !selectedCustody ? <p className="text-sm text-muted-foreground">لا توجد عهدة ضمن القائمة الحالية لعرض فحصها</p>
                 : latestInspection ? (
                   <div className="space-y-2">
                     {((latestInspection.items ?? []) as CheckAnswer[]).map((item) => (
@@ -148,7 +157,7 @@ function CustodyPage() {
         </TabsContent>
         <TabsContent value="insp">
           <Panel title="الفحوصات" icon={<ShieldCheck />}>
-            <DataTable rows={insp.data} loading={insp.isLoading} searchKeys={["asset.code", "driver.full_name"]} cols={[
+            <DataTable rows={insp.data} loading={inspectionState.pending} error={!inspectionState.loaded ? insp.error : null} searchKeys={["asset.code", "driver.full_name"]} cols={[
               { key: "created_at", label: "التاريخ", render: (r) => <span className="num">{fmtDateTime(r.created_at)}</span> },
               { key: "asset", label: "الأصل", render: (r) => <span className="num">{r.asset?.code}</span> },
               { key: "kind", label: "النوع", render: (r) => KINDS.find((k) => k[0] === r.kind)?.[1] ?? r.kind },
