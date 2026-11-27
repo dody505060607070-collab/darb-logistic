@@ -1,4 +1,4 @@
-import { createOpenAI } from "@ai-sdk/openai";
+import { createDarbAIProvider, getDarbAIConfig } from "./ai-provider.server";
 import { streamText } from "ai";
 import { plainDailyReport, type DailyFacts } from "./daily-report";
 
@@ -7,7 +7,7 @@ import { plainDailyReport, type DailyFacts } from "./daily-report";
  * The plain figures are saved first so the report survives a scheduler cut-off; the AI wording then replaces it when it finishes in time.
  */
 export async function generateDailyReport(source: "scheduled" | "manual") {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const aiConfig = getDarbAIConfig();
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
 
   const now = new Date();
@@ -37,19 +37,20 @@ export async function generateDailyReport(source: "scheduled" | "manual") {
   const plain = plainDailyReport(facts);
   const { data: saved, error } = await db.from("ai_reports").insert({ report_date: facts.date, body: plain, source }).select("id").single();
   if (error || !saved) throw new Error(error?.message ?? "تعذر حفظ التقرير");
-  if (!apiKey) return plain;
+  if (!aiConfig) return plain;
 
   try {
-    const provider = createOpenAI({ baseURL: "https://ai.gateway.lovable.dev/v1", apiKey, headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" } });
+    const provider = createDarbAIProvider();
+    if (!provider) return plain;
     const result = streamText({
-      model: provider.responses("openai/gpt-6-astra"),
+      model: provider.responses(aiConfig.model),
       system:
         "أنت مساعد عمليات لشركة نقل بري سعودية اسمها Shata. اكتب ملخصاً صباحياً بالعربية الفصحى المختصرة: عنوان، ثم أقسام قصيرة بنقاط: الرحلات المتأخرة، المستندات القريبة من الانتهاء، المصروفات المعلقة، الصيانة، الحوادث، المهام المفتوحة، ثم 3 توصيات عملية لليوم. لا تخترع أرقاماً غير موجودة في البيانات. العملة ر.س.",
       messages: [{ role: "user", content: "بيانات اليوم بصيغة JSON:\n" + JSON.stringify(facts) }],
       maxRetries: 0,
       // the scheduler disconnects after a few seconds; the plain report is already saved, so the AI wording only replaces it when it finishes in time
       abortSignal: AbortSignal.timeout(source === "scheduled" ? 3500 : 25000),
-      providerOptions: { openai: { store: false, reasoningEffort: "low" } },
+      providerOptions: aiConfig.lovableGateway ? { openai: { store: false, reasoningEffort: "low" } } : undefined,
     });
     const text = await result.text;
     const body = text.trim();
