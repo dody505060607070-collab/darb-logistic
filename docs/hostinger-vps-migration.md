@@ -127,3 +127,17 @@ Caddy or an equivalent proxy must terminate HTTPS, request/renew TLS, redirect H
 - No VPS build, deployment, restore rehearsal, signed-in acceptance, DNS cutover, live provider health check, or reviewed first PetroApp sync has occurred.
 
 Until these are closed with evidence, describe this work only as **a portable stateless bridge plus a future whole-stack migration runbook**.
+
+
+## Candidate branch implementation status (2026-11-28)
+
+The isolated branch `migration/hostinger-vps-node-runtime` contains a first-pass Node-hosting candidate:
+
+- `vite.config.ts` selects Nitro's `node-server` preset.
+- `package.json` adds `start: node .output/server/index.mjs`.
+- Root `Dockerfile` builds with Bun 1.3.10 and runs the standalone Nitro output on Node 22 as the unprivileged `node` user.
+- `src/routes/api/health.ts` exposes a small liveness endpoint for container checks.
+- `.dockerignore` excludes local dependencies, build output, and environment files from the Docker context.
+- `.github/workflows/vps-candidate.yml` validates locked dependency installation, unit tests, the Node production build/output, and the PetroApp bridge tests/type checks.
+
+This is a **candidate, not a validated deployment**. The PR remains draft and `main` is unchanged. CI must pass, and a real Docker image must be built and exercised before the image is accepted. The container has not been deployed to Hostinger. Do not add production secrets to GitHub or the repository.

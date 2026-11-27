@@ -1,0 +1,57 @@
+name: VPS candidate validation
+
+on:
+  push:
+    branches:
+      - migration/hostinger-vps-node-runtime
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  darb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Unit tests
+        run: bun run test
+      - name: Production Node build
+        run: bun run build
+      - name: Verify Node server artifact
+        run: test -f .output/server/index.mjs && test -d .output/public
+      - name: Build production Docker image
+        run: docker build --tag darb-candidate:ci .
+      - name: Smoke test production container
+        run: |
+          docker run --detach --name darb-candidate -p 3000:3000 -e PORT=3000 -e HOST=0.0.0.0 darb-candidate:ci
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs darb-candidate
+          exit 1
+  petroapp-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: petroapp-bridge/requirements-dev.txt
+      - name: Install bridge test dependencies
+        run: pip install -r petroapp-bridge/requirements-dev.txt
+      - name: Bridge tests
+        working-directory: petroapp-bridge
+        run: python -m pytest -q
+      - name: Bridge type check
+        working-directory: petroapp-bridge
+        run: python -m mypy app tests
