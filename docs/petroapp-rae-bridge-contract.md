@@ -45,6 +45,12 @@ Page response: `{"transactions":[NormalizedTxn],"next_cursor":null,"unavailable_
 
 Error signalling: `401/403` or `{"error":"auth_expired"}` → authentication expired; `429` or `{"error":"rate_limited"|"security_warning"}` → hard stop. Optional `message` is fixed human text without source content or secrets.
 
+### User-triggered cold-start preflight
+
+Before any user-invoked `/health`, `/v1/petroapp/preview`, or `/v1/petroapp/sync` call, Darb calls our `GET /livez` with `Accept: application/json` and **no Authorization header or other credential**. Transient network/502/503/504 liveness failures retry after 5 seconds; each probe has a 10-second timeout and the total liveness window is at most 90 seconds. A non-retry status retains the existing hard-stop classification. Only successful liveness permits the requested endpoint call; the existing endpoint timeout, three attempts, 500ms/1s backoff, and immediate 401/403/429/security stops are unchanged.
+
+If the bound expires, Darb returns a safe Arabic message saying the free bridge is waking and the user may retry; it returns no response body and never marks success or stages data. This policy is user-triggered only, never a scheduled/synthetic keep-alive. It is provider-neutral and works unchanged on an always-on Hostinger VPS, where `/livez` should respond immediately. Deterministic tests use mocked fetch/time only; no live Render or PetroApp verification has occurred.
+
 ## Captured field mapping
 
 Only these observed source fields are read:

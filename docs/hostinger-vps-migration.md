@@ -72,7 +72,7 @@ services:
         max-file: "3"
 ```
 
-The env file supplies `PETROAPP_RAE_BRIDGE_TOKEN`, `PETROAPP_BEARER_TOKEN`, `PETROAPP_FINGERPRINT`, and `PETROAPP_PAYMENT_STATUS_MAP`; it must never be committed. `/livez` is unauthenticated and performs no upstream call. Reserve authenticated `/health` for an explicitly authorized real PetroApp check, not frequent proxy/Docker probes.
+The env file supplies `PETROAPP_RAE_BRIDGE_TOKEN`, `PETROAPP_BEARER_TOKEN`, `PETROAPP_FINGERPRINT`, and `PETROAPP_PAYMENT_STATUS_MAP`; it must never be committed. `/livez` is unauthenticated and performs no upstream call. Reserve authenticated `/health` for an explicitly authorized real PetroApp check, not frequent proxy/Docker probes. Darb's user-triggered health/preview/sync caller first performs a token-free `/livez` preflight with a bounded 90-second cold-start window; on an always-on VPS it should succeed immediately. There is no scheduled keep-alive, and no requested provider endpoint runs before liveness succeeds.
 
 Example reverse-proxy target (placeholder hostname only):
 

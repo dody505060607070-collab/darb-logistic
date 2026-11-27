@@ -32,6 +32,8 @@ There is deliberately no pagination, create, update, delete, or other provider m
 
 Every route except `/livez` requires `Authorization: Bearer <PETROAPP_RAE_BRIDGE_TOKEN>`. Preview/sync accept the existing Darb body `{from,to,limit,cursor}`. Timestamps must include a timezone, `to` must be later than `from`, and the maximum window is 31 days. Dates in the source query are formatted in `Asia/Riyadh`. Do not use `/health` as a platform health-check path: frequent probes would repeatedly call PetroApp.
 
+Darb's server caller performs one token-free `GET /livez` preflight whenever a user explicitly invokes health, preview, or sync. If the bridge is sleeping, transient liveness failures retry every 5 seconds with a 10-second per-probe timeout and a **90-second total liveness bound**. Only a successful liveness response permits the requested endpoint call, whose existing 15-second/3-attempt policy and 401/403/429/security hard stops remain unchanged. If readiness does not recover, Darb returns an Arabic retry-later message and does not stage data. There is no scheduled keep-alive; on Hostinger or another always-on host the same preflight simply succeeds immediately.
+
 ## Environment
 
 Copy `.env.example` into your deployment secret manager, not into source control:

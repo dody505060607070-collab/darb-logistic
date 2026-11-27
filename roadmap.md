@@ -1,3 +1,7 @@
+## User-triggered bridge cold-start handling — 2026-11-27
+- [x] Preflight only our `/livez` on health/preview/sync actions, without bearer credentials; wait at most 90 seconds, preserve existing endpoint retry/stop behavior, and never stage before readiness.
+- [x] Eighteen focused tests cover awake/recovery/90-second timeout/credentials/request order and preserved safety rules; full TypeScript passed. Documented provider-neutral Render Free and Hostinger behavior. No deployment or PetroApp request.
+
 ## FREE temporary bridge hosting and future Hostinger VPS — 2026-11-27
 - [x] Render Blueprint is FREE TEMPORARY TEST HOSTING ONLY: one free Docker web service, no paid resources, documented sleep/cold-start/ephemeral/usage limits, and no keep-alive traffic.
 - [x] Future Hostinger runbook covers the entire Darb server/agent stack, external Supabase/auth/database/storage and provider dependencies, backups, DNS/TLS, scheduling, deployment and rollback; no migration now and no whole-app readiness claim.
