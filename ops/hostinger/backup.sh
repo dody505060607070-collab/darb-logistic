@@ -20,7 +20,7 @@ set -a
 . "$DARB_CONFIG_DIR/.env.evolution"
 set +a
 SUPABASE_DOCKER_DIR="$DARB_SUPABASE_DIR/docker"
-COMPOSE=(docker compose -p darb --env-file "$SUPABASE_DOCKER_DIR/.env" -f "$SUPABASE_DOCKER_DIR/docker-compose.yml" -f "$DARB_REPO_ROOT/ops/hostinger/compose.darb.yml")
+COMPOSE=(docker compose -p darb-logistic-prod --env-file "$SUPABASE_DOCKER_DIR/.env" -f "$SUPABASE_DOCKER_DIR/docker-compose.yml" -f "$DARB_REPO_ROOT/ops/hostinger/compose.darb.yml")
 
 "${COMPOSE[@]}" exec -T db pg_dumpall -U postgres --globals-only > "$work/supabase-globals.sql"
 "${COMPOSE[@]}" exec -T db pg_dump -U postgres -d postgres --format=custom > "$work/supabase-database.dump"
@@ -33,7 +33,7 @@ else
   exit 1
 fi
 
-docker run --rm -v darb_evolution_instances:/source:ro -v "$work":/backup alpine:3.22 \
+docker run --rm -v darb_logistic_prod_evolution_instances:/source:ro -v "$work":/backup alpine:3.22 \
   tar -czf /backup/evolution-instances.tar.gz -C /source .
 cp "$SUPABASE_DOCKER_DIR/.env" "$work/supabase.env"
 cp "$DARB_CONFIG_DIR/.env.darb" "$work/darb.env"
