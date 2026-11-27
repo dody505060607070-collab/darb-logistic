@@ -33,10 +33,29 @@ grep -q '^PETROAPP_RAE_BRIDGE_TOKEN=.' "$DARB_CONFIG_DIR/.env.darb" || {
   echo "PETROAPP bridge credentials are incomplete."
   exit 2
 }
-grep -q '^AI_API_KEY=.' "$DARB_CONFIG_DIR/.env.darb" || {
-  echo "AI provider key is not set; set it before starting for full AI parity."
+grep -q '^AI_API_KEY=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^AI_MODEL=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "AI_API_KEY and AI_MODEL are required for full AI parity."
   exit 2
 }
+grep -q '^PETROAPP_BEARER_TOKEN=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^PETROAPP_FINGERPRINT=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "PetroApp source session credentials are incomplete."
+  exit 2
+}
+grep -q '^PETROAPP_PAYMENT_STATUS_MAP=.{[^}]*' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "PETROAPP_PAYMENT_STATUS_MAP must contain exact observed source-state mappings."
+  exit 2
+}
+grep -q '^SUPABASE_PUBLISHABLE_KEY=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^SUPABASE_SERVICE_ROLE_KEY=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "Self-hosted Supabase API keys were not copied into Darb runtime config."
+  exit 2
+}
+grep -q '^SUPABASE_PUBLIC_URL=https://' "$SUPABASE_DOCKER_DIR/.env" && ! grep -q 'localhost' "$SUPABASE_DOCKER_DIR/.env" || {
+  echo "Set SUPABASE_PUBLIC_URL, API_EXTERNAL_URL, and SITE_URL to the owner-confirmed HTTPS domains."
+  exit 2
+}
+case "$EVOLUTION_API_IMAGE" in
+  *:latest|latest) echo "EVOLUTION_API_IMAGE must be pinned to the exact current Evolution version, never latest."; exit 2 ;;
+esac
 
 # Port availability check is read-only and scoped to the chosen Darb bind ports.
 for port in "$DARB_APP_BIND_PORT" "$DARB_SUPABASE_HTTP_BIND_PORT" "$DARB_SUPABASE_DB_BIND_PORT" "$DARB_SUPABASE_POOLER_BIND_PORT"; do
