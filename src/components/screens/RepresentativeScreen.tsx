@@ -40,7 +40,7 @@ function RepresentativeApp() {
 
   const customers = useRows(["customers", "rep"], () => db.from("customers").select("id,name,contact_name,phone,city,created_by").order("name"), allowed);
   const locations = useRows(["locations"], () => db.from("locations").select("*").order("name"), allowed);
-  const requests = useRows(["customer_requests", "mine", auth.session?.user.id], () => db.from("customer_requests").select("*, customer:customers(name), pickup:locations!customer_requests_pickup_location_id_fkey(name,city)").eq("created_by", (auth.session?.user.id ?? '')).order("created_at", { ascending: false }).limit(50), allowed && !!auth.session);
+  const requests = useRows(["customer_requests", "mine", auth.session?.user.id], () => db.from("customer_requests").select("*, customer:customers(name), pickup:locations!customer_requests_pickup_location_id_fkey(name,city), order:transport_orders(number)").eq("created_by", (auth.session?.user.id ?? '')).order("created_at", { ascending: false }).limit(50), allowed && !!auth.session);
 
   if (!auth.ready || !auth.session) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
@@ -211,6 +211,7 @@ function MyRequests({ rows }: { rows: Row[] }) {
           <div className="flex items-center justify-between"><span className="num font-bold text-primary">{r.number}</span><Badge tone={REQ_STATUS[r.status]?.[1] ?? "neutral"}>{REQ_STATUS[r.status]?.[0] ?? r.status}</Badge></div>
           <div>{r.customer?.name} — {r.cargo_type}{r.quantity ? ` (${r.quantity} ${r.unit ?? ""})` : ""}</div>
           <div className="text-xs text-muted-foreground">الاستلام: {r.pickup ? `${r.pickup.name} — ${r.pickup.city}` : "—"} • {fmtDateTime(r.created_at)}</div>
+          {r.status === "converted" && <p className="text-xs">مرجع أمر النقل: <span className="num">{r.order?.number ?? "غير متاح ضمن صلاحيتك"}</span></p>}
           {r.status === "closed" && r.close_reason && <div className="text-xs text-danger">سبب الإغلاق: {r.close_reason}</div>}
           {r.status === "new" && <Button size="sm" variant="ghost" onClick={() => void remove(r.id)}><Trash2 className="text-danger" /> حذف</Button>}
         </div>

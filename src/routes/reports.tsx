@@ -1,3 +1,4 @@
+import { punctuality } from "@/lib/home-summary";
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { BarChart3, Calculator, CalendarCheck, Clock, Coins, Download, Fuel, Percent, Truck } from "lucide-react";
@@ -51,8 +52,9 @@ function Reports() {
     const loadedKm = t.filter((x) => !x.is_empty).reduce((s, x) => s + Number(x.distance_km ?? 0), 0);
     const emptyKm = t.filter((x) => x.is_empty).reduce((s, x) => s + Number(x.distance_km ?? 0), 0);
     const totalKm = loadedKm + emptyKm;
-    const done = t.filter((x) => !x.is_empty && x.actual_end && x.order?.delivery_due_at);
-    const onTime = done.filter((x) => new Date(x.actual_end) <= new Date(x.order.delivery_due_at)).length;
+    const timing = punctuality(t);
+    const done = timing.eligible;
+    const onTime = timing.onTime.length;
     // waiting = arrival → unloading_start at delivery
     let waitH = 0, waitN = 0;
     t.forEach((x) => {
@@ -89,7 +91,7 @@ function Reports() {
       const paid = (i.allocs ?? []).reduce((s: number, a: Row) => s + Number(a.amount), 0);
       return { id: i.id, number: i.number, customer: i.customer?.name, total: Number(i.total), paid, outstanding: Number(i.total) - paid, due_at: i.due_at };
     });
-    return { loadedKm, emptyKm, totalKm, emptyPct: totalKm ? (emptyKm / totalKm) * 100 : null, onTimePct: done.length ? (onTime / done.length) * 100 : null, done: done.length,
+    return { loadedKm, emptyKm, totalKm, emptyPct: totalKm ? (emptyKm / totalKm) * 100 : null, onTimePct: done.length ? (onTime / done.length) * 100 : null, done: done.length, onTime, excluded: timing.excluded.length, missingActual: timing.missingActual.length,
       waitAvg: waitN ? waitH / waitN : null, rev, direct, margin: rev - direct, costPerKm: totalKm ? (direct + maint) / totalKm : null, maint,
       lPer100: fk > 0 ? (fl / fk) * 100 : null, perAsset: [...perAsset.entries()].map(([id, v]) => ({ id, ...v })), debt };
   }, [trips.data, fin.data, fuel.data, exp.data, wo.data, invs.data]);
@@ -103,7 +105,7 @@ function Reports() {
         <Kpi label="كم محملة (مخطط معتمد)" value={`${fmtNum(r.loadedKm)} كم`} icon={<Truck />} />
         <Kpi label="كم فارغة" value={`${fmtNum(r.emptyKm)} كم`} icon={<Truck />} />
         <Kpi label="نسبة الفارغ = فارغ ÷ إجمالي" value={r.emptyPct === null ? na : `${r.emptyPct.toFixed(1)}%`} tone="warning" icon={<Percent />} />
-        <Kpi label="الالتزام بالموعد المتفق" value={r.onTimePct === null ? na : `${r.onTimePct.toFixed(0)}%`} hint={`من ${r.done} رحلة مسلّمة`} tone="success" icon={<CalendarCheck />} />
+        <Kpi label="الالتزام بالموعد المتفق" value={r.onTimePct === null ? na : `${r.onTimePct.toFixed(0)}%`} hint={r.done ? `${r.onTime}/${r.done} · هذا الشهر · مستبعد ${r.excluded} · بلا وقت ${r.missingActual}` : "لا توجد رحلات مؤهلة خلال الفترة"} tone="success" icon={<CalendarCheck />} />
         <Kpi label="متوسط الانتظار عند التسليم" value={r.waitAvg === null ? na : `${r.waitAvg.toFixed(1)} ساعة`} hint="من الوصول حتى بداية التفريغ" icon={<Clock />} />
         <Kpi label="استهلاك الوقود" value={r.lPer100 === null ? na : `${r.lPer100.toFixed(1)} L/100كم`} hint="بين تعبئتين كاملتين فقط" icon={<Fuel />} />
         <Kpi label="تكلفة الكيلومتر" value={r.costPerKm === null ? na : `${r.costPerKm.toFixed(2)} ر.س`} hint="مباشرة + صيانة ÷ كم" icon={<Calculator />} />

@@ -19,7 +19,14 @@ const Tasks = lazy(() => import('@/components/screens/TasksScreen'));
 const Account = lazy(() => import('@/components/screens/MyAccountScreen'));
 const Documents = lazy(() => import('@/components/screens/MyDocumentsScreen'));
 const Chat = lazy(() => import('@/components/screens/ChatScreen'));
-const SCREENS = { '/': Home, '/representative': Representative, '/driver': Driver, '/repair-center': Repair, '/tasks': Tasks, '/my-account': Account, '/my-documents': Documents, '/chat': Chat };
+const Custody = lazy(() => import('@/components/screens/CustodyScreen'));
+const Expenses = lazy(() => import('@/components/screens/ExpensesScreen'));
+const Tracking = lazy(() => import('@/components/screens/TrackingScreen'));
+const Trips = lazy(() => import('@/components/screens/TripsScreen'));
+const Fleet = lazy(() => import('@/components/screens/FleetScreen'));
+const Finance = lazy(() => import('@/components/screens/FinanceScreen'));
+const Requests = lazy(() => import('@/components/screens/CustomerRequestsScreen'));
+const SCREENS = { '/tracking': Tracking, '/trips': Trips, '/fleet': Fleet, '/finance': Finance, '/customer-requests': Requests, '/custody': Custody, '/expenses': Expenses, '/': Home, '/representative': Representative, '/driver': Driver, '/repair-center': Repair, '/tasks': Tasks, '/my-account': Account, '/my-documents': Documents, '/chat': Chat };
 
 export function PresentationDemo({ number, screen }: { number: string; screen: string }) {
   const role = findDemoRole(number);

@@ -98,6 +98,7 @@ export function Kpi({
   tone,
   icon,
   variant,
+  onOpen,
 }: {
   label: string;
   value: ReactNode;
@@ -105,6 +106,7 @@ export function Kpi({
   tone?: Tone;
   icon?: ReactNode;
   variant?: "glass" | "solid";
+  onOpen?: () => void;
 }) {
   const cls = variant === "glass" ? "bento-glass" : variant === "solid" ? "bento-solid" : tone ? BENTO[tone] : "bento-auto";
   const arrangement = useArrangedCard(label);
@@ -116,6 +118,7 @@ export function Kpi({
       </div>
       <div className="big num mt-3 break-words text-right text-[32px]"><CountUp value={value} /></div>
       {hint && <div className="hint mt-1 text-xs opacity-75">{hint}</div>}
+      {onOpen && <Button variant="link" size="sm" className="h-auto justify-start px-0 text-xs" onClick={onOpen}>عرض التفاصيل</Button>}
       <span className="rim" />
     </div>
   );

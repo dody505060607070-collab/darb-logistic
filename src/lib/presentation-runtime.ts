@@ -108,7 +108,7 @@ export class PresentationRuntime {
 
 class SampleQuery implements PromiseLike<{ data: any; error: unknown; count: number }> { // eslint-disable-line @typescript-eslint/no-explicit-any
   private filters: ((row: SampleRow) => boolean)[] = [];
-  private mode = 'read'; private payload: SampleRow[] = []; private one = false; private max = Infinity; private head = false;
+  private mode = 'read'; private payload: SampleRow[] = []; private one = false; private start = 0; private max = Infinity; private head = false;
   constructor(private runtime: PresentationRuntime, private table: string) {}
   select(_columns = '*', options?: { head?: boolean }) { this.head = !!options?.head; return this; }
   insert(value: SampleRow | SampleRow[]) { this.mode = 'insert'; this.payload = Array.isArray(value) ? value : [value]; return this; }
@@ -127,7 +127,7 @@ class SampleQuery implements PromiseLike<{ data: any; error: unknown; count: num
   gt(k: string, v: any) { this.filters.push(r => r[k] != null && r[k] > v); return this; }
   order(_key: string, _options?: unknown) { return this; }
   limit(n: number) { this.max = n; return this; }
-  range(_start: number, end: number) { this.max = end + 1; return this; }
+  range(start: number, end: number) { this.start = start; this.max = end + 1; return this; }
   or(_filter: string) { return this; }
   single() { this.one = true; return this; }
   maybeSingle() { this.one = true; return this; }
@@ -138,7 +138,7 @@ class SampleQuery implements PromiseLike<{ data: any; error: unknown; count: num
     if (this.mode === 'update') rows.forEach(r => Object.assign(r, this.payload[0]));
     if (this.mode === 'delete') this.runtime.tables[this.table] = all.filter(r => !rows.includes(r));
     if (this.mode !== 'read') this.runtime.persist();
-    const count = rows.length; const result = rows.slice(0, this.max).map(r => this.runtime.join(r));
+    const count = rows.length; const result = rows.slice(this.start, this.max).map(r => this.runtime.join(r));
     return Promise.resolve({ data: this.head ? null : this.one ? result[0] ?? null : result, error: null, count }).then(onfulfilled, onrejected);
   }
 }

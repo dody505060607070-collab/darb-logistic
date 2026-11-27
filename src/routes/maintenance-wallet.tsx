@@ -1,3 +1,4 @@
+import { useScreenSearch } from '@/lib/screen-navigation';
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -12,10 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/lib/auth';
 import { db,useRows,uploadFile } from '@/lib/db';
 import { errMsg,fmtSAR,fmtDateTime } from '@/lib/format';
-export const Route=createFileRoute('/maintenance-wallet')({head:()=>({meta:[{title:'دفتر عهدة الصيانة | Shata'},{name:'description',content:'حركات العهدة المالية لموظفي الصيانة والمصروفات المعتمدة والتسويات والأرصدة.'},{property:'og:title',content:'عهدة الصيانة | Shata'},{property:'og:description',content:'كشف حركات العهدة والمصروفات والاعتمادات والتصحيحات.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:()=> <AppShell><WalletPage/></AppShell>});
+export const Route=createFileRoute('/maintenance-wallet')({validateSearch:(s:Record<string,unknown>):{id?:string}=>typeof s.id==='string'?{id:s.id}:{},head:()=>({meta:[{title:'دفتر عهدة الصيانة | Shata'},{name:'description',content:'حركات العهدة المالية لموظفي الصيانة والمصروفات المعتمدة والتسويات والأرصدة.'},{property:'og:title',content:'عهدة الصيانة | Shata'},{property:'og:description',content:'كشف حركات العهدة والمصروفات والاعتمادات والتصحيحات.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:()=> <AppShell><WalletPage/></AppShell>});
 const kinds:Record<string,string>={opening:'رصيد افتتاحي',issue:'صرف عهدة',expense:'مصروف',return:'رد متبقٍ',correction:'تصحيح عكسي'};
 function WalletPage(){
- const auth=useAuth();const fin=auth.can('accountant');const qc=useQueryClient();
+ const auth=useAuth();const search=useScreenSearch();const fin=!auth.viewAs&&auth.can('accountant');const qc=useQueryClient();
  const rows=useRows(['maintenance_wallet_entries'],()=>db.from('maintenance_wallet_entries').select('*,employee:profiles(full_name,phone),asset:assets(code),wo:work_orders(number)').order('created_at',{ascending:false}));
  const balances=useRows(['wallet_balances'],()=>db.rpc('wallet_balances'));
  const staff=useRows(['profiles','wallet'],()=>db.from('profiles').select('id,full_name,phone'),fin);
@@ -24,7 +25,7 @@ function WalletPage(){
  const wos=useRows(['work_orders','wallet'],()=>db.from('work_orders').select('id,number,asset_id'));
  const [open,setOpen]=useState(false);const [employee,setEmployee]=useState('');const [kind,setKind]=useState('expense');const [amount,setAmount]=useState('');const [desc,setDesc]=useState('');const [asset,setAsset]=useState('');const [wo,setWo]=useState('');const [supplier,setSupplier]=useState('');const [file,setFile]=useState<File|null>(null);const [reference,setReference]=useState('');const [reversal,setReversal]=useState('');const [cid,setCid]=useState('');const [busy,setBusy]=useState(false);const [note,setNote]=useState('');
  async function save(){setBusy(true);try{const receipt=file?await uploadFile(file,'maintenance-wallet'):null;const {error}=await db.rpc('wallet_create',{p_employee:fin?employee:auth.session?.user.id,p_kind:kind,p_amount:Number(amount),p_description:desc,p_client_ref:cid,p_asset:asset||null,p_work_order:wo||null,p_supplier:supplier||null,p_receipt:receipt,p_reference:reference||null,p_reversal:reversal||null});if(error)throw error;await qc.invalidateQueries();setOpen(false);toast.success('تم تقديم الحركة للاعتماد');}catch(e){toast.error(errMsg(e));}finally{setBusy(false);}}
- const [selectedId,setSelectedId]=useState<string|null>(null);
+ const [selectedId,setSelectedId]=useState<string|null>(search.id??null);
  const selected=(rows.data??[]).find(r=>r.id===selectedId)??rows.data?.[0]??null;
  async function review(id:string,approve:boolean){setBusy(true);try{const {error}=await db.rpc('wallet_review',{p_id:id,p_approve:approve,p_note:note||null});if(error)throw error;await qc.invalidateQueries();toast.success(approve?'تم اعتماد الحركة':'تم رفض الحركة');}catch(e){toast.error(errMsg(e));}finally{setBusy(false);}}
  return <><PageHeader title="دفتر عهدة الصيانة" icon={<Wallet/>} actions={<Button onClick={()=>{setCid(crypto.randomUUID());setOpen(true);}}><Plus/> حركة جديدة</Button>}/><div className="mb-6 grid gap-3 sm:grid-cols-3"><Kpi label="الرصيد من الحركات المعتمدة" value={balances.isPending?'غير متاح':fmtSAR((balances.data??[]).reduce((s,r)=>s+Number(r.balance),0))} icon={<Coins/>}/><Kpi label="مصروفات تنتظر الاعتماد" value={balances.isPending?'غير متاح':fmtSAR((balances.data??[]).reduce((s,r)=>s+Number(r.pending_expenses),0))} icon={<Hourglass/>}/><Kpi label="تكلفة الصيانة المعتمدة" value={balances.isPending?'غير متاح':fmtSAR((balances.data??[]).reduce((s,r)=>s+Number(r.maintenance_cost),0))} icon={<Wrench/>}/></div>

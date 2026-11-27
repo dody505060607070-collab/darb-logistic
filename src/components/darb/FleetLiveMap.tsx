@@ -2,13 +2,15 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Car, Crosshair, ExternalLink, Gauge, MapPin, Navigation, Radio, Route as RouteIcon, Search, Truck, User, X } from "lucide-react";
-import { Badge, Loading } from "./ui";
+import { useScreenSearch } from "@/lib/screen-navigation";
+import { Button } from "@/components/ui/button";
+import { Badge, Loading, Status } from "./ui";
 import { Input } from "@/components/ui/input";
 import { db, type Row } from "@/lib/db";
 import { fetchAssets, fetchTrips } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { CITY_COORDS, fmtDateTime, fmtNum } from "@/lib/format";
-import { agoLabel, buildFleetVehicles, hasInsight, INSIGHT_LABEL, nearestVehicles, type FleetVehicle, type Insight, type VehicleState } from "@/lib/fleet-map";
+import { agoLabel, freshReading, buildFleetVehicles, hasInsight, INSIGHT_LABEL, nearestVehicles, type FleetVehicle, type Insight, type VehicleState } from "@/lib/fleet-map";
 import { useTripPlan } from "./TripRouteMap";
 import type { MapLine, MapMarker } from "./MapView";
 
@@ -48,6 +50,7 @@ export function FleetLiveMap(props: Props) {
 
 function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }: Props) {
   const { can } = useAuth();
+  const search = useScreenSearch();
   const canGps = can("ops_manager", "dispatcher", "fleet_supervisor");
   const provider = useQuery({ queryKey: ["gps-provider"], enabled: canGps, refetchInterval: 30000, queryFn: () => rows(db.from("gps_provider_vehicles").select("*").order("plate")) });
   const assets = useQuery({ queryKey: ["assets"], refetchInterval: 60000, queryFn: () => rows(fetchAssets()) });
@@ -61,20 +64,20 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
   const select = (k: string | null) => { setSelLocal(k); onSelect?.(k); };
   const [stateF, setStateF] = useState<VehicleState | "all">("all");
   const [kindF, setKindF] = useState<"all" | "truck" | "car">("all");
-  const [insight, setInsight] = useState<Insight | null>(null);
+  const [insight, setInsight] = useState<Insight | null>(search.insight === "moving_without_trip" ? "moving_without_trip" : null);
   const [q, setQ] = useState("");
   const [pick, setPick] = useState<{ lat: number; lng: number } | null>(null);
 
   const vehicles = useMemo(() => buildFleetVehicles(provider.data ?? [], assets.data ?? [], trips.data ?? [], now), [provider.data, assets.data, trips.data, now]);
   const shown = useMemo(() => vehicles.filter((v) =>
-    (stateF === "all" || v.state === stateF) && (kindF === "all" || (kindF === "truck") === v.truck) && (!insight || hasInsight(v, insight)) &&
+    (stateF === "all" || v.state === stateF) && (kindF === "all" || (kindF === "truck") === v.truck) && (!insight || hasInsight(v, insight, now)) &&
     (!q.trim() || `${v.plate} ${v.code ?? ""} ${v.driver ?? ""} ${v.tripNumber ?? ""}`.toLowerCase().includes(q.trim().toLowerCase())),
-  ), [vehicles, stateF, kindF, insight, q]);
+  ), [vehicles, stateF, kindF, insight, q, now]);
   const cur = vehicles.find((v) => v.key === sel) ?? null;
 
   const track = useQuery({
     queryKey: ["gps-track", cur?.assetId], enabled: canGps && !!cur?.assetId, refetchInterval: 60000,
-    queryFn: () => rows(db.from("gps_readings").select("lat,lng,event_time").eq("asset_id", cur!.assetId).gte("event_time", new Date(Date.now() - 12 * 3600e3).toISOString()).order("event_time").limit(1000)),
+    queryFn: () => rows(db.from("gps_readings").select("lat,lng,event_time").eq("asset_id", cur?.assetId ?? "").gte("event_time", new Date(Date.now() - 12 * 3600e3).toISOString()).order("event_time").limit(1000)),
   });
   const plan = useTripPlan(cur?.tripId, !!cur?.tripId);
 
@@ -106,7 +109,7 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
   }, [cur, plan.data, track.data, trips.data]);
 
   const counts = (s: VehicleState) => vehicles.filter((v) => v.state === s).length;
-  const insights = (["idling", "speeding", "lost", "on_trip"] as Insight[]).map((i) => [i, vehicles.filter((v) => hasInsight(v, i)).length] as const).filter(([, n]) => n > 0);
+  const insights = (["idling", "speeding", "lost", "on_trip", "moving_without_trip"] as Insight[]).map((i) => [i, vehicles.filter((v) => hasInsight(v, i, now)).length] as const).filter(([, n]) => n > 0);
   const near = pick ? nearestVehicles(vehicles, pick.lat, pick.lng) : [];
   const lastSync = (provider.data ?? []).reduce<string | null>((m, p) => (p.synced_at && (!m || p.synced_at > m) ? p.synced_at : m), null);
   const loading = assets.isLoading || (canGps && provider.isLoading);
@@ -158,7 +161,15 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
     </Suspense>
   );
 
-  if (compact) return map;
+  const unavailable = provider.isError || assets.isError || trips.isError;
+  const scope = <div className="space-y-1 px-3 py-2 text-xs" aria-label="نطاق التتبع">
+    {unavailable ? <p role="alert" className="text-danger">بيانات التتبع أو الربط غير متاحة؛ لا يمكن تأكيد الأعداد الآن.</p> : loading ? <p>جارٍ تحميل التتبع…</p> : <p>أجهزة التتبع: {provider.data?.length ?? 0} · رؤوس مسجلة بالأسطول: {(assets.data ?? []).filter(a => a.kind !== 'trailer').length} · رحلات جارية: {(trips.data ?? []).filter(t => t.status === 'in_progress').length}</p>}
+    {canGps && !unavailable && <Button size="sm" variant="link" className="h-auto whitespace-normal p-0 text-start" asChild><Link to="/tracking" search={{ insight: 'moving_without_trip' }}>مركبات مرتبطة تتحرك بدون رحلة جارية ({vehicles.filter(v => hasInsight(v, 'moving_without_trip', now)).length})</Link></Button>}
+    <p className="text-muted-foreground">نطاق المزوّد يشمل الأجهزة غير المربوطة؛ حركة GPS لا تعني جاهزية الأصل أو وجود رحلة.</p>
+    <p className="num text-muted-foreground">مزامنة المزوّد: {fmtDateTime(lastSync)} · قراءة الأسطول: {assets.dataUpdatedAt ? fmtDateTime(new Date(assets.dataUpdatedAt).toISOString()) : '—'} · الرحلات: {trips.dataUpdatedAt ? fmtDateTime(new Date(trips.dataUpdatedAt).toISOString()) : '—'}</p>
+  </div>;
+  if (unavailable) return <div>{scope}<Button size="sm" variant="outline" onClick={() => { void provider.refetch(); void assets.refetch(); void trips.refetch(); }}>إعادة المحاولة</Button></div>;
+  if (compact) return <>{scope}{map}</>;
 
   return (
     <div className="grid min-w-0 gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
@@ -190,6 +201,7 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
             </div>
           </div>
         )}
+        <p className="text-xs text-muted-foreground">القائمة المفلترة: {shown.length} مركبة</p>
         <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
           {loading && <li><Loading /></li>}
           {!loading && shown.length === 0 && <li className="p-3 text-center text-sm text-muted-foreground">لا توجد مركبات مطابقة.</li>}
@@ -215,13 +227,14 @@ function LiveMap({ height = 420, compact = false, selected: selProp, onSelect }:
         </ul>
         <p className="text-[10px] text-muted-foreground">اضغط على أي مكان في الخريطة لمعرفة أقرب المركبات إليه.</p>
       </div>
-      <div ref={mapBox} className="order-1 min-w-0 scroll-mt-20 xl:order-none">{map}</div>
+      <div ref={mapBox} className="order-1 min-w-0 scroll-mt-20 xl:order-none">{scope}{map}</div>
     </div>
   );
 }
 
 function VehicleCard({ v, now, compact, trackPoints, onClose }: { v: FleetVehicle; now: number; compact: boolean; trackPoints: number; onClose: () => void }) {
   const st = STATE[v.state];
+  const { can, viewAs } = useAuth();
   return (
     <div className="absolute right-2.5 bottom-2.5 z-[3] w-80 max-w-[calc(100%-20px)] rounded-2xl border bg-card/95 p-3 text-sm shadow-lg backdrop-blur" dir="rtl">
       <div className="flex items-start justify-between gap-2">
@@ -231,10 +244,14 @@ function VehicleCard({ v, now, compact, trackPoints, onClose }: { v: FleetVehicl
             <b className="num truncate text-base">{v.plate}</b>
             <Badge tone={st.tone}>{st.label}</Badge>
           </div>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">{v.live ? "ضمان المهندس — مباشر" : "آخر موقع محفوظ"} • {agoLabel(v.at, now)}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{v.live ? "ضمان المهندس — آخر قراءة" : "آخر موقع محفوظ"} • {agoLabel(v.at, now)}</p>
         </div>
         <button type="button" aria-label="إغلاق" onClick={onClose} className="rounded-full p-1 hover:bg-muted"><X className="size-4" /></button>
       </div>
+      <p className="mt-1 text-xs">{v.assetId ? `مربوطة بملف الأصل · ${v.code ?? ''} · ${v.assetKind === 'tractor' ? 'رأس' : v.assetKind === 'trailer' ? 'مقطورة' : 'مركبة'}` : 'غير مربوطة بأصل موثوق'}</p>
+      <p className="text-xs">الإشارة: {freshReading(v.at, now) ? 'قراءة حديثة' : 'قراءة قديمة أو غير متاحة — لا تثبت الحركة الآن'}</p>
+      {v.assetStatus && <p className="flex items-center gap-1 text-xs">الجاهزية التشغيلية: <Status kind="asset" value={v.assetStatus} /></p>}
+      {!v.tripId && <p className="text-xs">لا توجد رحلة جارية مسجلة</p>}
       <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
         <span className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-2 py-1.5"><Gauge className="size-3.5" /> <span className="num">{v.speed != null ? `${fmtNum(v.speed)} كم/س` : "—"}</span></span>
         <span className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-2 py-1.5"><Radio className="size-3.5" /> {v.ignition == null ? "المحرك —" : v.ignition ? "المحرك يعمل" : "المحرك مطفأ"}</span>
@@ -245,6 +262,7 @@ function VehicleCard({ v, now, compact, trackPoints, onClose }: { v: FleetVehicl
       <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
         {compact && <Link to="/tracking" search={{ v: v.key }} className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground"><MapPin className="size-3.5" /> فتح في التتبع</Link>}
         {v.tripId && <Link to="/trips/$id" params={{ id: v.tripId }} className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-semibold hover:bg-muted"><RouteIcon className="size-3.5" /> الرحلة</Link>}
+        {!v.assetId && v.providerId && !viewAs && can('ops_manager', 'fleet_supervisor') && <Button size="sm" variant="outline" asChild><Link to="/tracking" search={{ v: v.key }} hash="device-linking">مراجعة ربط الجهاز</Link></Button>}
         {v.assetId && <Link to="/fleet/$id" params={{ id: v.assetId }} className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-semibold hover:bg-muted"><Truck className="size-3.5" /> المركبة</Link>}
         <a href={`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 font-semibold hover:bg-muted"><Navigation className="size-3.5" /> الاتجاهات <ExternalLink className="size-3" /></a>
       </div>

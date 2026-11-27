@@ -3,11 +3,14 @@ import type { ReactNode } from "react";
 import { AlertTriangle, CalendarClock, CheckCircle2, ClipboardCheck, Coins, FileText, Package, Plus, RefreshCcw, Route as RouteIcon, Truck, Undo2, Users, Wrench, XCircle } from "lucide-react";
 import { Badge, DataTable, Empty, Kpi, PageHeader, Panel, Status } from "./ui";
 import { db, useRows, type Row } from "@/lib/db";
+import { useScreenNavigate } from "@/lib/screen-navigation";
 import { fetchTrips } from "@/lib/queries";
 import { daysUntil, fmtDate, fmtSAR, fmtTime } from "@/lib/format";
+import { ApprovalCenter } from "./ApprovalCenter";
+import { companyDay } from "@/lib/home-summary";
 import type { AppRole } from "@/lib/auth";
 
-/** Which role dashboard "/" shows for a non-admin user, or null for the full admin dashboard. */
+/** Effective role dashboard; stored administrator identity never overrides preview context. */
 export function dashboardFor(roles: AppRole[]): "dispatcher" | "accountant" | "maintenance" | "fleet_supervisor" | null {
   if (roles.includes("owner") || roles.includes("ops_manager")) return null;
   for (const r of ["dispatcher", "accountant", "maintenance", "fleet_supervisor"] as const) if (roles.includes(r)) return r;
@@ -21,7 +24,7 @@ function Action({ to, children, primary }: { to: string; children: ReactNode; pr
     </Link>
   );
 }
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => companyDay();
 
 export function RoleDashboard({ kind, name }: { kind: NonNullable<ReturnType<typeof dashboardFor>>; name: string }) {
   if (kind === "dispatcher") return <Dispatcher name={name} />;
@@ -31,11 +34,12 @@ export function RoleDashboard({ kind, name }: { kind: NonNullable<ReturnType<typ
 }
 
 function Dispatcher({ name }: { name: string }) {
+  const nav = useScreenNavigate();
   const trips = useRows(["trips"], fetchTrips);
   const assets = useRows(["assets"], () => db.from("assets").select("id,status,kind"));
   const t = trips.data ?? [];
   const d = today();
-  const todays = t.filter((x) => (x.planned_start ?? "").slice(0, 10) === d || x.status === "in_progress");
+  const todays = t.filter((x) => companyDay(x.planned_start ?? "") === d || x.status === "in_progress");
   const waiting = t.filter((x) => ["draft", "planned"].includes(x.status) && (!x.driver_id || !x.tractor_id));
   const late = t.filter((x) => x.status === "in_progress" && x.planned_end && new Date(x.planned_end) < new Date());
   const free = (assets.data ?? []).filter((a) => a.kind !== "trailer" && a.status === "available").length;
@@ -46,12 +50,13 @@ function Dispatcher({ name }: { name: string }) {
   ].slice(0, 6);
   return (
     <div className="space-y-5">
-      <PageHeader title="لوحة موظف الحركة" subtitle={`أهلاً ${name} — إدارة وتنسيق رحلات الشاحنات اليوم`} icon={<RouteIcon />} />
+      <PageHeader title="لوحة موظف الحركة" subtitle={`ملخص اليوم · أهلاً ${name} — إدارة وتنسيق رحلات الشاحنات اليوم`} icon={<RouteIcon />} />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="رحلات اليوم" value={todays.length} tone="info" />
-        <Kpi label="بانتظار التخصيص" value={waiting.length} tone="warning" />
-        <Kpi label="متأخرة" value={late.length} tone="danger" />
-        <Kpi label="موارد متاحة" value={free} tone="success" />
+        <Kpi onOpen={() => void nav({ to: "/trips", search: { scope: "today" } })} label="رحلات اليوم" value={todays.length} tone="info" />
+        <Kpi onOpen={() => void nav({ to: "/trips", search: { scope: "waiting" } })} label="بانتظار التخصيص" value={waiting.length} tone="warning" />
+        <Kpi onOpen={() => void nav({ to: "/trips", search: { scope: "late" } })} label="متأخرة" value={late.length} tone="danger" />
+        <Kpi onOpen={() => void nav({ to: "/fleet", search: { status: "available", tab: "tractor" } })} label="موارد متاحة" value={free} tone="success" />
+        <div className="col-span-2 md:col-span-4"><ApprovalCenter /></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Action to="/orders/new" primary><Plus className="size-4" /> إنشاء رحلة</Action>
@@ -90,6 +95,9 @@ function Dispatcher({ name }: { name: string }) {
 }
 
 function Accountant({ name }: { name: string }) {
+  const nav = useScreenNavigate();
+  const billable = useRows(['trips', 'billable'], () => db.from('trips').select('id,number,status,is_empty,lines:invoice_lines(id)').in('status', ['delivered', 'closed']).eq('is_empty', false));
+  const unbilled = (billable.data ?? []).filter(t => !(t.lines ?? []).length);
   const inv = useRows(["invoices", "acct"], () => db.from("invoices").select("*, customer:customers(name), alloc:payment_allocations(amount)").neq("status", "cancelled").order("issued_at", { ascending: false }).limit(300));
   const pay = useRows(["payments", "acct"], () => db.from("payments").select("*, customer:customers(name)").order("paid_at", { ascending: false }).limit(50));
   const exp = useRows(["expenses", "pending"], () => db.from("expenses").select("*, driver:drivers(full_name)").eq("status", "pending").order("spent_at", { ascending: false }));
@@ -105,17 +113,18 @@ function Accountant({ name }: { name: string }) {
   const sum = (rows: Row[] | undefined) => (rows ?? []).reduce((s, r) => s + Number(r.amount ?? r.balance ?? 0), 0);
   return (
     <div className="space-y-5">
-      <PageHeader title="لوحة المحاسب" subtitle={`أهلاً ${name} — نظرة سريعة على الذمم والتحصيلات والمصروفات والسلف`} icon={<Coins />} />
+      <PageHeader title="لوحة المحاسب" subtitle={`ملخص اليوم · أهلاً ${name} — نظرة سريعة على الذمم والتحصيلات والمصروفات والسلف`} icon={<Coins />} />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="مستحقات العملاء" value={fmtSAR(total)} tone="info" />
-        <Kpi label="تحصيلات اليوم" value={fmtSAR(sum((pay.data ?? []).filter((p) => p.paid_at === today())))} tone="success" />
-        <Kpi label="مصروفات تنتظر الاعتماد" value={fmtSAR(sum(exp.data))} tone="warning" />
-        <Kpi label="سلف مفتوحة" value={fmtSAR(sum(adv.data))} tone="gold" />
+        <Kpi onOpen={() => void nav({ to: "/finance", search: { tab: "inv" } })} label="مستحقات العملاء" value={fmtSAR(total)} tone="info" />
+        <Kpi onOpen={() => void nav({ to: "/finance", search: { tab: "pay" } })} label="تحصيلات اليوم" value={fmtSAR(sum((pay.data ?? []).filter((p) => companyDay(p.paid_at) === today())))} tone="success" />
+        <Kpi onOpen={() => void nav({ to: "/expenses", search: { tab: "exp", status: "pending" } })} label="مصروفات تنتظر الاعتماد" value={fmtSAR(sum(exp.data))} tone="warning" />
+        <Kpi onOpen={() => void nav({ to: "/expenses", search: { tab: "adv", status: "open" } })} label="سلف مفتوحة" value={fmtSAR(sum(adv.data))} tone="gold" />
+        <div className="col-span-2 md:col-span-4"><ApprovalCenter /></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Action to="/finance" primary><Coins className="size-4" /> تسجيل تحصيل</Action>
         <Action to="/expenses"><ClipboardCheck className="size-4" /> مراجعة المصروفات</Action>
-        <Action to="/finance"><FileText className="size-4" /> إنشاء مسودة فاتورة</Action>
+        <Action to="/finance"><FileText className="size-4" /> رحلات مؤهلة للفوترة ({unbilled.length})</Action>
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="بنود بانتظار الاعتماد" className="lg:col-span-2">
@@ -173,12 +182,13 @@ function Maintenance({ name }: { name: string }) {
   const notReady = w.filter((x) => ["maintenance", "stopped"].includes(x.asset?.status));
   return (
     <div className="space-y-5">
-      <PageHeader title="لوحة مسؤول الصيانة" subtitle={`أهلاً ${name} — أوامر الصيانة والأعطال والصيانة الدورية وقطع الغيار`} icon={<Wrench />} />
+      <PageHeader title="لوحة مسؤول الصيانة" subtitle={`ملخص اليوم · أهلاً ${name} — أوامر الصيانة والأعطال والصيانة الدورية وقطع الغيار`} icon={<Wrench />} />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="أوامر مفتوحة" value={w.length} tone="info" />
         <Kpi label="أعطال حرجة" value={(insp.data ?? []).length} tone="danger" />
         <Kpi label="صيانة مستحقة" value={upcoming.filter((p) => p.next! <= new Date(Date.now() + 7 * 864e5)).length} tone="success" />
         <Kpi label="انتظار قطع" value={w.filter((x) => x.status === "waiting_parts").length} tone="warning" />
+        <div className="col-span-2 md:col-span-4"><ApprovalCenter /></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Action to="/maintenance" primary><Plus className="size-4" /> أمر صيانة جديد</Action>
@@ -240,12 +250,13 @@ function Fleet({ name }: { name: string }) {
   const ready = (r: Row) => crit(r.id) || ["maintenance", "stopped"].includes(r.status) ? "no" : docSoon(r.id) ? "limited" : "yes";
   return (
     <div className="space-y-5">
-      <PageHeader title="لوحة مشرف الأسطول" subtitle={`أهلاً ${name} — جاهزية الأسطول والعهد والفحوصات والوثائق`} icon={<Truck />} />
+      <PageHeader title="لوحة مشرف الأسطول" subtitle={`ملخص اليوم · أهلاً ${name} — جاهزية الأسطول والعهد والفحوصات والوثائق`} icon={<Truck />} />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="مركبات متاحة" value={a.filter((x) => x.status === "available").length} tone="success" />
         <Kpi label="عهد مفتوحة" value={(cust.data ?? []).length} tone="info" />
         <Kpi label="وثائق تنتهي قريباً" value={(docs.data ?? []).length} tone="warning" />
         <Kpi label="فحوصات معلقة" value={(insp.data ?? []).length} tone="danger" />
+        <div className="col-span-2 md:col-span-4"><ApprovalCenter /></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-4">
         <Action to="/custody" primary><Truck className="size-4" /> تسليم مركبة</Action>

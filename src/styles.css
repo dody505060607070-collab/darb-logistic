@@ -73,7 +73,7 @@ input:focus, textarea:focus, select:focus { box-shadow: 0 0 0 3px color-mix(in s
 .app-toolbar { margin: 14px 24px 0; border: 1px solid var(--glass-edge); border-radius: 8px; background: var(--glass-gradient); backdrop-filter: blur(24px); box-shadow: var(--glass-shadow); }
 .company-logo { width: 196px; height: 143px; object-fit: contain; }
 .driver-toolbar { background: var(--glass-gradient); backdrop-filter: blur(24px); box-shadow: var(--glass-shadow); color: var(--foreground); border-bottom: 1px solid var(--glass-edge); }
-.driver-toolbar .company-logo { width: 108px; height: 79px; }
+.driver-toolbar .company-logo { width: 72px; height: 52px; }
 html:not(.light) .company-logo { background: var(--logo-surface); border-radius: 8px; padding: 6px; }
 .card-grip { touch-action: none; cursor: grab; opacity: .55; }
 .card-grip:hover, .card-grip:focus-visible { opacity: 1; }

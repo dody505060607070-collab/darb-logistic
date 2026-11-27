@@ -5,7 +5,7 @@ import { tryNormalizePhone } from "@/lib/phone";
 import { DriverReturnRequest } from "@/components/darb/ReturnTrip";
 import { DriverRequests } from "@/components/darb/ApprovalCenter";
 import { flushWa } from "@/lib/wa-flush";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -133,7 +133,8 @@ function DriverApp() {
   const allDrivers = useRows(["drivers", "preview-list"], () => db.from("drivers").select("id,full_name,code,phone").order("full_name"), previewing);
   const trips = useRows(["driver_my_trips", previewing ? previewDriver : auth.driverId], () => previewing ? db.rpc("driver_trips_for", { p_driver_id: previewDriver }) : db.rpc("driver_my_trips"), previewing ? !!previewDriver && previewDriver !== 'sample' : !!auth.driverId);
   const me = useRows(["drivers", "me"], () => db.from("drivers").select("*").eq("id", auth.driverId), !!auth.driverId);
-  const custody = useRows(["custody", "me"], () => db.from("custody").select("*, asset:assets(code)").eq("driver_id", auth.driverId).is("closed_at", null), !!auth.driverId);
+  const custodyDriver = previewing ? previewDriver : auth.driverId;
+  const custody = useRows(["custody", "me", custodyDriver], () => db.from("custody").select("*, asset:assets(code)").eq("driver_id", custodyDriver).is("closed_at", null), !!custodyDriver && custodyDriver !== "sample");
 
   if (!auth.ready || !auth.session) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
@@ -157,7 +158,7 @@ function DriverApp() {
   const driverId = auth.driverId ?? "demo";
 
   return (
-    <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-20 animate-in fade-in duration-500">
+    <div dir="rtl" className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-28 animate-in fade-in duration-500">
       {(auth.viewAs || demo) && <div className="flex justify-end border-b px-4 py-2"><Button size="sm" variant="outline" onClick={() => { auth.setViewAs(null); void nav({ to: "/" }); }}>رجوع لـ Super Admin</Button></div>}
       {demo && <div className="space-y-1 bg-gold-soft px-4 py-2 text-center text-xs font-semibold text-primary">
         <div>{previewDriver === 'sample' ? 'مثال توضيحي — ليس بيانات تشغيل' : 'معاينة الإدارة — قراءة فقط'}</div>
@@ -167,8 +168,8 @@ function DriverApp() {
           {(allDrivers.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.full_name} — {x.phone ?? x.code}</option>)}
         </select></div>}
       {!demo && !getPresentationRuntime() && current?.status === "in_progress" && <LiveGps tripId={current.id} />}
-      <header className="driver-toolbar flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-        <Logo light />
+      <header className="driver-toolbar flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+        <Logo light className="driver-compact-logo" />
         <div className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2 text-xs">
           <span className={cn("flex items-center gap-1", online ? "text-success" : "text-warning")}>
             {online ? <span className="size-2 rounded-full bg-success" /> : <CloudOff className="size-4" />}
@@ -207,7 +208,9 @@ function DriverApp() {
       {drafts.length>0&&<div className="mx-4 mt-3 border border-warning bg-warning-soft p-3 text-xs"><b>مسودات إثبات التسليم — غير معتمدة</b>{drafts.map(d=><div key={d.id} className="mt-2"><p>{d.status==='pending'?'بانتظار الاتصال والإرسال':`تعذر الإرسال: ${d.error}`}</p><Button size="sm" variant="outline" onClick={()=>void retryDeliveryDraft(d.id,d.userId).then(()=>qc.invalidateQueries())}><RefreshCw/> إعادة الإرسال</Button></div>)}</div>}
 
       <main className="flex-1 space-y-4 p-4">
-        <h1 className="text-xl font-bold text-primary">تكليفات السائق</h1>
+        <h1 className="text-xl font-bold text-primary">تكليفات السائق · ملخص اليوم</h1>
+        {tab === 'home' && <DriverCustody rows={demo && previewDriver === 'sample' ? [{ id: 'preview-custody', asset: { code: 'مثال عهدة' }, acknowledged: false }] : custody.data ?? []} demo={demo} />}
+        {custody.error && <p role="alert" className="text-sm text-danger">تعذر تحميل العهد المسندة إليك.</p>}
         {tab === 'home' && <div className="grid grid-cols-2 gap-2">
           <div className="border-b p-3"><p className="text-xs text-muted-foreground">تكليفات جارية</p><b className="num text-xl">{list.filter(t => ['planned', 'ready', 'in_progress'].includes(t.status)).length}</b></div>
           <div className="border-b p-3"><p className="text-xs text-muted-foreground">تم التسليم</p><b className="num text-xl">{list.filter(t => ['delivered', 'closed'].includes(t.status)).length}</b></div>
@@ -217,7 +220,7 @@ function DriverApp() {
         {trips.isLoading && previewDriver !== 'sample' ? <Loading /> : trips.error ? <div role="alert" className="text-sm text-danger">{errMsg(trips.error)}</div> : !current ? (
           <div className="panel"><Empty text={demo && !previewDriver ? 'اختر ملفًا لعرض تكليفاته أو مثالًا توضيحيًا' : 'لا توجد رحلة مكلّف بها حاليًا.'} /></div>
         ) : tab === "home" ? (
-          <HomeView t={current} custody={demo ? [] : custody.data ?? []} online={online} go={setTab} demo={demo} />
+          <HomeView t={current} custody={demo && previewDriver === "sample" ? [{ id: "preview-custody", asset: { code: "مثال عهدة" }, acknowledged: false }] : custody.data ?? []} online={online} go={setTab} demo={demo} />
         ) : tab === "inspect" ? (
           <InspectView t={current} driverId={driverId} done={() => setTab("home")} demo={demo} />
         ) : tab === "trip" ? (
@@ -248,6 +251,29 @@ function DriverApp() {
   );
 }
 
+function DriverCustody({ rows, demo }: { rows: Row[]; demo?: boolean }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const lock = useRef(false);
+  async function acknowledge(id: string) {
+    if (demo) return void demoToast();
+    if (lock.current) return;
+    lock.current = true; setBusy(true);
+    try {
+      const { error } = await db.from('custody').update({ acknowledged: true }).eq('id', id);
+      if (error) throw error;
+      toast.success('تم الإقرار باستلام العهدة'); void qc.invalidateQueries({ queryKey: ['custody'] });
+    } catch (e) { toast.error(errMsg(e)); } finally { lock.current = false; setBusy(false); }
+  }
+  const pending = rows.filter(r => !r.closed_at && !r.acknowledged);
+  const render = (list: Row[]) => list.map(c => <section key={c.id} className="space-y-2 border-y border-gold py-3 text-sm">
+    <h2 className="font-bold text-primary">مطلوب مني · إقرار عهدة <span className="num">{c.asset?.code}</span></h2>
+    <p className="text-xs text-muted-foreground">راجع المركبة قبل تأكيد الاستلام · {fmtDateTime(c.opened_at)}</p>
+    <Button size="sm" disabled={busy} onClick={() => void acknowledge(c.id)}>إقرار الاستلام</Button>
+  </section>);
+  return <>{render(pending.slice(0, 1))}{pending.length > 1 && <details><summary className="cursor-pointer text-sm">بقية العهد المطلوبة مني ({pending.length - 1})</summary>{render(pending.slice(1))}</details>}</>;
+}
+
 function Stepper({ stage }: { stage: string }) {
   const labels = ["الوصول للتحميل", "تم التحميل", "في الطريق", "الوصول", "التفريغ", "تم التسليم"];
   const idx = Math.max(-1, STEPS.findIndex((s) => s === stage), ...["loading_start"].includes(stage) ? [0] : [], ...["fuel_stop", "rest_stop"].includes(stage) ? [2] : [], ...["unloading_start"].includes(stage) ? [3] : []);
@@ -265,7 +291,7 @@ function Stepper({ stage }: { stage: string }) {
   );
 }
 
-function HomeView({ t, custody, online, go, demo }: { t: Row; custody: Row[]; online: boolean; go: (t: Tab) => void; demo?: boolean }) {
+function HomeView({ t, online, go, demo }: { t: Row; custody: Row[]; online: boolean; go: (t: Tab) => void; demo?: boolean }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const next = NEXT_EVENT[t.stage] ?? null;
@@ -284,15 +310,8 @@ function HomeView({ t, custody, online, go, demo }: { t: Row; custody: Row[]; on
     }
     setBusy(false);
   }
-  const unack = custody.filter((c) => !c.acknowledged);
   return (
     <>
-      {unack.map((c) => (
-        <div key={c.id} className="panel flex flex-wrap items-center justify-between gap-3 border-2 border-gold p-4 text-sm">
-          <span className="space-y-1"><b className="block text-base text-primary">📦 تم تسليمك عهدة جديدة: <span className="num">{c.asset?.code}</span></b><span className="block text-muted-foreground">راجع المركبة ثم اضغط «إقرار الاستلام» لتأكيد أنك استلمتها.</span></span>
-          <Button size="sm" onClick={async () => { const { error } = await db.from("custody").update({ acknowledged: true }).eq("id", c.id); if (error) toast.error(errMsg(error)); else { toast.success("تم الإقرار باستلام العهدة"); void qc.invalidateQueries(); } }}>إقرار الاستلام</Button>
-        </div>
-      ))}
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-lg font-bold text-primary"><RouteIcon className="size-5" /> الرحلة الحالية</h2>
         <Badge tone={t.status === "in_progress" ? "success" : "info"}>{t.status === "in_progress" ? "قيد التنفيذ" : "مخططة"}</Badge>

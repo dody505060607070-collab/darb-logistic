@@ -10,7 +10,8 @@ import { db, useRows, type Row } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
 import { errMsg, fmtDateTime, fmtSAR } from "@/lib/format";
 import { flushWa } from "@/lib/wa-flush";
-import { ReturnRequestActions, ReturnRequestDetails } from "./ReturnRequestsInbox";
+import { pendingCustody } from "@/lib/home-summary";
+import { useScreenNavigate } from "@/lib/screen-navigation";
 
 type Res = { error: unknown } | PromiseLike<{ error: unknown }>;
 
@@ -70,79 +71,53 @@ function Line({ k, v }: { k: string; v: ReactNode }) {
   return v ? <div><span className="text-muted-foreground">{k}: </span>{v}</div> : null;
 }
 
-/** "Awaiting your approval" box — each section only loads for the roles that review it. */
+/** Role-scoped next actions; custody awaiting a driver belongs to follow-up, not approval. */
 export function ApprovalCenter() {
-  const { can } = useAuth();
-  const ops = can("ops_manager", "dispatcher");
-  const fin = can("accountant");
-  const mnt = can("ops_manager", "maintenance");
-  const fleet = can("ops_manager", "fleet_supervisor");
-
-  const returns = useRows(["return_requests", "pending"], () => db.from("return_requests").select("*, trip:trips!return_requests_trip_id_fkey(id,number,origin_city,dest_city), driver:drivers(full_name)").eq("status", "pending").order("created_at"), ops);
-  const delays = useRows(["delay_notices", "pending"], () => db.from("delay_notices").select("*, trip:trips(id,number,origin_city,dest_city), driver:drivers(full_name)").eq("status", "pending").order("created_at"), ops);
-  const expenses = useRows(["expenses", "pending-inbox"], () => db.from("expenses").select("*, driver:drivers(full_name), trip:trips(number)").eq("status", "pending").order("spent_at"), fin);
-  const fuel = useRows(["fuel_entries", "pending-inbox"], () => db.from("fuel_entries").select("*, driver:drivers(full_name), asset:assets(code)").eq("status", "pending").order("filled_at"), fin);
-  const wallet = useRows(["wallet", "pending-inbox"], () => db.from("maintenance_wallet_entries").select("*, employee:profiles!maintenance_wallet_entries_employee_id_fkey(full_name)").eq("status", "pending").order("occurred_at"), fin);
+  const { can, viewAs, session } = useAuth();
+  const nav = useScreenNavigate();
+  const ops = can("ops_manager", "dispatcher"), fin = can("accountant"), mnt = can("ops_manager", "maintenance"), fleet = can("ops_manager", "fleet_supervisor");
+  const returns = useRows(["return_requests", "pending"], () => db.from("return_requests").select("*, trip:trips!return_requests_trip_id_fkey(id,number), driver:drivers(full_name)").eq("status", "pending").order("created_at"), ops);
+  const delays = useRows(["delay_notices", "pending"], () => db.from("delay_notices").select("*, trip:trips(id,number), driver:drivers(full_name)").eq("status", "pending").order("created_at"), ops);
+  const expenses = useRows(["expenses", "pending-inbox"], () => db.from("expenses").select("*, driver:drivers(full_name)").eq("status", "pending").order("spent_at"), fin);
+  const fuel = useRows(["fuel_entries", "pending-inbox"], () => db.from("fuel_entries").select("*, asset:assets(code)").eq("status", "pending").order("filled_at"), fin);
+  const wallet = useRows(["wallet", "pending-inbox"], () => db.from("maintenance_wallet_entries").select("*").eq("status", "submitted").neq("employee_id", session?.user.id ?? "").order("occurred_at"), fin);
   const orders = useRows(["work_orders", "review-inbox"], () => db.from("work_orders").select("*, asset:assets(code)").in("workflow_status", ["review", "additional_review"]).order("opened_at"), mnt);
-  const inspections = useRows(["inspections", "critical-inbox"], () => db.from("inspections").select("*, asset:assets(code), driver:drivers(full_name)").eq("has_critical", true).eq("resolved", false).order("created_at"), fleet);
+  const inspections = useRows(["inspections", "critical-inbox"], () => db.from("inspections").select("*, asset:assets(code)").eq("has_critical", true).eq("resolved", false).order("created_at"), fleet);
   const custody = useRows(["custody", "unack-inbox"], () => db.from("custody").select("*, asset:assets(code), driver:drivers(full_name)").is("closed_at", null).eq("acknowledged", false).order("opened_at"), fleet);
-
-  const total = [returns, delays, expenses, fuel, wallet, orders, inspections, custody].reduce((s, q) => s + (q.data?.length ?? 0), 0);
-  if (!total) return null;
-
-  return (
-    <section className="panel space-y-4 border-gold p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-bold text-primary"><ClipboardCheck className="size-5 text-gold" /> بانتظار موافقتك <span className="num">({total})</span></h2>
-        <Link to="/chat" className="flex items-center gap-1 text-xs font-semibold text-gold"><MessageCircle className="size-4" /> المحادثة</Link>
-      </div>
-
-      <Section title="طلبات رحلات الرجوع" rows={returns.data} render={(r) => (
-        <Card who={r.driver?.full_name} title={<>طلب رجوع للرحلة <Link to="/trips/$id" params={{ id: r.trip?.id }} className="num text-gold underline">{r.trip?.number}</Link></>} at={r.created_at}
-          actions={<ReturnRequestActions r={r} />}><ReturnRequestDetails r={r} trip={r.trip} /></Card>)} />
-
-      <Section title="إشعارات تأخير" rows={delays.data} render={(r) => (
-        <Card who={r.driver?.full_name} title={<>تأخير في الرحلة <Link to="/trips/$id" params={{ id: r.trip?.id }} className="num text-gold underline">{r.trip?.number}</Link></>} at={r.created_at}
-          actions={<Decide approveLabel="تم الاستلام" approve={() => db.rpc("acknowledge_delay", { p_id: r.id, p_reply: "" })} />}>
-          <Line k="السبب" v={r.reason} /><Line k="الوصول المتوقع" v={<span className="num">{fmtDateTime(r.expected_at)}</span>} />
-        </Card>)} />
-
-      <Section title="مصروفات السائقين" rows={expenses.data} render={(r) => (
-        <Card who={r.driver?.full_name} title={<>{r.category} — <b className="num">{fmtSAR(r.amount)}</b></>} at={r.spent_at}
-          actions={<Decide approve={() => db.rpc("review_expense", { p_id: r.id, p_approve: true, p_reason: "" })} reject={(why) => db.rpc("review_expense", { p_id: r.id, p_approve: false, p_reason: why })} />}>
-          <Line k="الرحلة" v={r.trip?.number} /><Line k="الوصف" v={r.description} /><Line k="الدفع" v={r.payment_method} /><Line k="الإيصال" v={r.receipt_path ? "مرفق ✅" : "بدون إيصال"} />
-        </Card>)} />
-
-      <Section title="تعبئات الديزل" rows={fuel.data} render={(r) => (
-        <Card who={r.driver?.full_name} title={<><span className="num">{r.liters}</span> لتر — <b className="num">{fmtSAR(r.amount)}</b></>} at={r.filled_at}
-          actions={<Decide approve={() => db.from("fuel_entries").update({ status: "approved" }).eq("id", r.id)} reject={() => db.from("fuel_entries").update({ status: "rejected" }).eq("id", r.id)} needReason={false} />}>
-          <Line k="الشاحنة" v={r.asset?.code} /><Line k="المحطة" v={r.station} /><Line k="العداد" v={r.odometer && <span className="num">{r.odometer} كم</span>} /><Line k="الإيصال" v={r.receipt_path ? "مرفق ✅" : "بدون إيصال"} />
-        </Card>)} />
-
-      <Section title="حركات عهدة الصيانة" rows={wallet.data} render={(r) => (
-        <Card who={r.employee?.full_name} title={<>{r.kind === "disbursement" ? "صرف عهدة" : "مصروف صيانة"} — <b className="num">{fmtSAR(r.amount)}</b></>} at={r.occurred_at}
-          actions={<Decide approve={() => db.rpc("wallet_review", { p_id: r.id, p_approve: true, p_note: null as never })} reject={(why) => db.rpc("wallet_review", { p_id: r.id, p_approve: false, p_note: why })} />}>
-          <Line k="الوصف" v={r.description} /><Line k="المورد" v={r.supplier} /><Line k="الإيصال" v={r.receipt_path ? "مرفق ✅" : "بدون إيصال"} />
-        </Card>)} />
-
-      <Section title="أوامر صيانة تحتاج قرارًا" rows={orders.data} render={(r) => (
-        <Card title={<><span className="num">{r.number}</span> — {r.asset?.code}</>} at={r.opened_at}
-          actions={<Link to="/repair-center" className="text-xs font-semibold text-gold underline">افتح للموافقة أو الرفض</Link>}>
-          <Line k="العطل" v={r.description} /><Line k="الخطورة" v={r.severity === "critical" ? "حرجة" : r.severity === "high" ? "عالية" : "عادية"} />
-          <Line k="التقدير" v={r.estimate && <span className="num">{fmtSAR(r.estimate)}</span>} /><Line k="المرحلة" v={r.workflow_status === "additional_review" ? "تكلفة إضافية" : "طلب جديد"} />
-        </Card>)} />
-
-      <Section title="فحوصات بها عيب حرج" rows={inspections.data} render={(r) => (
-        <Card who={r.driver?.full_name} title={<>الشاحنة {r.asset?.code}</>} at={r.created_at}
-          actions={<Link to="/maintenance" className="text-xs font-semibold text-gold underline">افتح الصيانة</Link>}><Line k="ملاحظات" v={r.notes} /></Card>)} />
-
-      <Section title="عهد بانتظار إقرار السائق باستلامها" rows={custody.data} render={(r) => (
-        <Card who={r.driver?.full_name} title={<>الشاحنة {r.asset?.code}</>} at={r.opened_at}
-          actions={<Link to="/custody" className="text-xs font-semibold text-gold underline">افتح العهد</Link>}>
-          <Line k="المطلوب" v="ينتظر أن يدخل السائق للتطبيق ويضغط «إقرار الاستلام» — وصلته رسالة واتساب" /><Line k="العداد" v={r.odometer_out && <span className="num">{r.odometer_out} كم</span>} /><Line k="الوقود" v={r.fuel_level_out} /><Line k="الأضرار" v={r.damages} />
-        </Card>)} />
-    </section>
-  );
+  const requests = useRows(['customer_requests', 'action-inbox'], () => db.from('customer_requests').select('id,number,created_at,cargo_type,customer:customers(name)').eq('status', 'new').order('created_at'), ops);
+  const groups = [
+    { q: requests, enabled: ops, label: 'راجع طلب النقل', route: '/customer-requests', priority: 2, at: 'created_at' },
+    { q: inspections, enabled: fleet, label: 'افتح الفحص الحرج', route: '/custody', tab: 'insp', priority: 0, at: 'created_at' },
+    { q: orders, enabled: mnt, label: 'راجع أمر الصيانة', route: '/repair-center', priority: 1, at: 'opened_at' },
+    { q: expenses, enabled: fin, label: 'راجع المصروف', route: '/expenses', tab: 'exp', priority: 2, at: 'spent_at' },
+    { q: fuel, enabled: fin, label: 'راجع تعبئة الديزل', route: '/expenses', tab: 'fuel', priority: 3, at: 'filled_at' },
+    { q: wallet, enabled: fin, label: 'راجع عهدة الصيانة المالية', route: '/maintenance-wallet', priority: 3, at: 'occurred_at' },
+    { q: delays, enabled: ops, label: 'راجع إشعار التأخير', route: '/trips/$id', priority: 1, at: 'created_at' },
+    { q: returns, enabled: ops, label: 'راجع طلب الرجوع', route: '/trips/$id', priority: 3, at: 'created_at' },
+  ].filter(g => g.enabled);
+  const items = groups.flatMap(g => (g.q.data ?? []).map(r => ({ ...g, r }))).sort((a,b) => a.priority - b.priority || String(a.r[a.at] ?? '').localeCompare(String(b.r[b.at] ?? '')));
+  const waiting = fleet ? pendingCustody(custody.data ?? []) : [];
+  const loading = groups.some(g => g.q.isLoading);
+  const failed = groups.some(g => g.q.error);
+  function open(item: typeof items[number]) {
+    if (item.route === '/trips/$id') { if (item.r.trip?.id) void nav({ to: '/trips/$id', params: { id: item.r.trip.id } }); return; }
+    if (item.route === '/customer-requests') { void nav({ to: '/customer-requests', search: { id: item.r.id } }); return; }
+    if (item.route === '/repair-center') { void nav({ to: '/repair-center', search: { order: item.r.id } }); return; }
+    if (item.route === '/expenses') { void nav({ to: '/expenses', search: { id: item.r.id, tab: item.tab ?? 'exp', status: 'pending' } }); return; }
+    if (item.route === '/custody') { void nav({ to: '/custody', search: { id: item.r.id, tab: 'insp' } }); return; }
+    void nav({ to: '/maintenance-wallet', search: { id: item.r.id } });
+  }
+  const render = (list: typeof items) => list.map(item => <div key={`${item.route}-${item.r.id}`} className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b py-2 text-sm">
+    <div className="min-w-0"><b>{item.r.asset?.code ?? item.r.trip?.number ?? item.r.driver?.full_name ?? item.r.number ?? item.label}</b><p className="text-xs text-muted-foreground">{item.r.description ?? item.r.reason ?? item.r.category ?? 'تحتاج مراجعتك'} · {fmtDateTime(item.r[item.at])}{item.r.amount != null && ` · ${fmtSAR(item.r.amount)}`}</p></div>
+    <Button size="sm" variant="outline" onClick={() => open(item)}>{item.label}</Button>
+  </div>);
+  return <section className="my-3 space-y-2" aria-label="إجراءات اليوم">
+    <h2 className="flex items-center gap-2 font-bold text-primary"><ClipboardCheck className="size-4" />مطلوب مني <span className="num">({items.length})</span></h2>
+    {viewAs && <p className="text-xs text-warning">معاينة الإدارة — قراءة فقط، ليست صلاحية تنفيذ للموظف.</p>}
+    {loading ? <p className="text-sm text-muted-foreground">جارٍ تحميل الإجراءات…</p> : failed ? <p role="alert" className="text-sm text-danger">تعذر تحميل بعض الإجراءات؛ العدد غير مكتمل.</p> : !items.length ? <p className="text-sm text-muted-foreground">لا توجد إجراءات مطلوبة منك اليوم</p> : <>{render(items.slice(0, 2))}{items.length > 2 && <details><summary className="cursor-pointer text-sm text-primary">بقية الإجراءات ({items.length - 2})</summary>{render(items.slice(2))}</details>}</>}
+    {fleet && custody.error && <p role="alert" className="text-sm text-danger">تعذر تحميل متابعة العهد.</p>}
+    {!!waiting.length && <details className="border-t pt-2"><summary className="cursor-pointer text-sm font-semibold">بانتظار الآخرين · بانتظار إقرار السائقين — {waiting.length} عهدة</summary><div className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>أقدم طلب: {fmtDateTime(waiting[0]?.opened_at)} · الخطوة التالية لدى السائق</span><Button size="sm" variant="outline" onClick={() => void nav({ to: '/custody', search: { filter: 'unacknowledged' } })}>عرض العهد المعلّقة</Button></div></details>}
+  </section>;
 }
 
 const ST: Record<string, string> = { pending: "بانتظار الموافقة", approved: "تمت الموافقة ✅", rejected: "مرفوض ❌", acknowledged: "استلمتها الإدارة ✅" };

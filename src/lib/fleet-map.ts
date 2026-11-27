@@ -22,12 +22,22 @@ export type FleetVehicle = {
   tripId: string | null;
   tripNumber: string | null;
   tripRoute: string | null;
+  assetStatus: string | null;
+  assetKind: string | null;
+  providerId: string | null;
 };
 
 /** A reading older than this is treated as a lost signal even if the provider still says "stopped". */
 export const LOST_AFTER_MIN = 24 * 60;
 /** Speed above which the map flags a vehicle (km/h). */
 export const HIGH_SPEED_KMH = 120;
+/** Same fresh window as the tracking page; older fixes cannot prove movement now. */
+export const FRESH_AFTER_MIN = 15;
+
+export function freshReading(at: string | null | undefined, now = Date.now()) {
+  const m = minutesSince(at, now);
+  return m !== null && m < FRESH_AFTER_MIN && Date.parse(at ?? '') <= now + 60000;
+}
 
 export function minutesSince(at: string | null | undefined, now = Date.now()): number | null {
   if (!at) return null;
@@ -37,7 +47,9 @@ export function minutesSince(at: string | null | undefined, now = Date.now()): n
 
 export function vehicleState(providerState: string | null | undefined, at: string | null | undefined, now = Date.now()): VehicleState {
   const m = minutesSince(at, now);
+  if (m === null) return "unknown";
   if (m != null && m > LOST_AFTER_MIN) return "disconnected";
+  if (providerState === "moving" && !freshReading(at, now)) return "unknown";
   if (providerState === "moving" || providerState === "stopped" || providerState === "disconnected") return providerState;
   return "unknown";
 }
@@ -61,11 +73,12 @@ export function buildFleetVehicles(provider: Row[], assets: Row[], trips: Row[],
   for (const p of provider) {
     if (p.lat == null || p.lng == null) continue;
     const a = p.asset_id ? byAsset.get(p.asset_id) : null;
-    const t = tripOf(p.asset_id ?? null);
-    const key = p.asset_id ?? `gps:${p.id}`;
+    const t = tripOf(a?.id ?? null);
+    const key = a?.id ?? `gps:${p.id}`;
     seen.add(key);
     out.push({
-      key, assetId: p.asset_id ?? null, plate: p.plate ?? a?.code ?? "GPS", code: a?.code ?? null,
+      key, assetId: a?.id ?? null, plate: p.plate ?? a?.code ?? "GPS", code: a?.code ?? null,
+      assetStatus: a?.status ?? null, assetKind: a?.kind ?? null, providerId: p.id,
       state: vehicleState(p.vehicle_state, p.gps_time, now), speed: p.speed_kmh ?? null, ignition: p.ignition ?? null,
       lat: Number(p.lat), lng: Number(p.lng), at: p.gps_time ?? null,
       driver: t?.driver?.full_name ?? p.driver_name ?? null, truck: isDamanTruck(p) || (a ? a.kind !== "trailer" : false), live: true,
@@ -77,6 +90,7 @@ export function buildFleetVehicles(provider: Row[], assets: Row[], trips: Row[],
     const t = tripOf(a.id);
     out.push({
       key: a.id, assetId: a.id, plate: a.code, code: a.code, state: vehicleState(null, a.last_position_at, now), speed: null, ignition: null,
+      assetStatus: a.status ?? null, assetKind: a.kind ?? null, providerId: null,
       lat: Number(a.last_lat), lng: Number(a.last_lng), at: a.last_position_at ?? null, driver: t?.driver?.full_name ?? null,
       truck: true, live: false, tripId: t?.id ?? null, tripNumber: t?.number ?? null, tripRoute: t ? `${t.origin_city} ← ${t.dest_city}` : null,
     });
@@ -85,15 +99,17 @@ export function buildFleetVehicles(provider: Row[], assets: Row[], trips: Row[],
   return out.sort((x, y) => order[x.state] - order[y.state] || x.plate.localeCompare(y.plate, "ar"));
 }
 
-export type Insight = "idling" | "speeding" | "lost" | "on_trip";
+export type Insight = "idling" | "speeding" | "lost" | "on_trip" | "moving_without_trip";
 export const INSIGHT_LABEL: Record<Insight, string> = {
   idling: "واقفة والمحرك يعمل",
   speeding: `سرعة أعلى من ${HIGH_SPEED_KMH} كم/س`,
   lost: "إشارة منقطعة",
   on_trip: "في رحلة الآن",
+  moving_without_trip: "مركبات مرتبطة تتحرك بدون رحلة جارية",
 };
 
-export function hasInsight(v: FleetVehicle, i: Insight): boolean {
+export function hasInsight(v: FleetVehicle, i: Insight, now = Date.now()): boolean {
+  if (i === 'moving_without_trip') return !!v.assetId && v.live && v.state === 'moving' && !v.tripId && freshReading(v.at, now);
   if (i === "idling") return v.state === "stopped" && v.ignition === true;
   if (i === "speeding") return v.state === "moving" && (v.speed ?? 0) > HIGH_SPEED_KMH;
   if (i === "lost") return v.state === "disconnected";

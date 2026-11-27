@@ -1,12 +1,15 @@
 import { useScreenNavigate } from '@/lib/screen-navigation';
 import truck3d from "@/assets/truck-3d.jpg";
+import { companyDay, punctuality, tractorUtilization } from "@/lib/home-summary";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft, BarChart3, Coins, Gauge, Route as RouteIcon, Truck, Container } from "lucide-react";
 import { AppShell } from "@/components/darb/AppShell";
 import { Badge, DataTable, Kpi, Panel, Status } from "@/components/darb/ui";
 import { useRows, type Row } from "@/lib/db";
-import { fetchAssets, fetchFinancials, fetchTrips } from "@/lib/queries";
+import { fetchAssets, fetchFinancials, fetchSummaryTrips } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { daysUntil, fmtNum, fmtSAR, fmtTime } from "@/lib/format";
 import { db } from "@/lib/db";
@@ -18,13 +21,14 @@ import { ApprovalCenter } from '@/components/darb/ApprovalCenter';
 function Home() {
   const { roles, fullName, can } = useAuth();
   const kind = dashboardFor(roles);
-  return <><div className="mb-4"><ApprovalCenter /></div>{kind ? <RoleDashboard kind={kind} name={fullName} /> : <Dashboard />}{can('ops_manager','accountant') && <CrmDashboard />}</>;
+  return <><div aria-hidden="true" />{kind ? <RoleDashboard kind={kind} name={fullName} /> : <Dashboard />}{can('ops_manager','accountant') && <CrmDashboard />}</>;
 }
 
 function Dashboard() {
   const { can, fullName } = useAuth();
   const nav = useScreenNavigate();
-  const trips = useRows(["trips"], fetchTrips);
+  const [metric, setMetric] = useState<"time" | "fleet" | null>(null);
+  const trips = useRows(["trips", "summary"], fetchSummaryTrips);
   const assets = useRows(["assets"], fetchAssets);
   const showFin = can("ops_manager", "accountant");
   const fin = useRows(["trip_financials"], fetchFinancials, showFin);
@@ -41,13 +45,14 @@ function Dashboard() {
   const tractors = a.filter((x) => x.kind !== "trailer");
   const trailers = a.filter((x) => x.kind === "trailer");
   const count = (list: Row[], s: string) => list.filter((x) => x.status === s).length;
-  const today = new Date().toISOString().slice(0, 10);
-  const todayTrips = t.filter((x) => (x.actual_start ?? x.planned_start ?? "").slice(0, 10) === today || x.status === "in_progress");
+  const today = companyDay();
+  const todayTrips = t.filter((x) => companyDay(x.actual_start ?? x.planned_start ?? "") === today || x.status === "in_progress");
   const late = active.filter((x) => x.planned_end && new Date(x.planned_end) < new Date());
   const delivered = t.filter((x) => ["delivered", "closed"].includes(x.status));
-  const onTime = delivered.filter((x) => x.actual_end && x.order?.delivery_due_at && new Date(x.actual_end) <= new Date(x.order.delivery_due_at));
-  const onTimePct = delivered.length ? Math.round((onTime.length / delivered.length) * 100) : null;
-  const utilization = tractors.length ? Math.round((count(tractors, "active") / tractors.length) * 100) : null;
+  const timing = punctuality(t);
+  const usage = tractorUtilization(a);
+  const onTimePct = timing.percent;
+  const utilization = usage.percent;
 
   const finSum = useMemo(() => {
     const ids = new Set(active.map((x) => x.id));
@@ -70,12 +75,12 @@ function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <section className="bento bento-glass relative min-h-[220px] overflow-hidden">
+      <section className="bento bento-glass relative min-h-[120px] overflow-hidden">
         <img src={truck3d} alt="شاحنة Shata على طريق سريع في المملكة" width={1536} height={768} className="absolute inset-0 h-full w-full object-cover opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-l from-background via-background/70 to-transparent" />
-        <div className="relative flex h-full max-w-xl flex-col gap-3 p-6 md:p-8">
-          <span className="chip w-fit">ملخص الصباح</span>
-          <h1 className="text-3xl font-bold text-foreground md:text-4xl">Shata</h1>
+        <div className="relative flex h-full max-w-xl flex-col gap-2 p-3 md:p-4">
+          <span className="chip w-fit">ملخص اليوم</span>
+          <h1 className="text-xl font-bold text-foreground md:text-2xl">Shata</h1>
           <p className="font-medium">{greeting()}، {fullName?.split(' ')[0]??''} — نظام إدارة الأسطول والصيانة</p>
           <p className="text-sm leading-7 text-muted-foreground">
             لديك <b className="text-foreground">{fmtNum(active.length)}</b> رحلة نشطة و<b className="text-foreground">{fmtNum(todayTrips.length)}</b> رحلة اليوم
@@ -88,30 +93,33 @@ function Dashboard() {
         </div>
       </section>
 
+      {(trips.error || assets.error) && <p role="alert" className="text-sm text-danger">تعذر تحميل ملخص التشغيل؛ الأعداد غير مكتملة.</p>}
       <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <div className="col-span-2 flex items-center gap-3 md:col-span-1">
           <Truck className="size-8 text-gold" />
           <div className="text-lg font-bold text-primary">التشغيل اليوم</div>
         </div>
-        <Kpi label="الرحلات النشطة" value={fmtNum(active.length)} />
-        <Kpi label="رحلات اليوم" value={fmtNum(todayTrips.length)} />
-        <Kpi label="المسافة المخططة النشطة" value={`${fmtNum(active.reduce((s, x) => s + Number(x.distance_km ?? 0), 0))} كم`} />
-        <Kpi label="رحلات متأخرة" value={fmtNum(late.length)} tone={late.length ? "warning" : undefined} />
+        <Kpi onOpen={() => void nav({ to: "/trips", search: { status: 'in_progress' } })} label="الرحلات النشطة" value={trips.isLoading || trips.error ? "—" : fmtNum(active.length)} />
+        <Kpi onOpen={() => void nav({ to: "/trips", search: { scope: 'today' } })} label="رحلات اليوم" value={trips.isLoading || trips.error ? "—" : fmtNum(todayTrips.length)} />
+        <Kpi onOpen={() => void nav({ to: "/trips", search: { status: 'in_progress' } })} label="المسافة المخططة النشطة" value={`${fmtNum(active.reduce((s, x) => s + Number(x.distance_km ?? 0), 0))} كم`} />
+        <Kpi onOpen={() => void nav({ to: "/trips", search: { scope: 'late' } })} label="رحلات متأخرة" value={trips.isLoading || trips.error ? "—" : fmtNum(late.length)} tone={late.length ? "warning" : undefined} />
+        <div className="col-span-2 md:col-span-5"><ApprovalCenter /></div>
       </section>
-
       <div className="grid gap-5 lg:grid-cols-4">
         <Panel tone="blue" title="مؤشرات التشغيل" icon={<BarChart3 />}>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between rounded-md bg-muted px-3 py-2">
-              <span>الالتزام بالمواعيد المتفق عليها</span>
-              <b className="num text-success">{onTimePct === null ? "غير متاح" : `${onTimePct}%`}</b>
+              <Button variant="link" className="h-auto whitespace-normal p-0 text-start" onClick={() => setMetric(metric === "time" ? null : "time")}>الالتزام بالمواعيد · هذا الشهر</Button>
+              <b className="num text-success">{onTimePct === null ? "—" : `${onTimePct}%`}</b>
             </div>
             <div className="flex justify-between rounded-md bg-muted px-3 py-2">
-              <span>نسبة استغلال الرؤوس</span>
+              <Button variant="link" className="h-auto whitespace-normal p-0 text-start" onClick={() => setMetric(metric === "fleet" ? null : "fleet")}>استغلال الرؤوس · الآن</Button>
               <b className="num text-success">{utilization === null ? "غير متاح" : `${utilization}%`}</b>
             </div>
+            <p className="text-xs text-muted-foreground">{timing.eligible.length ? `${timing.onTime.length} في الموعد من أصل ${timing.eligible.length} مؤهلة · هذا الشهر` : 'لا توجد رحلات مؤهلة خلال الفترة'}</p>
+            <p className="text-xs text-muted-foreground">{usage.active.length} رأس بحالة تعمل / {usage.total.length} رأس مسجل · الآن، وليس حركة GPS</p>
             <div className="flex justify-between rounded-md bg-muted px-3 py-2">
-              <span>رحلات مسلّمة (إجمالي)</span>
+              <Button variant="link" className="h-auto p-0" onClick={() => void nav({ to: "/trips", search: { scope: "delivered" } })}>رحلات مسلّمة (إجمالي)</Button>
               <b className="num">{fmtNum(delivered.length)}</b>
             </div>
           </div>
@@ -144,6 +152,7 @@ function Dashboard() {
               <div><div className="text-muted-foreground">التكلفة التقديرية</div><b className="num text-danger">{fmtSAR(finSum.cost)}</b></div>
               <div><div className="text-muted-foreground">الهامش المباشر</div><b className="num text-success">{fmtSAR(finSum.margin)}</b>{finSum.pct !== null && <div className="num text-xs">({finSum.pct.toFixed(1)}%)</div>}</div>
             </div>
+            <Button variant="link" size="sm" onClick={() => void nav({ to: "/finance", search: { tab: "acct" } })}>تفاصيل الإيرادات والتكاليف والفواتير والتحصيل</Button>
             <p className="mt-3 text-xs text-muted-foreground">الهامش المباشر = الإيراد ناقص التكلفة المباشرة، وليس صافي ربح الشركة.</p>
           </Panel>
         ) : (
@@ -151,6 +160,7 @@ function Dashboard() {
             <div className="num text-center text-4xl font-bold text-warning">{docs.data?.length ?? 0}</div>
           </Panel>
         )}
+      {metric && <section className="col-span-full space-y-2 border-y py-3"><h2 className="font-bold">{metric === 'time' ? 'تفاصيل الالتزام · هذا الشهر' : 'الرؤوس المسجلة · الآن'}</h2>{metric === 'time' && <p className="text-xs text-muted-foreground">المقارنة بين وقت التسليم المسجل والموعد المتفق عليه في أمر النقل. مستبعد: رحلة فارغة أو موعد غير مسجل: {timing.excluded.length} · سجلات تسليم بلا وقت لا يمكن نسبتها للفترة: {timing.missingActual.length}</p>}<DataTable rows={metric === 'time' ? [...timing.eligible, ...timing.excluded] : usage.total} cols={metric === 'time' ? [{ key: 'number', label: 'الرحلة' }, { key: 'result', label: 'النتيجة', render: r => timing.excluded.includes(r) ? 'مستبعد: الموعد غير مسجل' : timing.onTime.includes(r) ? 'في الموعد' : 'متأخرة' }] : [{ key: 'code', label: 'الرأس' }, { key: 'status', label: 'الجاهزية', render: r => <Status kind="asset" value={r.status} /> }]} onRowClick={r => void nav({ to: metric === 'time' ? '/trips/$id' : '/fleet/$id', params: { id: r.id } })} /></section>}
       </div>
 
       <div className="grid gap-5 xl:grid-cols-3">

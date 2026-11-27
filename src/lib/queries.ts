@@ -1,9 +1,20 @@
-import { db } from "./db";
+import { db, type Row } from "./db";
 
 export const TRIP_SELECT =
   "*, driver:drivers!trips_driver_id_fkey(id,full_name,code,phone), tractor:assets!trips_tractor_id_fkey(id,code,plate,make_model,last_lat,last_lng,last_position_at,last_position_source), trailer:assets!trips_trailer_id_fkey(id,code,trailer_type), order:transport_orders(id,number,cargo_type,quantity,unit,weight_kg,delivery_due_at,customer:customers(id,name))";
 
 export const fetchTrips = () => db.from("trips").select(TRIP_SELECT).order("created_at", { ascending: false }).limit(500);
+/** Complete RLS-visible population; a failed page never becomes a partial successful total. */
+export async function fetchSummaryTrips() {
+  const all: Row[] = [];
+  for (let offset = 0; ; offset += 500) {
+    const { data, error } = await db.from('trips').select(TRIP_SELECT).order('created_at', { ascending: false }).order('id').range(offset, offset + 499);
+    if (error) return { data: null, error };
+    const page = (data ?? []) as Row[];
+    all.push(...page);
+    if (page.length < 500) return { data: all, error: null };
+  }
+}
 export const fetchAssets = () => db.from("assets").select("*").order("code");
 export const fetchDrivers = () => db.from("drivers").select("*").order("code");
 export const fetchFinancials = () => db.from("trip_financials").select("*");
