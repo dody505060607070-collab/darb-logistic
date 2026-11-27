@@ -8,6 +8,7 @@ const res = (status: number, body: unknown) => new Response(JSON.stringify(body)
 const noWait = async () => {};
 const sql = readFileSync("drizzle/migrations/0061_petroapp_foundation.sql", "utf8");
 const safety = readFileSync("drizzle/migrations/0062_petroapp_safety_pass.sql", "utf8");
+const integrity = readFileSync("drizzle/migrations/0063_petroapp_full_tank_strict_state.sql", "utf8");
 const panel = readFileSync("src/components/darb/PetroAppPanel.tsx", "utf8");
 
 describe("PetroApp bridge client", () => {
@@ -61,7 +62,7 @@ describe("PetroApp bridge client", () => {
 describe("PetroApp normalized contract", () => {
   it("rejects full card numbers, missing IDs and unknown fields; keeps unavailable fields as null", () => {
     const p = parsePage({ transactions: [
-      { provider_txn_id: "A1", occurred_at: "2026-11-01T08:00:00Z", liters: "50", unit_price: 2.33, amount: 116.5, station: null },
+      { provider_txn_id: "A1", occurred_at: "2026-11-01T08:00:00Z", liters: "50", unit_price: 2.33, amount: 116.5, station: null, provider_state: "completed" },
       { provider_txn_id: "A2", occurred_at: "2026-11-01T08:00:00Z", provider_card_ref: "4111 1111 1111 1111" },
       { occurred_at: "2026-11-01T08:00:00Z" },
       { provider_txn_id: "A4", occurred_at: "2026-11-01T08:00:00Z", guessed_field: 1 },
@@ -110,11 +111,24 @@ describe("PetroApp safety pass", () => {
     expect(imp).not.toMatch(/UPDATE assets|odometer_km|ex\.odometer/);
     expect(safety.slice(safety.indexOf("FUNCTION public.petroapp_review"))).not.toContain("odometer = ex.odometer");
   });
-  it("rejects unknown provider states; missing defaults to completed", () => {
-    expect(safety).toContain("IF v_state NOT IN ('completed','cancelled') THEN RAISE EXCEPTION");
+  it("requires provider_state: missing and unknown are rejected, never assumed completed", () => {
+    expect(integrity).toContain("IF v_state IS NULL OR v_state NOT IN ('completed','cancelled') THEN RAISE EXCEPTION");
     const base = { provider_txn_id: "T1", occurred_at: "2026-11-01T08:00:00Z" };
     expect(normalizedTxnSchema.safeParse({ ...base, provider_state: "reversed" }).success).toBe(false);
-    expect(normalizedTxnSchema.parse(base).provider_state).toBe("completed");
+    expect(normalizedTxnSchema.safeParse(base).success).toBe(false);
+    expect(normalizedTxnSchema.parse({ ...base, provider_state: "completed" }).provider_state).toBe("completed");
+  });
+  it("never guesses full_tank: null unless mapped, explicit before approve/import/correction", () => {
+    const base = { provider_txn_id: "T1", occurred_at: "2026-11-01T08:00:00Z", provider_state: "completed" };
+    expect(normalizedTxnSchema.parse(base).full_tank).toBeUndefined();
+    expect(normalizedTxnSchema.safeParse({ ...base, full_tank: "yes" }).success).toBe(false);
+    expect(integrity).not.toContain("false, 'petroapp'");
+    expect(integrity).toContain("NULL, ex.full_tank, 'petroapp'");
+    expect(integrity).toContain("full_tank = ex.full_tank, status = 'pending'");
+    expect((integrity.match(/ex\.full_tank IS NULL/g) ?? []).length).toBe(3);
+    expect(integrity).toMatch(/petroapp_set_full_tank[\s\S]*petroapp_can_review\(\)/);
+    expect(integrity).toContain("petroapp_set_full_tank(uuid, boolean) FROM PUBLIC, anon");
+    expect(panel).toContain('aria-label="خزان ممتلئ"');
   });
   it("maps cards to drivers only explicitly and still requires a vehicle", () => {
     expect(panel).toContain('aria-label="السائق"');

@@ -8,7 +8,7 @@ import { z } from "zod";
 const num = z.union([z.number(), z.string().regex(/^-?\d+(\.\d+)?$/)]).transform(Number).pipe(z.number().finite()).nullable().optional();
 const text = (max: number) => z.string().trim().max(max).nullable().optional();
 
-export const PETRO_FIELDS = ["provider_vehicle_ref", "provider_card_ref", "card_last4", "station", "fuel_type", "liters", "unit_price", "amount", "odometer"] as const;
+export const PETRO_FIELDS = ["provider_vehicle_ref", "provider_card_ref", "card_last4", "station", "fuel_type", "liters", "unit_price", "amount", "odometer", "full_tank"] as const;
 
 export const normalizedTxnSchema = z.object({
   provider_txn_id: z.string().trim().min(1).max(120),
@@ -23,7 +23,10 @@ export const normalizedTxnSchema = z.object({
   unit_price: num.refine((v) => v == null || v >= 0),
   amount: num.refine((v) => v == null || v >= 0),
   odometer: num.refine((v) => v == null || v >= 0),
-  provider_state: z.enum(["completed", "cancelled"]).default("completed"),
+  // Required: the bridge sets "completed" only when a permitted capture proves the record is a completed transaction.
+  provider_state: z.enum(["completed", "cancelled"]),
+  // Only from an observed source field; otherwise null and a reviewer sets it explicitly.
+  full_tank: z.boolean().nullable().optional(),
 }).strict();
 export type NormalizedTxn = z.infer<typeof normalizedTxnSchema>;
 

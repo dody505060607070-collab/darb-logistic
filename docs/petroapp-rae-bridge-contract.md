@@ -1,6 +1,6 @@
 # PetroApp RAE bridge contract (OUR routes, not PetroApp routes)
 
-Status: **foundation only**. No bridge is deployed, no RAE client exists, no secrets are set, and no real sync has been verified. The PetroApp integration is **not complete**.
+Status: **foundation only**. No bridge is deployed, no secrets are set, and no real sync has been verified. A prior RAE-generated `api_client.py` artifact exists for dashboard/profile/config-related methods, but **no verified fuel-transaction method or endpoint was captured**. The latest full audit produced no new client or traffic capture and stopped on the source's rate-limit ("too many attempts") warning. The PetroApp integration is **not complete**.
 
 ## Architecture
 
@@ -37,8 +37,9 @@ Error signalling: `401/403` or `{"error":"auth_expired"}` → authentication exp
 | provider_card_ref | string or null | Opaque card ID. A 12–19 digit full card number is rejected. |
 | card_last4 | 4 digits or null | |
 | station, fuel_type | string or null | |
+| full_tank | boolean or null | Only from a source field observed in a permitted capture; otherwise null. A reviewer must set yes/no before approval, import or applying a correction. |
 | liters (>0), unit_price, amount, odometer (≥0) | number or null | `odometer` is a raw source reading; its unit is NOT established (see Safety boundaries). |
-| provider_state | `completed` \| `cancelled` | Omitted = `completed` (schema default); any other value is rejected by validation and by `petroapp_stage`. A changed row with the same ID = correction/cancellation. |
+| provider_state | `completed` \| `cancelled` (**required**) | No default: a missing or unknown value is rejected by validation and by `petroapp_stage`. The bridge may send `completed` only when the permitted capture proves the record is a completed transaction. A changed row with the same ID = correction/cancellation. |
 
 **Source-field mapping is intentionally not defined here.** The RAE adapter may fill a field only from a source field actually observed in a future permitted capture; anything not observed is `null` and listed in `unavailable_fields`. No PetroApp endpoint, field name, permission or capability is assumed.
 
@@ -60,7 +61,7 @@ Error signalling: `401/403` or `{"error":"auth_expired"}` → authentication exp
 
 ## Remaining external blocker
 
-1. A permitted RAE capture of PetroApp traffic and the generated client (the last audit produced none and hit a "too many attempts" warning).
+1. A permitted RAE capture of the PetroApp **fuel-transaction** page/traffic and a verified fuel adapter built from it. (The existing `api_client.py` covers only dashboard/profile/config-related methods; the last audit captured nothing new and stopped on the rate-limit warning.)
 2. The FastAPI bridge implementing this contract, deployed on HTTPS (e.g. the company VPS, isolated from other sites).
 3. `PETROAPP_RAE_BRIDGE_URL` and `PETROAPP_RAE_BRIDGE_TOKEN` saved as server secrets, then a real health check and a reviewed first sync.
 
@@ -70,4 +71,5 @@ Error signalling: `401/403` or `{"error":"auth_expired"}` → authentication exp
 - **No automatic WhatsApp:** `wa_money_trigger` returns without queueing for `fuel_entries` rows with `source='petroapp'`. Manual fuel entries and expenses keep their existing notices.
 - **Odometer sync disabled:** the source unit is unproven. The raw reading is kept on `petroapp_transactions.odometer` for review only; imports and corrections never write `fuel_entries.odometer` or `assets.odometer_km`. This stays disabled until a permitted RAE capture proves the unit and the bridge maps it explicitly to km.
 - **Card → driver:** a card mapping may name a driver explicitly; a driver is never inferred from a card. A vehicle mapping is still required before import because `fuel_entries.asset_id` is required.
-- **Strict provider state:** only `completed`/`cancelled` are staged; unknown states fail the batch instead of becoming `completed`.
+- **Strict provider state (0063):** `provider_state` is required; missing or unknown states fail the batch instead of becoming `completed`.
+- **Full tank (0063):** `full_tank` is staged as null unless the bridge maps an observed field; reviewers set it with the role-checked `petroapp_set_full_tank` RPC (logged as `full_tank_set`). Approval, import and correction require it; import and correction copy the explicit value to `fuel_entries.full_tank`. A source correction resets it to the source value so it is confirmed again. Never guessed.

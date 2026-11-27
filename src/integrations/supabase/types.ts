@@ -2151,6 +2151,7 @@ export type Database = {
           first_run_id: string | null
           fuel_entry_id: string | null
           fuel_type: string | null
+          full_tank: boolean | null
           id: string
           last_run_id: string | null
           liters: number | null
@@ -2179,6 +2180,7 @@ export type Database = {
           first_run_id?: string | null
           fuel_entry_id?: string | null
           fuel_type?: string | null
+          full_tank?: boolean | null
           id?: string
           last_run_id?: string | null
           liters?: number | null
@@ -2207,6 +2209,7 @@ export type Database = {
           first_run_id?: string | null
           fuel_entry_id?: string | null
           fuel_type?: string | null
+          full_tank?: boolean | null
           id?: string
           last_run_id?: string | null
           liters?: number | null
@@ -3974,6 +3977,10 @@ export type Database = {
           p_run: string
           p_status: string
         }
+        Returns: undefined
+      }
+      petroapp_set_full_tank: {
+        Args: { p_tx: string; p_value: boolean }
         Returns: undefined
       }
       petroapp_stage: { Args: { p_rows: Json; p_run: string }; Returns: Json }

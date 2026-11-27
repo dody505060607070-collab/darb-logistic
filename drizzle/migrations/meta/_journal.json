@@ -442,6 +442,13 @@
       "when": 1795814173686,
       "tag": "0062_petroapp_safety_pass",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1795814638102,
+      "tag": "0063_petroapp_full_tank_strict_state",
+      "breakpoints": true
     }
   ]
 }

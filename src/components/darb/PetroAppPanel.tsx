@@ -98,7 +98,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 function PetroReview({ canAct, isOwner, importFn }: { canAct: boolean; isOwner: boolean; importFn: (a: { data: { ids: string[] } }) => Promise<{ imported: number; skipped: number }> }) {
   const qc = useQueryClient();
   const rows = useQuery({ queryKey: ["petroapp", "review"], queryFn: async () => {
-    const { data, error } = await db.from("petroapp_transactions").select("id,provider_txn_id,occurred_at,station,fuel_type,liters,unit_price,amount,odometer,mapping_status,review_state,asset_id,provider_vehicle_ref,card_last4").not("review_state", "in", "(imported,cancelled)").order("occurred_at", { ascending: false }).limit(100);
+    const { data, error } = await db.from("petroapp_transactions").select("id,provider_txn_id,occurred_at,station,fuel_type,liters,unit_price,amount,odometer,full_tank,mapping_status,review_state,asset_id,provider_vehicle_ref,card_last4").not("review_state", "in", "(imported,cancelled)").order("occurred_at", { ascending: false }).limit(100);
     if (error) throw error; return data ?? [];
   } });
   const assets = useQuery({ queryKey: ["petroapp", "assets"], enabled: isOwner, queryFn: async () => { const { data, error } = await db.from("assets").select("id,code,plate").order("code"); if (error) throw error; return data ?? []; } });
@@ -118,7 +118,7 @@ function PetroReview({ canAct, isOwner, importFn }: { canAct: boolean; isOwner: 
     <div className="mt-3 overflow-x-auto border-t pt-3">
       <b className="text-xs">منطقة المراجعة ({list.length})</b>
       <table className="mt-2 w-full min-w-[720px] text-xs">
-        <thead><tr className="text-muted-foreground"><th className="p-1 text-start">الوقت</th><th className="p-1 text-start">المرجع</th><th className="p-1 text-start">المحطة</th><th className="p-1 text-start">لتر</th><th className="p-1 text-start">المبلغ</th><th className="p-1 text-start">الربط</th><th className="p-1 text-start">الحالة</th><th className="p-1" /></tr></thead>
+        <thead><tr className="text-muted-foreground"><th className="p-1 text-start">الوقت</th><th className="p-1 text-start">المرجع</th><th className="p-1 text-start">المحطة</th><th className="p-1 text-start">لتر</th><th className="p-1 text-start">المبلغ</th><th className="p-1 text-start">خزان ممتلئ</th><th className="p-1 text-start">الربط</th><th className="p-1 text-start">الحالة</th><th className="p-1" /></tr></thead>
         <tbody>{list.map((r) => (
           <tr key={r.id} className="border-t align-top">
             <td className="p-1">{fmtDateTime(r.occurred_at)}</td>
@@ -126,6 +126,10 @@ function PetroReview({ canAct, isOwner, importFn }: { canAct: boolean; isOwner: 
             <td className="p-1">{r.station ?? "غير متاح"}</td>
             <td className="p-1">{r.liters ?? "غير متاح"}</td>
             <td className="p-1">{r.amount ?? "غير متاح"}</td>
+            <td className="p-1">{canAct && ["pending", "correction_pending"].includes(r.review_state) ? (
+              <select aria-label="خزان ممتلئ" className="rounded border bg-background p-1" value={r.full_tank == null ? "" : String(r.full_tank)} disabled={!!pending} onChange={(e) => e.target.value && void act(r.id, () => db.rpc("petroapp_set_full_tank", { p_tx: r.id, p_value: e.target.value === "true" }) as any)}>
+                <option value="">حدد…</option><option value="true">نعم</option><option value="false">لا</option>
+              </select>) : r.full_tank == null ? "غير محدد" : r.full_tank ? "نعم" : "لا"}</td>
             <td className="p-1">{r.mapping_status === "matched" ? <Badge tone="success">مربوطة</Badge> : <Badge tone="warning">{r.mapping_status === "ambiguous" ? "غير محسومة" : "غير مربوطة"}</Badge>}
               {isOwner && r.mapping_status !== "matched" && ["pending", "rejected"].includes(r.review_state) && (
                 <select aria-label="ربط بمركبة" className="mt-1 block rounded border bg-background p-1" defaultValue="" disabled={!!pending} onChange={(e) => e.target.value && void act(r.id, () => db.rpc("petroapp_assign", { p_tx: r.id, p_asset: e.target.value }) as any)}>
@@ -134,10 +138,10 @@ function PetroReview({ canAct, isOwner, importFn }: { canAct: boolean; isOwner: 
             </td>
             <td className="p-1">{REVIEW_LABEL[r.review_state] ?? r.review_state}</td>
             <td className="p-1 whitespace-nowrap">{canAct && <span className="flex gap-1">
-              {r.review_state === "pending" && r.mapping_status === "matched" && <Button size="sm" variant="outline" disabled={!!pending} onClick={() => void review(r.id, "approve")}>اعتماد</Button>}
+              {r.review_state === "pending" && r.mapping_status === "matched" && r.full_tank != null && <Button size="sm" variant="outline" disabled={!!pending} onClick={() => void review(r.id, "approve")}>اعتماد</Button>}
               {r.review_state === "approved" && <Button size="sm" variant="gold" disabled={!!pending} onClick={() => void act(r.id, async () => { const res = await importFn({ data: { ids: [r.id] } }); toast.success(res.imported ? "أُضيفت لسجل الوقود كقيد معلّق للاعتماد" : "لم تُستورد"); })}>استيراد</Button>}
               {["pending", "approved"].includes(r.review_state) && <Button size="sm" variant="ghost" disabled={!!pending} onClick={() => void review(r.id, "reject")}>رفض</Button>}
-              {r.review_state === "correction_pending" && <Button size="sm" variant="outline" disabled={!!pending} onClick={() => void review(r.id, "apply_correction")}>تطبيق التصحيح</Button>}
+              {r.review_state === "correction_pending" && r.full_tank != null && <Button size="sm" variant="outline" disabled={!!pending} onClick={() => void review(r.id, "apply_correction")}>تطبيق التصحيح</Button>}
               {r.review_state === "cancellation_pending" && <Button size="sm" variant="outline" disabled={!!pending} onClick={() => void review(r.id, "apply_cancellation")}>تطبيق الإلغاء</Button>}
             </span>}</td>
           </tr>))}</tbody>
