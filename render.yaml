@@ -1,8 +1,9 @@
+# FREE TEMPORARY TEST HOSTING ONLY: one stateless bridge and no paid resources.
 services:
   - type: web
     name: darb-petroapp-bridge
     runtime: docker
-    plan: starter
+    plan: free
     region: frankfurt
     rootDir: petroapp-bridge
     dockerfilePath: ./Dockerfile

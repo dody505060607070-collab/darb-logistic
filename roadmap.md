@@ -1,5 +1,11 @@
+## FREE temporary bridge hosting and future Hostinger VPS — 2026-11-27
+- [x] Render Blueprint is FREE TEMPORARY TEST HOSTING ONLY: one free Docker web service, no paid resources, documented sleep/cold-start/ephemeral/usage limits, and no keep-alive traffic.
+- [x] Future Hostinger runbook covers the entire Darb server/agent stack, external Supabase/auth/database/storage and provider dependencies, backups, DNS/TLS, scheduling, deployment and rollback; no migration now and no whole-app readiness claim.
+- [x] Verified 30 bridge tests, strict mypy (10 files), TypeScript, required free-only Blueprint fields/YAML, workflow YAML and diff formatting.
+- [ ] Actual whole-stack VPS migration awaits Hostinger plan/OS/region, Darb Node/workerd runtime and production container, database/auth/storage/realtime target, WhatsApp gateway migration, domains/TLS, schedules, monitoring and backup/restore choices.
+
 ## PetroApp isolated bridge — 2026-11-27
-- [x] Deployment preparation only: unauthenticated `/livez`, authenticated upstream `/health`, Render `PORT`, one-service paid Blueprint, path-filtered GitHub checks, and documented manual billing approval; no deploy or credentials. Verified: 30 mocked tests, strict mypy (10 files), TypeScript, YAML and diff checks.
+- [x] Deployment preparation only: unauthenticated `/livez`, authenticated upstream `/health`, Render `PORT`, one-service isolated Blueprint, path-filtered GitHub checks, and documented manual review; no deploy or credentials. Verified: 30 mocked tests, strict mypy (10 files), TypeScript, YAML and diff checks.
 - [x] FastAPI bridge source, Dockerfile, pinned requirements, README and environment template under `petroapp-bridge/`; no Darb UI/database/migration/review/import changes.
 - [x] Exact captured GET bills query, Asia/Riyadh dates, 31-day maximum, page 1 and 10-row hard cap; only observed fields mapped, with unknown payment states omitted for Darb rejection.
 - [x] Immediate 401/403/429/security stops; bounded network/502/503/504 retries; no raw-row or secret logging.

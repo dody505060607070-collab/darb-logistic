@@ -96,21 +96,31 @@ docker run --rm -p 8080:8080 --env-file .env darb-petroapp-bridge
 
 The container runs as non-root user `bridge`, disables access logs, and listens on the injected `PORT`, falling back to `8080` for local use. Deploy behind HTTPS on an isolated host.
 
-## Render Blueprint setup (manual review required)
+## FREE TEMPORARY TEST HOSTING ONLY — Render
 
-The repository root contains `render.yaml` for **only** `darb-petroapp-bridge`. It uses the Frankfurt region, Docker with `petroapp-bridge` as its root, `/livez` for health checks, and `autoDeployTrigger: checksPass`. See Render's [Blueprint reference](https://render.com/docs/blueprint-spec) and [compute plans](https://render.com/docs/compute-plans).
+The root `render.yaml` defines **exactly one Free Docker web service**, `darb-petroapp-bridge`, in Frankfurt with `rootDir: petroapp-bridge`, `./Dockerfile`, `/livez`, and `autoDeployTrigger: checksPass`. It declares no paid plan, database, disk, worker, or other add-on. See Render's [Blueprint reference](https://render.com/docs/blueprint-spec), [Free-tier documentation](https://render.com/docs/free), and [compute plans](https://render.com/docs/compute-plans).
 
-No service is created by these files. To prepare it later:
+Render Free is suitable only for temporary testing, not reliable production or an SLA:
 
-1. Push the reviewed commit to `dody505060607070/darb-logistic`. In the signed-in Render dashboard, choose **New → Blueprint** and select that repository and branch.
-2. Confirm that the Blueprint preview contains only `darb-petroapp-bridge`. Review the recurring charge before creating anything: the always-on **Starter** plan (legacy ID for `0.5c-512mb`) is **$7/month for 0.5 CPU and 512 MB RAM**, subject to Render's current billing and proration. Do not approve or create the paid service unless that charge is accepted.
-3. At Render's prompts, enter `PETROAPP_RAE_BRIDGE_TOKEN`, `PETROAPP_BEARER_TOKEN`, and `PETROAPP_FINGERPRINT`. Their values are deliberately absent from YAML and must never appear in logs or commits. Leave `PETROAPP_PAYMENT_STATUS_MAP` as `{}` until exact observed status semantics are established.
-4. After any separately approved deployment, set Darb's server secret `PETROAPP_RAE_BRIDGE_URL` to the bridge's HTTPS URL. Set Darb's `PETROAPP_RAE_BRIDGE_TOKEN` to **exactly the same value** as the Render bridge token; the source bearer token and fingerprint do not belong in Darb.
-5. Verify unauthenticated `GET /livez` without any upstream request. Only an explicitly authorized, authenticated `GET /health` may perform the real upstream check. A reviewed first sync remains a separate verification step.
+- 512 MB RAM and 0.1 CPU; one instance only.
+- Spins down after 15 minutes without inbound traffic; the next request can take about one minute while it cold-starts.
+- Ephemeral filesystem: local changes disappear on redeploy, restart, or spin-down. This is acceptable only because this bridge is stateless and keeps no local business data.
+- 750 Free instance-hours per workspace per calendar month, shared by Free services. Exhausting them suspends Free web services until the next month.
+- Render may restart Free services at any time and may suspend them for tier/usage reasons.
+- No persistent disks, SSH/dashboard shell, one-off jobs, or background workers.
 
-The path-filtered GitHub Actions workflow runs mocked pytest and strict mypy checks on Python 3.12 using pinned `requirements-dev.txt`. For subsequent commits, `checksPass` makes automatic deployment conditional on successful GitHub checks; keep the bridge workflow enabled and required. Creating the initial Blueprint service and accepting its recurring fee remain manual user actions.
+Render states that no credit card is required to start Free Docker hosting. Without a payment method, exhausted included bandwidth suspends Free services and exhausted build minutes disable new builds instead of creating automatic supplementary charges. A Free plan is not a spend cap on a workspace that already has billing enabled: review Render's current usage terms and keep a zero spend limit/no payment method to prevent supplementary charges. Do not add a payment method or upgrade this Blueprint. Do not add keep-alive pings, synthetic requests, or other traffic to defeat sleep.
 
-Completion still requires an authorized live health check and a reviewed first sync; neither has happened.
+No service is created by these files. For an explicitly approved temporary test later:
+
+1. Push the reviewed commit to `dody505060607070/darb-logistic`. In Render choose **New → Blueprint**, select that repository/branch, and confirm the preview contains only the Free bridge service with no paid resources.
+2. At Render's prompts, enter `PETROAPP_RAE_BRIDGE_TOKEN`, `PETROAPP_BEARER_TOKEN`, and `PETROAPP_FINGERPRINT`. Values stay out of YAML/logs/commits. Leave `PETROAPP_PAYMENT_STATUS_MAP` as `{}` until exact observed status semantics are established.
+3. After any separately approved test deployment, set Darb's `PETROAPP_RAE_BRIDGE_URL` to the HTTPS URL and use **exactly the same** `PETROAPP_RAE_BRIDGE_TOKEN` in Render and Darb server secrets. Source credentials never belong in Darb.
+4. Expect sleep and cold starts. Verify `/livez` without upstream traffic; only an authorized authenticated `/health` request may call PetroApp. A reviewed first sync is separate.
+
+The path-filtered GitHub Actions workflow runs mocked pytest and strict mypy on Python 3.12 with pinned dependencies. Later automatic deploys require successful GitHub checks. Creating the initial Free service remains manual.
+
+The future goal is moving the entire Darb server/agent stack to a Hostinger VPS, not merely this bridge. See `docs/hostinger-vps-migration.md` for the verified architecture, external dependencies, and future runbook. No VPS migration is performed or claimed ready now. Completion still requires authorized live health/sync verification; neither has happened.
 
 ## Mocked verification
 
