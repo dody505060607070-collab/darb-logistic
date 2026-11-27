@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Explicit one-time start for the isolated Darb stack. Never stops or prunes any project.
+set -euo pipefail
+umask 077
+
+[ "${DARB_CONFIRM_START:-}" = "YES" ] || {
+  echo "Refusing to start. Set DARB_CONFIRM_START=YES after the VPS preflight, env setup, and backup review."
+  exit 2
+}
+: "${DARB_REPO_ROOT:?}"
+: "${DARB_SUPABASE_DIR:?}"
+: "${DARB_CONFIG_DIR:?}"
+
+set -a
+. "$DARB_CONFIG_DIR/compose.env"
+set +a
+SUPABASE_DOCKER_DIR="$DARB_SUPABASE_DIR/docker"
+COMPOSE=(docker compose -p darb --env-file "$SUPABASE_DOCKER_DIR/.env" -f "$SUPABASE_DOCKER_DIR/docker-compose.yml" -f "$DARB_REPO_ROOT/ops/hostinger/compose.darb.yml")
+
+for key in DARB_APP_BIND_PORT DARB_SUPABASE_HTTP_BIND_PORT DARB_SUPABASE_DB_BIND_PORT DARB_SUPABASE_POOLER_BIND_PORT DARB_APP_IMAGE DARB_PETROAPP_BRIDGE_IMAGE EVOLUTION_API_IMAGE; do
+  eval "value=\${$key:-}"
+  [ -n "$value" ] || { echo "Missing required compose setting: $key"; exit 2; }
+done
+[ -f "$DARB_CONFIG_DIR/.env.darb" ] && [ -f "$DARB_CONFIG_DIR/.env.evolution" ] || {
+  echo "Missing Darb runtime environment files."
+  exit 2
+}
+grep -q '^WHATSAPP_INSTANCE=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "WHATSAPP_INSTANCE must match the existing gateway instance before start."
+  exit 2
+}
+grep -q '^PETROAPP_RAE_BRIDGE_TOKEN=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "PETROAPP bridge credentials are incomplete."
+  exit 2
+}
+grep -q '^AI_API_KEY=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "AI provider key is not set; set it before starting for full AI parity."
+  exit 2
+}
+
+# Port availability check is read-only and scoped to the chosen Darb bind ports.
+for port in "$DARB_APP_BIND_PORT" "$DARB_SUPABASE_HTTP_BIND_PORT" "$DARB_SUPABASE_DB_BIND_PORT" "$DARB_SUPABASE_POOLER_BIND_PORT"; do
+  if ss -ltnH 2>/dev/null | awk '{print $4}' | grep -Eq "(:|\])$port$"; then
+    echo "Chosen Darb bind port $port is already listening; choose another port."
+    exit 2
+  fi
+done
+
+"${COMPOSE[@]}" config --quiet
+"${COMPOSE[@]}" up -d
+echo "Darb stack started. Scheduled jobs remain disabled; WhatsApp sending remains disabled."
