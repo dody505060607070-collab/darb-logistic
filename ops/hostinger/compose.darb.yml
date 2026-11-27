@@ -142,8 +142,8 @@ services:
       - ${DARB_CONFIG_DIR:?Set DARB_CONFIG_DIR}/.env.darb
     environment:
       DARB_APP_INTERNAL_URL: http://app:3000
-      DARB_ENABLE_SCHEDULED_JOBS: "false"
-      DARB_ENABLE_WHATSAPP_SENDING: "false"
+      DARB_ENABLE_SCHEDULED_JOBS: ${DARB_ENABLE_SCHEDULED_JOBS:-false}
+      DARB_ENABLE_WHATSAPP_SENDING: ${DARB_ENABLE_WHATSAPP_SENDING:-false}
       TZ: UTC
     depends_on:
       app:
