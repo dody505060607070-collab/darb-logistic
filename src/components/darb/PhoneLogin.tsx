@@ -27,7 +27,7 @@ export function PhoneLogin() {
     e.preventDefault();
     const demoRole = !sentTo ? findDemoRole(number) : undefined;
     if (demoRole) {
-      await navigate({ to: '/demo', search: { number: demoRole.code } });
+      await navigate({ to: '/demo', search: { number: demoRole.code, screen: '' } });
       return;
     }
     setBusy(true); setError('');

@@ -3,10 +3,23 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { errMsg } from "./format";
 import { validateAttachment } from './files';
+import { getPresentationRuntime, isPresentationLocation } from './presentation-runtime';
 
 // Loosely-typed handle: tables are many and screens build dynamic selects.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const db = supabase as any;
+export const db = new Proxy(supabase as any, {
+  get(target, property) {
+    if (isPresentationLocation()) {
+      const runtime = getPresentationRuntime();
+      if (!runtime) throw new Error('تجربة الشرح غير جاهزة؛ لم يتم الاتصال ببيانات الشركة');
+      if (property === 'from') return runtime.from.bind(runtime);
+      if (property === 'rpc') return runtime.rpc.bind(runtime);
+      throw new Error('الخدمات الحقيقية غير متاحة في تجربة الشرح');
+    }
+    const value = target[property];
+    return typeof value === 'function' ? value.bind(target) : value;
+  },
+});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Row = Record<string, any>;
@@ -54,6 +67,13 @@ export function useAction<A>(fn: (a: A) => Promise<unknown>, opts: { success?: s
 
 export async function uploadFile(file: File, folder: string) {
   validateAttachment(file);
+  if (isPresentationLocation()) {
+    const runtime = getPresentationRuntime();
+    if (!runtime) throw new Error('تجربة الشرح غير جاهزة');
+    const path = `sample/${folder}/${crypto.randomUUID()}-${file.name}`;
+    runtime.files.set(path, URL.createObjectURL(file));
+    return path;
+  }
   const { data: u } = await supabase.auth.getUser();
   if(!u.user)throw new Error('سجل الدخول لرفع الملفات');
   const path = `${u.user.id}/${folder}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
@@ -63,6 +83,11 @@ export async function uploadFile(file: File, folder: string) {
 }
 
 export async function signedUrl(path: string) {
+  if (isPresentationLocation()) {
+    const url = getPresentationRuntime()?.files.get(path);
+    if (!url) throw new Error('أعد اختيار الملف لعرضه في هذه التجربة');
+    return url;
+  }
   const { data, error } = await supabase.storage.from("attachments").createSignedUrl(path, 300);
   if (error) throw error;
   return data.signedUrl;

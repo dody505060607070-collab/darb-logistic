@@ -10,6 +10,7 @@ import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -86,17 +87,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const presentation = useRouterState({ select: s => s.location.pathname === '/demo' });
   useEffect(()=>{void initializePwa();},[]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <SessionBoundary presentation={presentation}>
         <LanguageLayer />
         <Outlet />
         <PrivacyLinks />
         <ConsentPanel />
         <Toaster position="top-center" richColors dir="rtl" />
-      </AuthProvider>
+      </SessionBoundary>
     </QueryClientProvider>
   );
+}
+
+function SessionBoundary({ presentation, children }: { presentation: boolean; children: ReactNode }) {
+  return presentation ? <>{children}</> : <AuthProvider>{children}</AuthProvider>;
 }

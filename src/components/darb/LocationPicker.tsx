@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db, type Row } from "@/lib/db";
 import { CITY_COORDS, errMsg } from "@/lib/format";
+import { getPresentationRuntime } from '@/lib/presentation-runtime';
 
 const MapView = lazy(() => import("./MapView"));
 
@@ -22,6 +23,7 @@ export function LocationPicker({ label, value, options, customerId, onChange, on
   const [busy, setBusy] = useState(false);
   const sel = "h-9 w-full rounded-md border border-input bg-card px-3 text-sm";
   const here = () => {
+    if (getPresentationRuntime()) { setPt(CITY_COORDS[city] ?? [24.7136, 46.6753]); toast.info('موقع توضيحي فقط'); return; }
     if (!navigator.geolocation) return void toast.error("الجهاز لا يدعم تحديد الموقع");
     navigator.geolocation.getCurrentPosition((p) => setPt([p.coords.latitude, p.coords.longitude]), () => toast.error("تعذر قراءة موقعك — اسمح بالوصول للموقع"), { enableHighAccuracy: true, timeout: 10000 });
   };

@@ -47,6 +47,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "./ui";
 import { CommandPalette } from "./CommandPalette";
 import { CardArrangement } from './CardArrangement';
+import { useScreenNavigate, useScreenPath } from '@/lib/screen-navigation';
+import { getPresentationRuntime } from '@/lib/presentation-runtime';
 
 type NavItem = { to: string; label: string; icon: typeof Home; roles?: AppRole[]; group: string };
 
@@ -182,7 +184,7 @@ function useNavCounts() {
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { can } = useAuth();
-  const path = useRouterState({ select: (s) => s.location.pathname });
+  const path = useScreenPath();
   const counts = useNavCounts().data ?? {};
   return (
     <nav className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -232,9 +234,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children, staffOnly = true }: { children: ReactNode; staffOnly?: boolean }) {
   const auth = useAuth();
-  const nav = useNavigate();
+  const nav = useScreenNavigate();
   const now = useClock();
-  const path = useRouterState({ select: (s) => s.location.pathname });
+  const path = useScreenPath();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -258,7 +260,7 @@ export function AppShell({ children, staffOnly = true }: { children: ReactNode; 
       </div>
     );
 
-  if (auth.roles.length === 0)
+  if (auth.roles.length === 0 && !getPresentationRuntime())
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="panel max-w-md p-8 text-center">

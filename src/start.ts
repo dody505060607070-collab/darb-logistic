@@ -46,7 +46,13 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
 });
 
+// Presentation screens reuse real views, never real server actions or bearer tokens.
+const presentationIsolation = createMiddleware({ type: 'function' }).client(async ({ next }) => {
+  if (window.location.pathname === '/demo') throw new Error('الخدمات الخارجية غير متاحة في تجربة الشرح؛ لم تُرسل أي بيانات');
+  return next();
+});
+
 export const startInstance = createStart(() => ({
-  functionMiddleware: [attachSupabaseAuth],
+  functionMiddleware: [presentationIsolation, attachSupabaseAuth],
   requestMiddleware: [securityHeaders, errorMiddleware, csrfMiddleware],
 }));
