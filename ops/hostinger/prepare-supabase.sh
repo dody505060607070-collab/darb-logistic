@@ -102,5 +102,35 @@ evo.write_text("\n".join(e) + "\n")
 app.chmod(0o600); evo.chmod(0o600)
 PY
 
+# Copy only the generated Supabase public/secret API keys into the Darb runtime env.
+# Values are never printed; the service-role secret remains on the VPS.
+python3 - "$DARB_SUPABASE_DIR/docker/.env" "$DARB_CONFIG_DIR/.env.darb" <<'PY'
+from pathlib import Path
+import secrets, sys
+supabase_env, app_env = map(Path, sys.argv[1:])
+def read(p):
+    return p.read_text().splitlines()
+def value(lines, key):
+    return next((line.split("=",1)[1] for line in lines if line.startswith(key+"=")), "")
+def put(lines, key, val):
+    out, found = [], False
+    for line in lines:
+        if line.startswith(key+"="):
+            out.append(f"{key}={val}"); found = True
+        else:
+            out.append(line)
+    if not found: out.append(f"{key}={val}")
+    return out
+s, a = read(supabase_env), read(app_env)
+publishable = value(s, "SUPABASE_PUBLISHABLE_KEY")
+secret = value(s, "SUPABASE_SECRET_KEY")
+if publishable: a = put(a, "SUPABASE_PUBLISHABLE_KEY", publishable)
+if secret: a = put(a, "SUPABASE_SERVICE_ROLE_KEY", secret)
+if not value(a, "LOVABLE_CRON_SECRET"):
+    a = put(a, "LOVABLE_CRON_SECRET", secrets.token_urlsafe(48))
+app_env.write_text("\\n".join(a) + "\\n")
+app_env.chmod(0o600)
+PY
+
 echo "Prepared Darb-owned Supabase and runtime configuration only."
 echo "No containers were started; no production database or WhatsApp session was touched."
