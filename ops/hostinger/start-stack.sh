@@ -15,7 +15,7 @@ set -a
 . "$DARB_CONFIG_DIR/compose.env"
 set +a
 SUPABASE_DOCKER_DIR="$DARB_SUPABASE_DIR/docker"
-COMPOSE=(docker compose -p darb --env-file "$SUPABASE_DOCKER_DIR/.env" -f "$SUPABASE_DOCKER_DIR/docker-compose.yml" -f "$DARB_REPO_ROOT/ops/hostinger/compose.darb.yml")
+COMPOSE=(docker compose -p darb-logistic-prod --env-file "$SUPABASE_DOCKER_DIR/.env" -f "$SUPABASE_DOCKER_DIR/docker-compose.yml" -f "$DARB_REPO_ROOT/ops/hostinger/compose.darb.yml")
 
 for key in DARB_APP_BIND_PORT DARB_SUPABASE_HTTP_BIND_PORT DARB_SUPABASE_DB_BIND_PORT DARB_SUPABASE_POOLER_BIND_PORT DARB_APP_IMAGE DARB_PETROAPP_BRIDGE_IMAGE EVOLUTION_API_IMAGE; do
   eval "value=\${$key:-}"
