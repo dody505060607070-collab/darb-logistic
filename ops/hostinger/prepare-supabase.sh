@@ -128,7 +128,7 @@ if publishable: a = put(a, "SUPABASE_PUBLISHABLE_KEY", publishable)
 if secret: a = put(a, "SUPABASE_SERVICE_ROLE_KEY", secret)
 if not value(a, "LOVABLE_CRON_SECRET"):
     a = put(a, "LOVABLE_CRON_SECRET", secrets.token_urlsafe(48))
-app_env.write_text("\\n".join(a) + "\\n")
+app_env.write_text("\n".join(a) + "\n")
 app_env.chmod(0o600)
 PY
 
