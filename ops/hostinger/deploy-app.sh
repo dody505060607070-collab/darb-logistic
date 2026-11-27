@@ -3,7 +3,9 @@
 set -euo pipefail
 umask 077
 
-image=${1:?Pass the immutable GHCR image reference}
+image=${1:?Pass the immutable GHCR app image reference}
+migration_image=${2:-}
+has_migrations=${3:-false}
 : "${DARB_REPO_ROOT:?}"
 : "${DARB_SUPABASE_DIR:?}"
 : "${DARB_CONFIG_DIR:?}"
@@ -20,6 +22,22 @@ if [ -n "$cid" ]; then
 fi
 
 export DARB_APP_IMAGE="$image"
+if [ "$has_migrations" = "true" ]; then
+  if [ "${DARB_AUTO_MIGRATE:-false}" != "true" ]; then
+    echo "Database migrations changed, but DARB_AUTO_MIGRATE is not true; refusing an app-only deploy."
+    exit 2
+  fi
+  [ -n "$migration_image" ] || { echo "Missing immutable migration image."; exit 2; }
+  if [ -f "$DARB_CONFIG_DIR/backup.env" ]; then
+    set -a
+    . "$DARB_CONFIG_DIR/backup.env"
+    set +a
+  fi
+  : "${DARB_BACKUP_PASSPHRASE:?Set the encrypted backup passphrase in a protected backup.env file}"
+  export DARB_MIGRATION_IMAGE="$migration_image"
+  DARB_BACKUP_PASSPHRASE="$DARB_BACKUP_PASSPHRASE" bash "$DARB_REPO_ROOT/ops/hostinger/backup.sh"
+  "${COMPOSE[@]}" --profile migration run --rm --no-deps migrate
+fi
 "${COMPOSE[@]}" pull app
 "${COMPOSE[@]}" up -d --no-deps app
 
