@@ -1,0 +1,172 @@
+# Additive Darb services for the official self-hosted Supabase Compose stack.
+# Run with project name "darb" and the official Supabase docker-compose.yml as the first file.
+# No fixed container_name values; all Darb services share the isolated project network/volumes.
+services:
+  app:
+    image: ${DARB_APP_IMAGE:?Set DARB_APP_IMAGE to an immutable GHCR image tag}
+    restart: unless-stopped
+    env_file:
+      - ${DARB_CONFIG_DIR:?Set DARB_CONFIG_DIR}/.env.darb
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      SUPABASE_URL: http://api-gw:8000
+    ports:
+      - "127.0.0.1:${DARB_APP_BIND_PORT:?Choose an unused loopback port after VPS preflight}:3000"
+    depends_on:
+      api-gw:
+        condition: service_healthy
+    networks:
+      - default
+      - darb-private
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    mem_limit: 2g
+    cpus: 1.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  petroapp-bridge:
+    image: ${DARB_PETROAPP_BRIDGE_IMAGE:?Set DARB_PETROAPP_BRIDGE_IMAGE to an immutable GHCR image tag}
+    restart: unless-stopped
+    env_file:
+      - ${DARB_CONFIG_DIR:?Set DARB_CONFIG_DIR}/.env.darb
+    environment:
+      PORT: "8080"
+    expose:
+      - "8080"
+    networks:
+      - darb-private
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/livez', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    mem_limit: 512m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  evolution-db:
+    image: postgres:15.10-alpine
+    restart: unless-stopped
+    env_file:
+      - ${DARB_CONFIG_DIR:?Set DARB_CONFIG_DIR}/.env.evolution
+    volumes:
+      - darb_evolution_db:/var/lib/postgresql/data
+    networks:
+      - darb-private
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 1g
+    cpus: 0.75
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  evolution-redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - darb_evolution_redis:/data
+    networks:
+      - darb-private
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    mem_limit: 256m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  evolution-api:
+    image: ${EVOLUTION_API_IMAGE:?Set EVOLUTION_API_IMAGE to the exact compatible version used by the current gateway}
+    restart: unless-stopped
+    env_file:
+      - ${DARB_CONFIG_DIR:?Set DARB_CONFIG_DIR}/.env.evolution
+    environment:
+      SERVER_TYPE: http
+      SERVER_PORT: "8080"
+      SERVER_URL: http://evolution-api:8080
+      DATABASE_PROVIDER: postgresql
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://evolution-redis:6379/6
+    volumes:
+      - darb_evolution_instances:/evolution/instances
+    expose:
+      - "8080"
+    depends_on:
+      evolution-db:
+        condition: service_healthy
+      evolution-redis:
+        condition: service_healthy
+    networks:
+      - darb-private
+    mem_limit: 1536m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  scheduler:
+    profiles: ["scheduled"]
+    build:
+      context: ${DARB_REPO_ROOT:?Set DARB_REPO_ROOT to the checked-out Darb repository}/ops/hostinger/scheduler
+    restart: unless-stopped
+    env_file:
+      - ${DARB_CONFIG_DIR:?Set DARB_CONFIG_DIR}/.env.darb
+    environment:
+      DARB_APP_INTERNAL_URL: http://app:3000
+      DARB_ENABLE_SCHEDULED_JOBS: "false"
+      DARB_ENABLE_WHATSAPP_SENDING: "false"
+      TZ: UTC
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - default
+    mem_limit: 128m
+    cpus: 0.1
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+networks:
+  darb-private:
+    name: darb-private
+    driver: bridge
+
+volumes:
+  darb_evolution_db:
+    name: darb_evolution_db
+  darb_evolution_redis:
+    name: darb_evolution_redis
+  darb_evolution_instances:
+    name: darb_evolution_instances
