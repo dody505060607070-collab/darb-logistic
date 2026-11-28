@@ -2,7 +2,7 @@
 # This image contains the app only. Data services are intentionally not started here.
 FROM oven/bun:1.3.10 AS build
 WORKDIR /app
-COPY package.json bun.lock ./
+COPY package.json bun.lock bunfig.toml ./
 RUN bun install --frozen-lockfile
 COPY . .
 ARG VITE_SUPABASE_URL
