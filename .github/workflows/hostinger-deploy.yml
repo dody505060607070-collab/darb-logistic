@@ -92,7 +92,7 @@ jobs:
           DARB_APP_IMAGE=ghcr.io/example/darb-app:ci
           DARB_PETROAPP_BRIDGE_IMAGE=ghcr.io/example/darb-petroapp-bridge:ci
           DARB_MIGRATION_IMAGE=ghcr.io/example/darb-migration:ci
-          EVOLUTION_API_IMAGE=ghcr.io/example/evolution-api:v2.3.8
+          EVOLUTION_API_IMAGE=evoapicloud/evolution-api:v2.3.7
           EOF
           set -a
           . "$DARB_CONFIG_DIR/compose.env"
