@@ -29,8 +29,12 @@ done
   echo "Missing Darb runtime environment files."
   exit 2
 }
-grep -q '^WHATSAPP_INSTANCE=.' "$DARB_CONFIG_DIR/.env.darb" || {
-  echo "WHATSAPP_INSTANCE must match the existing gateway instance before start."
+grep -q '^WHATSAPP_INSTANCE=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^WHATSAPP_SERVER_KEY=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "WhatsApp instance name and API key must be configured before start."
+  exit 2
+}
+grep -q '^DAMAN_GPS_API_KEY=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^DAMAN_GPS_FLEET_ID=.' "$DARB_CONFIG_DIR/.env.darb" && grep -q '^ORS_API_KEY=.' "$DARB_CONFIG_DIR/.env.darb" || {
+  echo "Daman GPS and OpenRouteService credentials are required for full integration parity."
   exit 2
 }
 grep -q '^PETROAPP_RAE_BRIDGE_TOKEN=.' "$DARB_CONFIG_DIR/.env.darb" || {
