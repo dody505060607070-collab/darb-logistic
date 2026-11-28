@@ -60,7 +60,7 @@ services:
         max-file: "3"
 
   evolution-db:
-    image: postgres:15.10-alpine
+    image: postgres:15-alpine
     restart: unless-stopped
     env_file:
       - ${DARB_CONFIG_DIR:?Set DARB_CONFIG_DIR}/.env.evolution
@@ -82,7 +82,7 @@ services:
         max-file: "3"
 
   evolution-redis:
-    image: redis:7.4-alpine
+    image: redis:7-alpine
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
