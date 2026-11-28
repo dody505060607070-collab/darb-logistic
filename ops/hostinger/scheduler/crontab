@@ -1,0 +1,7 @@
+# All schedules are UTC. Daily report 05:00 UTC = 08:00 Asia/Riyadh.
+0 5 * * * /usr/local/bin/run-job daily-report
+0 * * * * /usr/local/bin/run-job task-reminders
+* * * * * /usr/local/bin/run-job whatsapp-outbox
+* * * * * /usr/local/bin/run-job whatsapp-send a
+* * * * * /usr/local/bin/run-job whatsapp-send b
+* * * * * /usr/local/bin/run-job whatsapp-send c

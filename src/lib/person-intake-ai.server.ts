@@ -1,4 +1,4 @@
-import { createOpenAI } from '@ai-sdk/openai';
+import { createDarbAIProvider, getDarbAIConfig } from './ai-provider.server';
 import { NoObjectGeneratedError, Output, streamText } from 'ai';
 import { z } from 'zod';
 import { INTAKE_DOC_TYPES, INTAKE_ROLES } from './person-intake';
@@ -49,21 +49,22 @@ const INSTRUCTIONS = `أنت موظف شؤون موظفين في شركة نقل
 
 /** Reads the person's files with the AI and returns only the structured details found in them. */
 export async function extractPerson(files: IntakeFile[]): Promise<IntakeExtraction> {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error('خدمة التحليل غير مهيأة');
-  const provider = createOpenAI({ baseURL: 'https://ai.gateway.lovable.dev/v1', apiKey, headers: { 'Lovable-API-Key': apiKey, 'X-Lovable-AIG-SDK': 'vercel-ai-sdk' }, fetch: runIdFetch() });
+  const aiConfig = getDarbAIConfig();
+  if (!aiConfig) throw new Error('خدمة التحليل غير مهيأة');
+  const provider = createDarbAIProvider(runIdFetch());
+  if (!provider) throw new Error('خدمة التحليل غير مهيأة');
   const content: any[] = [{ type: 'text', text: `عدد الملفات: ${files.length}. أسماؤها بالترتيب: ${files.map((f, i) => `${i}) ${f.name}`).join('، ')}` }];
   files.forEach((f, i) => {
     content.push({ type: 'text', text: `الملف رقم ${i}: ${f.name}` });
     content.push({ type: 'file', filename: f.name, data: f.base64, mediaType: f.mediaType });
   });
   const result = streamText({
-    model: provider.responses('openai/gpt-6-astra'),
+    model: provider.responses(aiConfig.model),
     system: INSTRUCTIONS,
     messages: [{ role: 'user', content }],
     output: Output.object({ schema }),
     maxRetries: 0,
-    providerOptions: { openai: { forceReasoning: true, reasoningEffort: 'low', reasoningSummary: 'auto', store: false, include: ['reasoning.encrypted_content'] } },
+    providerOptions: aiConfig.lovableGateway ? { openai: { forceReasoning: true, reasoningEffort: 'low', reasoningSummary: 'auto', store: false, include: ['reasoning.encrypted_content'] } } : undefined,
   });
   try {
     const out = await result.output;
