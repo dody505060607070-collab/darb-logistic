@@ -81,7 +81,8 @@ for key in ("SUPABASE_PUBLIC_URL", "API_EXTERNAL_URL", "SITE_URL"):
         raise SystemExit(f"{key} must be set to the owner-confirmed HTTPS production URL")
 PY
 case "$EVOLUTION_API_IMAGE" in
-  *:latest|latest) echo "EVOLUTION_API_IMAGE must be pinned to the exact current Evolution version, never latest."; exit 2 ;;
+  *evoapicloud/evolution-api:v2.3.7*) ;;
+  *) echo "EVOLUTION_API_IMAGE must match the verified current gateway version 2.3.7 until session compatibility is confirmed."; exit 2 ;;
 esac
 
 # Port availability check is read-only and scoped to the chosen Darb bind ports.
