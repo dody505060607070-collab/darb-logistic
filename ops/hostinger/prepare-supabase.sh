@@ -121,6 +121,8 @@ e = put(e, "POSTGRES_PASSWORD", db_password)
 e = put(e, "DATABASE_CONNECTION_URI", f"postgresql://evolution:{db_password}@evolution-db:5432/evolution?schema=evolution_api")
 app.write_text("\n".join(a) + "\n")
 evo.write_text("\n".join(e) + "\n")
+bridge_token = value(a, "PETROAPP_RAE_BRIDGE_TOKEN") or secrets.token_urlsafe(48)
+a = put(a, "PETROAPP_RAE_BRIDGE_TOKEN", bridge_token)
 app.chmod(0o600); evo.chmod(0o600)
 PY
 
