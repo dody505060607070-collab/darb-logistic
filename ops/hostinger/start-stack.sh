@@ -21,6 +21,10 @@ for key in DARB_APP_BIND_PORT DARB_SUPABASE_HTTP_BIND_PORT DARB_SUPABASE_DB_BIND
   eval "value=\${$key:-}"
   [ -n "$value" ] || { echo "Missing required compose setting: $key"; exit 2; }
 done
+[ "${DARB_DATA_IMPORT_COMPLETE:-false}" = "YES" ] || {
+  echo "Refusing to start the full Darb app before the database/Auth/Storage import is validated. Set DARB_DATA_IMPORT_COMPLETE=YES only after parity checks."
+  exit 2
+}
 [ -f "$DARB_CONFIG_DIR/.env.darb" ] && [ -f "$DARB_CONFIG_DIR/.env.evolution" ] || {
   echo "Missing Darb runtime environment files."
   exit 2
