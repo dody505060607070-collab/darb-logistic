@@ -35,6 +35,8 @@ fi
 
 docker run --rm -v darb_logistic_prod_evolution_instances:/source:ro -v "$work":/backup alpine:3.22 \
   tar -czf /backup/evolution-instances.tar.gz -C /source .
+docker run --rm -v darb_logistic_prod_evolution_redis:/source:ro -v "$work":/backup alpine:3.22 \
+  tar -czf /backup/evolution-redis.tar.gz -C /source .
 cp "$SUPABASE_DOCKER_DIR/.env" "$work/supabase.env"
 cp "$DARB_CONFIG_DIR/.env.darb" "$work/darb.env"
 cp "$DARB_CONFIG_DIR/.env.evolution" "$work/evolution.env"
