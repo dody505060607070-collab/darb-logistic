@@ -19,7 +19,7 @@ export function getDarbAIConfig(): DarbAIConfig | null {
   if (externalKey) {
     const baseURL = (
       process.env.AI_API_BASE_URL?.trim() || "https://api.openai.com/v1"
-    ).replace(/\\/+$/, "");
+    ).replace(/\/+$/, "");
     const model = process.env.AI_MODEL?.trim();
     if (!model) throw new Error("AI_MODEL is required when AI_API_KEY is configured");
     const parsed = new URL(baseURL);
