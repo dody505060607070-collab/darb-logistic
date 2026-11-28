@@ -21,7 +21,11 @@ export function getDarbAIConfig(): DarbAIConfig | null {
     const model = process.env.AI_MODEL?.trim();
     if (!model) throw new Error("AI_MODEL is required when AI_API_KEY is configured");
     const parsed = new URL(baseURL);
-    if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+    if (
+      parsed.protocol !== "https:" &&
+      parsed.hostname !== "localhost" &&
+      parsed.hostname !== "127.0.0.1"
+    ) {
       throw new Error("AI_API_BASE_URL must use HTTPS");
     }
     return { apiKey: externalKey, baseURL, model, lovableGateway: false, headers: {} };
