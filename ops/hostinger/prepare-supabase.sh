@@ -86,7 +86,7 @@ for key, value in values.items():
             out.append(line)
     if not found: out.append(f"{key}={value}")
     lines = out
-p.write_text("\\n".join(lines) + "\\n")
+p.write_text("\n".join(lines) + "\n")
 p.chmod(0o600)
 PY
 
