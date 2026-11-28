@@ -45,7 +45,7 @@ chmod 600 "$work"/*
 
 tar -czf "$work/archive.tar.gz" -C "$work" \
   supabase-globals.sql supabase-database.dump evolution-database.sql \
-  supabase-storage.tar.gz evolution-instances.tar.gz \
+  supabase-storage.tar.gz evolution-instances.tar.gz evolution-redis.tar.gz \
   supabase.env darb.env evolution.env compose.env
 
 openssl enc -aes-256-cbc -pbkdf2 -salt -in "$work/archive.tar.gz" \
