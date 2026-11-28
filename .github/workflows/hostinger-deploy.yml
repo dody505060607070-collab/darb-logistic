@@ -2,7 +2,7 @@ name: Darb Hostinger CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, migration/hostinger-full-stack-2026-11-28]
   pull_request:
     branches: [main]
   workflow_dispatch:
